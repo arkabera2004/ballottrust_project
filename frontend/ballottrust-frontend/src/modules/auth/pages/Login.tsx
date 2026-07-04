@@ -31,8 +31,11 @@ export default function Login() {
 
       const response =
         await authService.login({
+
           email,
+
           password,
+
         });
 
       console.log(
@@ -41,9 +44,13 @@ export default function Login() {
       );
 
       authLogin(
+
         response.access_token,
+
         response.refresh_token,
+
         response.user,
+
       );
 
       console.log(
@@ -51,44 +58,118 @@ export default function Login() {
         response.user,
       );
 
-      Toast.success('Login Successful');
+      Toast.success(
+        `Welcome back, ${response.user.fullName}!`,
+      );
 
       if (
+
         response.user.role ===
           'SUPER_ADMIN' ||
+
         response.user.role ===
           'ELECTION_COMMISSIONER'
+
       ) {
 
         navigate('/admin');
 
-      } else if (
+      }
+
+      else if (
+
         response.user.role ===
         'CANDIDATE'
+
       ) {
 
         navigate('/candidate');
 
-      } else if (
+      }
+
+      else if (
+
         response.user.role ===
         'AUDITOR'
+
       ) {
 
         navigate('/audit-logs');
 
-      } else {
+      }
+
+      else {
 
         navigate('/voter');
 
       }
 
-    } catch (error) {
+    }
+
+    catch (error: any) {
 
       console.error(error);
 
-      Toast.error('Invalid Email or Password');
+      const message =
+        error?.response?.data?.message ||
+        'Login Failed';
 
-    } finally {
+      if (
+
+        message ===
+        'Please verify your email first.'
+
+      ) {
+
+        sessionStorage.setItem(
+
+          'verificationEmail',
+
+          email,
+
+        );
+
+        Toast.error(
+          'Please verify your email first.',
+        );
+
+        setTimeout(() => {
+
+          navigate(
+            '/verify-email',
+            {
+              state: {
+                email,
+              },
+            },
+          );
+
+        }, 1000);
+
+        return;
+
+      }
+
+      if (
+
+        message ===
+        'Account pending approval'
+
+      ) {
+
+        Toast.error(
+          'Your account is awaiting administrator approval.',
+        );
+
+        return;
+
+      }
+
+      Toast.error(message);
+
+    }
+
+    finally {
 
       setLoading(false);
 
@@ -97,6 +178,7 @@ export default function Login() {
   };
 
   return (
+
     <div className="min-h-screen flex">
 
       {/* Left Side */}
@@ -104,33 +186,47 @@ export default function Login() {
       <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-blue-900 to-indigo-950 text-white p-16 flex-col justify-center">
 
         <h1 className="text-5xl font-bold mb-6">
+
           BallotTrust
+
         </h1>
 
         <h2 className="text-3xl font-semibold mb-4">
+
           Secure Digital Elections
+
         </h2>
 
         <p className="text-lg text-gray-300 mb-8">
+
           Transparent • Secure • Verifiable • Scalable
+
         </p>
 
         <div className="space-y-4">
 
           <div className="bg-white/10 p-4 rounded-lg">
+
             ✓ Role Based Access
+
           </div>
 
           <div className="bg-white/10 p-4 rounded-lg">
+
             ✓ Blockchain Verified Voting
+
           </div>
 
           <div className="bg-white/10 p-4 rounded-lg">
+
             ✓ Election Commission Ready
+
           </div>
 
           <div className="bg-white/10 p-4 rounded-lg">
+
             ✓ Candidate Verification Portal
+
           </div>
 
         </div>
@@ -144,65 +240,119 @@ export default function Login() {
         <div className="bg-white dark:bg-slate-900 shadow-2xl rounded-2xl p-10 w-full max-w-md">
 
           <h2 className="text-3xl font-bold text-center mb-2 dark:text-white">
+
             Welcome Back
+
           </h2>
 
           <p className="text-center text-gray-500 mb-8">
+
             Sign in to continue
+
           </p>
 
           <input
+
             type="email"
+
+            autoComplete="email"
+
             placeholder="Email Address"
+
             className="w-full border p-3 rounded-lg mb-4"
+
             value={email}
+
             onChange={(e) =>
               setEmail(
                 e.target.value,
               )
             }
+
           />
 
           <input
+
             type="password"
+
+            autoComplete="current-password"
+
             placeholder="Password"
-            className="w-full border p-3 rounded-lg mb-6"
+
+            className="w-full border p-3 rounded-lg"
+
             value={password}
+
             onChange={(e) =>
               setPassword(
                 e.target.value,
               )
             }
+
           />
 
+          <div className="flex justify-end mt-2 mb-6">
+
+            <Link
+
+              to="/forgot-password"
+
+              className="text-sm text-blue-600 hover:underline"
+
+            >
+
+              Forgot Password?
+
+            </Link>
+
+          </div>
+
           <button
+
             onClick={login}
+
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-semibold transition"
+
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-semibold transition disabled:opacity-60"
+
           >
+
             {loading
+
               ? 'Signing In...'
+
               : 'Login'}
+
           </button>
 
           <button
+
             className="w-full mt-4 border p-3 rounded-lg font-medium"
+
           >
-            Continue with Google
-            (Coming Soon)
+
+            Continue with Google (Coming Soon)
+
           </button>
 
           <div className="text-center mt-6">
 
             <p className="text-gray-500">
+
               New voter?
+
             </p>
 
             <Link
+
               to="/register"
+
               className="text-blue-600 font-semibold"
+
             >
+
               Register Here
+
             </Link>
 
           </div>
@@ -212,5 +362,7 @@ export default function Login() {
       </div>
 
     </div>
+
   );
+
 }

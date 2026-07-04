@@ -25,25 +25,40 @@ export default function Register() {
   };
 
   const register = async () => {
-    try {
+
+  try {
+
+    const response =
       await axios.post(
         'http://localhost:3000/auth/register',
-        formData
+        formData,
       );
 
-      alert(
-        'Registration successful. Waiting for approval.'
-      );
+    sessionStorage.setItem(
+      'verificationEmail',
+      formData.email,
+    );
 
-      navigate('/');
-    } catch (error: any) {
-      alert(
-        error?.response?.data?.message ||
-        'Registration Failed'
-      );
-    }
-  };
+    alert(
+      response.data.message,
+    );
 
+    navigate(
+      '/verify-email',
+      {
+        state: {
+          email: formData.email,
+        },
+      },
+    );
+  }
+  catch (error: any) {
+    alert(
+      error?.response?.data?.message ||
+      'Registration Failed',
+    );
+  }
+};
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
 

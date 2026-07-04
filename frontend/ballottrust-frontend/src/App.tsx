@@ -28,6 +28,8 @@ import ProtectedRoute from './routes/ProtectedRoute';
 import RoleRoute from './routes/RoleRoute';
 import Blockchain from './pages/Blockchain';
 import Profile from './modules/profile/pages/Profile';
+import ChangePassword from './modules/change-password/pages/ChangePassword';
+import VerifyEmail from './modules/email-verification/pages/VerifyEmail';
 
 function App() {
   return (
@@ -107,6 +109,10 @@ function App() {
             </RoleRoute>
           }
         />
+        <Route
+  path="/verify-email"
+  element={<VerifyEmail />}
+/>
 
         <Route
           path="/candidate-approval"
@@ -129,6 +135,10 @@ function App() {
               <Profile />
             </ProtectedRoute>
           }
+        />
+        <Route
+          path="/change-password"
+          element={<ChangePassword />}
         />
 
         <Route

@@ -1,78 +1,91 @@
-import { useEffect, useState } from 'react';
-import profileService from '../services/profile.service';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'react-hot-toast';
 
-type Profile = {
-  id: string;
-  fullName: string;
-  email: string;
-  role: string;
-  status: string;
+import DashboardLayout from '../../../components/layout/DashboardLayout';
 
-  avatarUrl?: string;
+import Button from '../../../components/ui/Button';
 
-  bio?: string;
+import AvatarCard from '../components/AvatarCard';
+import PersonalInfo from '../components/PersonalInfo';
+import AcademicInfo from '../components/AcademicInfo';
+import AddressInfo from '../components/AddressInfo';
+import AccountInfo from '../components/AccountInfo';
 
-  phoneNumber?: string;
+import { useProfile } from '../hooks/useProfile';
+import avatarService from '../services/avatar.service';
+import { useNavigate } from 'react-router-dom';
 
-  department?: string;
-
-  course?: string;
-
-  year?: number;
-
-  semester?: number;
-
-  registrationNumber?: string;
-
-  address?: string;
-
-  city?: string;
-
-  state?: string;
-
-  country?: string;
-
-  postalCode?: string;
-
-  emailVerified: boolean;
-
-  provider: string;
-
-  profileCompleted: boolean;
-
-  lastLogin?: string;
-};
+import {
+  profileSchema,
+  type ProfileFormData,
+} from '../schemas/profile.schema';
 
 export default function Profile() {
+  const navigate = useNavigate();
 
-  const [profile, setProfile] =
-    useState<Profile | null>(null);
+  const {
+    profile,
+    loading,
+    saving,
+    updateProfile,
+    reload,
+  } = useProfile();
 
-  const [loading, setLoading] =
-    useState(true);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: {
+      errors,
+      isDirty,
+    },
+  } = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+  });
 
   useEffect(() => {
 
-    loadProfile();
+    if (profile) {
 
-  }, []);
+      reset({
 
-  async function loadProfile() {
+        ...profile,
+
+        year: profile.year ?? undefined,
+
+        semester: profile.semester ?? undefined,
+
+      });
+
+    }
+
+  }, [profile, reset]);
+
+  async function handleAvatarUpload(
+    file: File,
+  ) {
 
     try {
 
-      const data =
-        await profileService.getMyProfile();
+      await avatarService.uploadAvatar(file);
 
-      setProfile(data);
+      toast.success(
+        'Avatar updated successfully',
+      );
 
-    } catch (error) {
+      await reload();
+
+    }
+
+    catch (error) {
 
       console.error(error);
 
-    } finally {
-
-      setLoading(false);
+      toast.error(
+        'Failed to upload avatar',
+      );
 
     }
 
@@ -82,15 +95,25 @@ export default function Profile() {
 
     return (
 
-      <div className="min-h-screen flex items-center justify-center">
+      <DashboardLayout>
 
-        <h2 className="text-xl font-semibold">
+        <div className="flex items-center justify-center h-[70vh]">
 
-          Loading Profile...
+          <div className="text-center">
 
-        </h2>
+            <div className="w-12 h-12 rounded-full border-4 border-blue-600 border-t-transparent animate-spin mx-auto" />
 
-      </div>
+            <p className="mt-5 text-slate-600">
+
+              Loading Profile...
+
+            </p>
+
+          </div>
+
+        </div>
+
+      </DashboardLayout>
 
     );
 
@@ -98,67 +121,114 @@ export default function Profile() {
 
   return (
 
-    <div className="min-h-screen bg-slate-100 p-8">
+    <DashboardLayout>
 
-      <div className="max-w-7xl mx-auto">
+      <form
+        onSubmit={handleSubmit(updateProfile)}
+        className="max-w-7xl mx-auto"
+      >
 
-        <h1 className="text-4xl font-bold mb-8">
+        {/* Header */}
 
-          My Profile
+        <div className="mb-10">
 
-        </h1>
+          <h1 className="text-4xl font-bold text-slate-900">
+
+            My Profile
+
+          </h1>
+
+          <p className="text-slate-500 mt-2">
+
+            Manage your personal information,
+            academic details and account settings.
+
+          </p>
+
+        </div>
+
+        {/* Content */}
 
         <div className="grid lg:grid-cols-3 gap-8">
 
-          {/* LEFT CARD */}
+          {/* Left Sidebar */}
 
-          <div className="bg-white rounded-2xl shadow-lg p-8">
+          <div className="space-y-8">
 
-            <div className="flex flex-col items-center">
-
-              <div className="w-36 h-36 rounded-full bg-blue-100 flex items-center justify-center text-5xl font-bold text-blue-700">
-
-                {profile?.fullName
-                  ?.charAt(0)
-                  .toUpperCase()}
-
-              </div>
-
-              <h2 className="text-2xl font-bold mt-6">
-
-                {profile?.fullName}
-
-              </h2>
-
-              <p className="text-gray-500">
-
-                {profile?.email}
-
-              </p>
-
-              <span className="mt-4 px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-semibold">
-
-                {profile?.role}
-
-              </span>
-
-            </div>
+            <AvatarCard
+              profile={profile}
+              onAvatarSelect={handleAvatarUpload}
+            />
 
           </div>
 
-          {/* RIGHT SIDE */}
+          {/* Right Content */}
 
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-8">
 
-            <div className="bg-white rounded-2xl shadow-lg p-8">
+            <PersonalInfo
+              register={register}
+              errors={errors}
+              profile={profile}
+            />
 
-              <h2 className="text-2xl font-bold mb-6">
+            <AcademicInfo
+              register={register}
+              errors={errors}
+            />
 
-                Personal Information
+            <AddressInfo
+              register={register}
+              errors={errors}
+            />
 
-              </h2>
+            <AccountInfo
+              profile={profile}
+            />
 
-              {/* Form will come in Part 2 */}
+            {/* Save Button */}
+
+            <div className="sticky bottom-6 bg-white rounded-2xl border border-slate-200 shadow-xl p-5">
+
+              <div className="flex items-center justify-between">
+
+                <div>
+
+                  <h3 className="font-semibold">
+
+                    Ready to save?
+
+                  </h3>
+
+                  <p className="text-sm text-slate-500">
+
+                    Save your profile changes.
+
+                  </p>
+
+                </div>
+
+                <div className="flex items-center gap-4">
+
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => navigate('/change-password')}
+                >
+                  Change Password
+                </Button>
+
+                <Button
+                  type="submit"
+                  loading={saving}
+                  disabled={!isDirty}
+                >
+                  Save Changes
+                </Button>
+
+              </div>
+
+              </div>
 
             </div>
 
@@ -166,9 +236,9 @@ export default function Profile() {
 
         </div>
 
-      </div>
+      </form>
 
-    </div>
+    </DashboardLayout>
 
   );
 
