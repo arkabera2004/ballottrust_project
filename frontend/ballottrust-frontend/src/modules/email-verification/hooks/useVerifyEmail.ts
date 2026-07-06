@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 
-import emailVerificationService from '../services/emailVerification.service';
+import { emailVerificationService } from '../../auth/services';
 
 export function useVerifyEmail() {
 

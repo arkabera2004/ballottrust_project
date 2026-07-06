@@ -30,6 +30,7 @@ import Blockchain from './pages/Blockchain';
 import Profile from './modules/profile/pages/Profile';
 import ChangePassword from './modules/change-password/pages/ChangePassword';
 import VerifyEmail from './modules/email-verification/pages/VerifyEmail';
+import {ForgotPassword, ResetPassword} from './modules/forgot-password/pages';
 
 function App() {
   return (
@@ -155,6 +156,8 @@ function App() {
           }
         />
 
+        
+
         {/* Candidate Routes */}
 
         <Route
@@ -247,6 +250,21 @@ function App() {
       <StaffManagement />
     </RoleRoute>
   }
+/>
+<Route
+
+  path="/forgot-password"
+
+  element={<ForgotPassword />}
+
+/>
+
+<Route
+
+  path="/reset-password"
+
+  element={<ResetPassword />}
+
 />
 
       </Routes>

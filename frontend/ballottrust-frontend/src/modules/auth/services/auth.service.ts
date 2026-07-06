@@ -6,6 +6,9 @@ import type {
 } from '../../../types/auth';
 
 class AuthService {
+  register(arg0: { fullName: string; email: string; password: string; role: "VOTER" | "CANDIDATE"; }) {
+      throw new Error('Method not implemented.');
+  }
 
   async login(
     data: LoginRequest,
