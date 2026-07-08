@@ -31,6 +31,7 @@ import Profile from './modules/profile/pages/Profile';
 import ChangePassword from './modules/change-password/pages/ChangePassword';
 import VerifyEmail from './modules/email-verification/pages/VerifyEmail';
 import {ForgotPassword, ResetPassword} from './modules/forgot-password/pages';
+import { OAuthCallback } from './modules/oauth/pages';
 
 function App() {
   return (
@@ -265,6 +266,11 @@ function App() {
 
   element={<ResetPassword />}
 
+/>
+
+<Route
+    path="/oauth/callback"
+    element={<OAuthCallback />}
 />
 
       </Routes>

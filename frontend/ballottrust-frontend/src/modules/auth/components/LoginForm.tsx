@@ -199,16 +199,14 @@ export default function LoginForm() {
           </button>
 
           <button
-
-            type="button"
-
-            className="w-full mt-4 border p-3 rounded-lg font-medium"
-
-          >
-
-            Continue with Google (Coming Soon)
-
-          </button>
+                onClick={() => {
+                    window.location.href =
+                        'http://localhost:3000/auth/google';
+                }}
+                className="w-full mt-4 border p-3 rounded-lg font-medium hover:bg-gray-100 transition"
+            >
+                Continue with Google
+            </button>
 
           <div className="text-center mt-6">
 

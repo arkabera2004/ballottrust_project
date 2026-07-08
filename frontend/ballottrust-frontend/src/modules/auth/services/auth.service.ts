@@ -6,7 +6,7 @@ import type {
 } from '../../../types/auth';
 
 class AuthService {
-  register(arg0: { fullName: string; email: string; password: string; role: "VOTER" | "CANDIDATE"; }) {
+  register(_arg0: { fullName: string; email: string; password: string; role: "VOTER" | "CANDIDATE"; }) {
       throw new Error('Method not implemented.');
   }
 
@@ -54,6 +54,17 @@ class AuthService {
     return response.data;
 
   }
+
+  async getProfile() {
+
+  const response =
+    await api.get('/auth/profile');
+
+  return response.data;
+
+}
+
+  
 
 }
 
