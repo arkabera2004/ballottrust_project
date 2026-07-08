@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma, Election } from '@prisma/client';
+import { Prisma, Election, ElectionStatus } from '@prisma/client';
+import { NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class ElectionRepository {
@@ -119,4 +120,86 @@ async electionCodeExists(
 
   return !!election;
 }
+
+async findAll(): Promise<Election[]> {
+  return this.prisma.election.findMany({
+    where: {
+      deletedAt: null,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+}
+
+// ======================================================
+// Soft Delete
+// ======================================================
+
+async softDelete(id: string) {
+  return this.prisma.election.update({
+    where: {
+      id,
+    },
+    data: {
+      deletedAt: new Date(),
+    },
+  });
+}
+
+// ======================================================
+// Find By ID Or Throw
+// ======================================================
+
+async findByIdOrThrow(id: string) {
+  const election =
+    await this.findById(id);
+
+  if (!election || election.deletedAt) {
+    throw new NotFoundException(
+      'Election not found.',
+    );
+  }
+
+  return election;
+}
+
+// ======================================================
+// Submit For Approval
+// ======================================================
+
+// ======================================================
+// Submit For Approval
+// ======================================================
+
+async submitForApproval(id: string) {
+  return this.prisma.election.update({
+    where: {
+      id,
+    },
+    data: {
+      status: 'PENDING_APPROVAL',
+    },
+  });
+}
+
+// ======================================================
+// Approve Election
+// ======================================================
+
+async approveElection(
+  id: string,
+  approvedById: string,
+) {
+  return this.prisma.election.update({
+    where: {
+      id,
+    },
+    data: {
+      status: ElectionStatus.APPROVED,
+      approvedById,
+    },
+  });
+}
+
 }

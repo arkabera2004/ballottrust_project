@@ -1,7 +1,11 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
+  Patch,
+  Delete,
+  Param,
   UseGuards,
 } from '@nestjs/common';
 
@@ -16,11 +20,24 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 
 import type { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
+import { UpdateElectionService } from '../services';
+import {UpdateElectionDto} from '../dto';
+import { GetElectionService} from '../services';
+import {GetElectionByIdService} from '../services';
+import {DeleteElectionService} from '../services';
+import {SubmitElectionForApprovalService} from '../services';
+import { ApproveElectionService } from '../services';
 
 @Controller('elections')
 export class ElectionController {
   constructor(
-    private readonly createElectionService: CreateElectionService,
+  private readonly createElectionService: CreateElectionService,
+  private readonly updateElectionService: UpdateElectionService,
+  private readonly getElectionService: GetElectionService,
+  private readonly getElectionByIdService: GetElectionByIdService,
+  private readonly deleteElectionService: DeleteElectionService,
+  private readonly submitElectionForApprovalService: SubmitElectionForApprovalService,
+  private readonly approveElectionService: ApproveElectionService,
   ) {}
 
   @Post()
@@ -38,4 +55,76 @@ export class ElectionController {
       user.id,
     );
   }
+
+  @Patch(':id')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('ELECTION_COMMISSIONER', 'SUPER_ADMIN')
+    updateElection(
+      @Param('id') id: string,
+
+      @Body()
+      dto: UpdateElectionDto,
+    ) {
+      return this.updateElectionService.execute(
+        id,
+        dto,
+      );
+    }
+
+    @Get()
+    @UseGuards(JwtAuthGuard)
+    async findAll() {
+        return this.getElectionService.getAll();
+    }
+
+    @Get(':id')
+      @UseGuards(JwtAuthGuard)
+      async findOne(
+        @Param('id') id: string,
+      ) {
+        return this.getElectionByIdService.execute(
+          id,
+        );
+      }
+
+      @Delete(':id')
+      @UseGuards(JwtAuthGuard, RolesGuard)
+      @Roles(
+        Role.SUPER_ADMIN,
+        Role.ELECTION_COMMISSIONER,
+      )
+      async delete(
+        @Param('id') id: string,
+      ) {
+        return this.deleteElectionService.execute(
+          id,
+        );
+      }
+
+      @Patch(':id/submit')
+      @UseGuards(JwtAuthGuard, RolesGuard)
+      @Roles(
+        Role.ELECTION_COMMISSIONER,
+        Role.SUPER_ADMIN,
+      )
+      async submitForApproval(
+        @Param('id') id: string,
+      ) {
+        return this.submitElectionForApprovalService.execute(
+          id,
+        );
+      }
+
+      @Patch(':id/approve')
+      @UseGuards(JwtAuthGuard, RolesGuard)
+      @Roles(Role.SUPER_ADMIN)
+      async approve(
+        @Param('id') id: string,
+        @CurrentUser() user: JwtPayload,
+      ) {
+        return this.approveElectionService.execute(
+          id,
+          user.id,
+        );
+      }
 }

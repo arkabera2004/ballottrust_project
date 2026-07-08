@@ -103,4 +103,17 @@ export class ElectionValidator {
       );
     }
   }
+
+  validateUpdate(dto: any): void {
+  if (
+    dto.startDate &&
+    dto.endDate &&
+    new Date(dto.startDate) >=
+      new Date(dto.endDate)
+  ) {
+    throw new BadRequestException(
+      'End date must be after start date.',
+    );
+  }
+}
 }

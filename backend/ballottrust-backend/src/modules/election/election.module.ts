@@ -9,7 +9,15 @@ import { ElectionRepository } from './repository';
 
 import { ElectionValidator } from './validators';
 
-import { CreateElectionService } from './services';
+import {
+  CreateElectionService,
+  UpdateElectionService,
+  GetElectionService,
+  GetElectionByIdService,
+  DeleteElectionService,
+  SubmitElectionForApprovalService,
+  ApproveElectionService,
+} from './services';
 
 @Module({
   imports: [
@@ -25,7 +33,13 @@ import { CreateElectionService } from './services';
     ElectionValidator,
     ElectionCodeGenerator,
     CreateElectionService,
-  ],
+    UpdateElectionService,
+    GetElectionService,
+    GetElectionByIdService,
+    DeleteElectionService,
+    SubmitElectionForApprovalService,
+    ApproveElectionService,
+],
 
   exports: [
     ElectionRepository,
