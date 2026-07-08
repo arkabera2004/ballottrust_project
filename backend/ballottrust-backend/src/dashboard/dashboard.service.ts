@@ -28,7 +28,7 @@ async getStats() {
   const closedElections =
     await this.prisma.election.count({
       where: {
-        status: 'CLOSED',
+        status: 'VOTING_CLOSED',
       },
     });
 

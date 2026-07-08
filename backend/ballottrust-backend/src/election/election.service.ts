@@ -8,13 +8,15 @@ export class ElectionService {
     private prisma: PrismaService,
   ) {}
 
-  async createElection(data: CreateElectionDto) {
+  async createElection(dto: CreateElectionDto) {
     return this.prisma.election.create({
       data: {
-        title: data.title,
-        description: data.description,
-        startDate: new Date(data.startDate),
-        endDate: new Date(data.endDate),
+        title: dto.title,
+        electionCode: dto.electionCode,
+        electionType: dto.electionType,
+        description: dto.description,
+        startDate: dto.startDate,
+        endDate: dto.endDate,
       },
     });
   }
@@ -40,7 +42,7 @@ export class ElectionService {
     return this.prisma.election.update({
       where: { id },
       data: {
-        status: 'CLOSED',
+        status: 'VOTING_CLOSED',
       },
     });
   }

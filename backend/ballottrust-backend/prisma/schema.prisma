@@ -30,12 +30,39 @@ enum UserStatus {
   REJECTED
 }
 
+//////////////////////////////////////////////////////
+// ELECTION ENUMS
+//////////////////////////////////////////////////////
+
+enum ElectionType {
+  STUDENT_COUNCIL
+  CLUB
+  UNIVERSITY
+  CORPORATE
+  GOVERNMENT
+  CUSTOM
+}
+
 enum ElectionStatus {
   DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  PUBLISHED
   ACTIVE
-  CLOSED
+  VOTING_CLOSED
+  RESULT_PUBLISHED
   ARCHIVED
 }
+
+enum ResultVisibility {
+  IMMEDIATE
+  AFTER_CLOSURE
+  MANUAL
+}
+
+//////////////////////////////////////////////////////
+// CANDIDATE
+//////////////////////////////////////////////////////
 
 enum CandidateStatus {
   DRAFT
@@ -45,6 +72,10 @@ enum CandidateStatus {
   WITHDRAWN
 }
 
+//////////////////////////////////////////////////////
+// NOTIFICATION
+//////////////////////////////////////////////////////
+
 enum NotificationType {
   INFO
   SUCCESS
@@ -53,12 +84,20 @@ enum NotificationType {
   SECURITY
 }
 
+//////////////////////////////////////////////////////
+// AUDIT
+//////////////////////////////////////////////////////
+
 enum AuditSeverity {
   LOW
   MEDIUM
   HIGH
   CRITICAL
 }
+
+//////////////////////////////////////////////////////
+// BLOCKCHAIN
+//////////////////////////////////////////////////////
 
 enum BlockchainStatus {
   PENDING
@@ -205,6 +244,10 @@ model User {
 
   createdElections Election[] @relation("ElectionCreator")
 
+  approvedElections Election[] @relation("ElectionApprover")
+
+  publishedElections Election[] @relation("ElectionPublisher")
+
   candidateProfile Candidate? @relation("CandidateUser")
 
   reviewedCandidates Candidate[] @relation("CandidateReviewer")
@@ -228,44 +271,121 @@ model User {
 //////////////////////////////////////////////////////
 
 model Election {
-  id String @id @default(uuid())
 
-  title String
+  id                 String             @id @default(uuid())
 
-  description String
+  // ======================================================
+  // Basic Information
+  // ======================================================
 
-  startDate DateTime
+  title              String
+  electionCode       String             @unique
+  description        String?
 
-  endDate DateTime
+  electionType       ElectionType
 
-  status ElectionStatus @default(DRAFT)
+  status             ElectionStatus     @default(DRAFT)
 
-  createdById String?
+  // ======================================================
+  // Timeline
+  // ======================================================
 
-  createdBy User? @relation("ElectionCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  registrationStart  DateTime?
+  registrationEnd    DateTime?
 
-  publishedAt DateTime?
+  nominationStart    DateTime?
+  nominationEnd      DateTime?
 
-  closedAt DateTime?
+  campaignStart      DateTime?
+  campaignEnd        DateTime?
 
-  deletedAt DateTime?
+  startDate          DateTime
+  endDate            DateTime
 
-  createdAt DateTime @default(now())
+  resultDate         DateTime?
 
-  updatedAt DateTime @updatedAt
+  publishedAt        DateTime?
+  closedAt           DateTime?
+  deletedAt          DateTime?
 
-  candidates Candidate[]
+  // ======================================================
+  // Election Configuration
+  // ======================================================
 
-  reports ElectionReport[]
+  candidateLimit     Int                @default(0)
 
-  dashboardMetrics DashboardMetric[]
+  maximumVotes       Int                @default(1)
 
-  votes Vote[]
+  allowRevote        Boolean            @default(false)
+
+  blockchainEnabled  Boolean            @default(true)
+
+  auditEnabled       Boolean            @default(true)
+
+  autoPublish        Boolean            @default(false)
+
+  autoArchive        Boolean            @default(false)
+
+  resultVisibility   ResultVisibility   @default(AFTER_CLOSURE)
+
+  // ======================================================
+  // Branding
+  // ======================================================
+
+  banner             String?
+
+  logo               String?
+
+  // ======================================================
+  // Ownership
+  // ======================================================
+
+  createdById        String?
+
+  createdBy          User? @relation("ElectionCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  approvedById       String?
+
+  approvedBy User? @relation("ElectionApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  publishedById String?
+
+  publishedBy User? @relation("ElectionPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
+
+  // ======================================================
+  // Relations
+  // ======================================================
+
+  candidates         Candidate[]
+
+  votes              Vote[]
+
+  reports            ElectionReport[]
+
+  dashboardMetrics   DashboardMetric[]
+
+  // ======================================================
+  // Audit
+  // ======================================================
+
+  createdAt          DateTime           @default(now())
+
+  updatedAt          DateTime           @updatedAt
+
+  // ======================================================
+  // Indexes
+  // ======================================================
 
   @@index([status])
+
   @@index([startDate])
+
   @@index([endDate])
+
   @@index([createdById])
+
+  @@index([electionCode])
+
 }
 
 //////////////////////////////////////////////////////

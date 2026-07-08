@@ -1,16 +1,15 @@
-import { IsDateString, IsString } from 'class-validator';
+import { ElectionType } from '@prisma/client';
 
 export class CreateElectionDto {
-
-  @IsString()
   title!: string;
 
-  @IsString()
-  description!: string;
+  electionCode!: string;
 
-  @IsDateString()
-  startDate!: string;
+  electionType!: ElectionType;
 
-  @IsDateString()
-  endDate!: string;
+  description?: string;
+
+  startDate!: Date;
+
+  endDate!: Date;
 }
