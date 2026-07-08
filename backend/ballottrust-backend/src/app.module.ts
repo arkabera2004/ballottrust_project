@@ -7,80 +7,82 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 import { PrismaModule } from './prisma/prisma.module';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { ProfileModule } from './profile/profile.module';
-import { UploadModule } from './upload/upload.module';
 
-import { ElectionModule } from './election/election.module';
-import { CandidateModule } from './candidate/candidate.module';
-import { VoteModule } from './vote/vote.module';
-import { ResultModule } from './result/result.module';
+// ===============================
+// Modules
+// ===============================
 
-import { BlockchainModule } from './blockchain/blockchain.module';
-import { DashboardModule } from './dashboard/dashboard.module';
-import { CandidatePortalModule } from './candidate-portal/candidate-portal.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
+import { ProfileModule } from './modules/profile/profile.module';
+import { UploadModule } from './modules/upload/upload.module';
 
-import { MailModule } from './mail/mail.module';
+import { ElectionModule } from './modules/election/election.module';
+import { CandidateModule } from './modules/candidate/candidate.module';
+import { VoteModule } from './modules/vote/vote.module';
+import { ResultModule } from './modules/result/result.module';
+
+import { BlockchainModule } from './modules/blockchain/blockchain.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { CandidatePortalModule } from './modules/candidate-portal/candidate-portal.module';
+
+import { MailModule } from './modules/mail/mail.module';
 
 import { AdminController } from './admin.controller';
 
 @Module({
   imports: [
-
+    // =====================================
     // Global Configuration
+    // =====================================
+
     ConfigModule.forRoot({
       isGlobal: true,
     }),
 
-    // Serve Uploaded Files
+    // =====================================
+    // Static File Hosting
+    // =====================================
+
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads',
     }),
 
+    // =====================================
+    // Core
+    // =====================================
+
     PrismaModule,
 
+    // =====================================
+    // Feature Modules
+    // =====================================
+
     AuthModule,
-
     UsersModule,
-
     ProfileModule,
-
     UploadModule,
 
     ElectionModule,
-
     CandidateModule,
-
     VoteModule,
-
     ResultModule,
 
     BlockchainModule,
-
     DashboardModule,
-
     CandidatePortalModule,
 
     MailModule,
-
   ],
 
   controllers: [
-
     AppController,
-
     AdminController,
-
   ],
 
   providers: [
-
     AppService,
-
   ],
-
 })
-
 export class AppModule {}
