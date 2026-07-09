@@ -29,6 +29,7 @@ import { CandidatePortalModule } from './modules/candidate-portal/candidate-port
 import { MailModule } from './modules/mail/mail.module';
 
 import { AdminController } from './admin.controller';
+import { JobsModule } from './modules/jobs/jobs.module';
 
 @Module({
   imports: [
@@ -74,6 +75,7 @@ import { AdminController } from './admin.controller';
     CandidatePortalModule,
 
     MailModule,
+    JobsModule,
   ],
 
   controllers: [

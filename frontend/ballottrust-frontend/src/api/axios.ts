@@ -1,28 +1,71 @@
-import axios, { AxiosError } from 'axios';
-import type { InternalAxiosRequestConfig } from 'axios';
+import axios from 'axios';
+import type {
+  AxiosError,
+  InternalAxiosRequestConfig,
+} from 'axios';
+
 import { ENV } from '../config/env';
 import TokenStorage from '../utils/token-storage';
 
 const api = axios.create({
   baseURL: ENV.API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
+
+// ======================================================
+// REQUEST INTERCEPTOR
+// ======================================================
 
 api.interceptors.request.use(
   (
     config: InternalAxiosRequestConfig,
   ) => {
+    console.log(
+      '================================',
+    );
+    console.log('AXIOS REQUEST');
+
+    console.log(
+      'URL:',
+      `${config.baseURL ?? ''}${config.url ?? ''}`,
+    );
 
     const token =
-  TokenStorage.getAccessToken();
+      TokenStorage.getAccessToken();
+
+    console.log(
+      'TokenStorage Token:',
+      token,
+    );
+
+    console.log(
+      'LocalStorage Token:',
+      localStorage.getItem('token'),
+    );
 
     if (token) {
       config.headers.Authorization =
         `Bearer ${token}`;
+
+      console.log(
+        'Authorization Header Attached',
+      );
+    } else {
+      console.warn(
+        'No access token found.',
+      );
     }
 
     return config;
   },
+  (error) => Promise.reject(error),
 );
+
+// ======================================================
+// REFRESH TOKEN
+// ======================================================
 
 let isRefreshing = false;
 
@@ -31,37 +74,51 @@ let failedQueue: {
   reject: (error: unknown) => void;
 }[] = [];
 
-const processQueue = (
+function processQueue(
   error: unknown,
   token?: string,
-) => {
-
-  failedQueue.forEach((promise) => {
-
-    if (error) {
-      promise.reject(error);
-    } else {
-      promise.resolve(token!);
-    }
-
-  });
+) {
+  failedQueue.forEach(
+    (promise) => {
+      if (error) {
+        promise.reject(error);
+      } else {
+        promise.resolve(token!);
+      }
+    },
+  );
 
   failedQueue = [];
-};
+}
+
+// ======================================================
+// RESPONSE INTERCEPTOR
+// ======================================================
 
 api.interceptors.response.use(
+  (response) => {
+    console.log(
+      `SUCCESS: ${response.config.url} ${response.status}`,
+    );
 
-  (response) => response,
+    return response;
+  },
 
   async (error: AxiosError) => {
-
     const originalRequest =
-      error.config as InternalAxiosRequestConfig & {
-        _retry?: boolean;
-      };
+      error.config as
+        | (InternalAxiosRequestConfig & {
+            _retry?: boolean;
+          })
+        | undefined;
+
+    console.error(
+      `ERROR: ${originalRequest?.url} ${error.response?.status}`,
+    );
 
     if (
       error.response?.status !== 401 ||
+      !originalRequest ||
       originalRequest._retry
     ) {
       return Promise.reject(error);
@@ -70,44 +127,38 @@ api.interceptors.response.use(
     originalRequest._retry = true;
 
     if (isRefreshing) {
+      return new Promise(
+        (resolve, reject) => {
+          failedQueue.push({
+            resolve: (token) => {
+              originalRequest.headers.Authorization =
+                `Bearer ${token}`;
 
-      return new Promise((resolve, reject) => {
-
-        failedQueue.push({
-
-          resolve: (token) => {
-
-            originalRequest.headers.Authorization =
-              `Bearer ${token}`;
-
-            resolve(api(originalRequest));
-
-          },
-
-          reject,
-
-        });
-
-      });
-
+              resolve(
+                api(originalRequest),
+              );
+            },
+            reject,
+          });
+        },
+      );
     }
 
     isRefreshing = true;
 
     try {
-
       const refreshToken =
-  TokenStorage.getRefreshToken();
+        TokenStorage.getRefreshToken();
 
       if (!refreshToken) {
         throw new Error(
-          'No Refresh Token',
+          'No refresh token found.',
         );
       }
 
       const response =
         await axios.post(
-          'http://localhost:3000/auth/refresh',
+          `${ENV.API_URL}/auth/refresh`,
           {
             refreshToken,
           },
@@ -117,8 +168,8 @@ api.interceptors.response.use(
         response.data.access_token;
 
       TokenStorage.setAccessToken(
-  newAccessToken,
-);
+        newAccessToken,
+      );
 
       processQueue(
         null,
@@ -129,8 +180,11 @@ api.interceptors.response.use(
         `Bearer ${newAccessToken}`;
 
       return api(originalRequest);
-
     } catch (err) {
+      console.error(
+        'Refresh Token Failed:',
+        err,
+      );
 
       processQueue(err);
 
@@ -139,13 +193,9 @@ api.interceptors.response.use(
       window.location.href = '/';
 
       return Promise.reject(err);
-
     } finally {
-
       isRefreshing = false;
-
     }
-
   },
 );
 

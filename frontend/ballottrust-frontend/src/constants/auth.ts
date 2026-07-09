@@ -1,15 +1,15 @@
-export const AUTH_KEYS = {
+  export const AUTH_KEYS = {
 
-  ACCESS_TOKEN: 'token',
+    ACCESS_TOKEN: 'token',
 
-  REFRESH_TOKEN: 'refreshToken',
+    REFRESH_TOKEN: 'refreshToken',
 
-  USER: 'user',
+    USER: 'user',
 
-  USER_ROLE: 'userRole',
+    USER_ROLE: 'userRole',
 
-  USER_EMAIL: 'userEmail',
+    USER_EMAIL: 'userEmail',
 
-  USER_ID: 'userId',
+    USER_ID: 'userId',
 
-};
+  };

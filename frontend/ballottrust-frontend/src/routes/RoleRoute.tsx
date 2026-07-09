@@ -1,5 +1,7 @@
 import { Navigate } from 'react-router-dom';
 
+import { useAuth } from '../context/AuthContext';
+
 export default function RoleRoute({
   children,
   allowedRoles,
@@ -7,37 +9,26 @@ export default function RoleRoute({
   children: React.ReactNode;
   allowedRoles: string[];
 }) {
-  const token =
-    localStorage.getItem('token');
+  const {
+    user,
+    loading,
+    isAuthenticated,
+  } = useAuth();
 
-  const role =
-    localStorage.getItem('userRole');
-
-  console.log('ROLE ROUTE ROLE:', role);
-
-  if (!token) {
+  if (loading) {
     return (
-      <Navigate
-        to="/"
-        replace
-      />
+      <div className="flex h-screen items-center justify-center">
+        Loading...
+      </div>
     );
   }
 
-  if (
-    !role ||
-    !allowedRoles.includes(role)
-  ) {
-    console.log(
-      'ROLE NOT ALLOWED'
-    );
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/" replace />;
+  }
 
-    return (
-      <Navigate
-        to="/"
-        replace
-      />
-    );
+  if (!allowedRoles.includes(user.role)) {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

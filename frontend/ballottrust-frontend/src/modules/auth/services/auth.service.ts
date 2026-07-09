@@ -11,61 +11,54 @@ class AuthService {
   }
 
   async login(
-    data: LoginRequest,
-  ): Promise<LoginResponse> {
+  data: LoginRequest,
+    ): Promise<LoginResponse> {
 
-    const response =
-      await api.post<LoginResponse>(
-        '/auth/login',
-        data,
-      );
+      const response =
+        await api.post(
+          '/auth/login',
+          data,
+        );
 
-    return response.data;
-  }
+      return response.data.data;
+    }
 
   async refresh(
-    refreshToken: string,
-  ) {
+  refreshToken: string,
+    ) {
 
-    const response =
-      await api.post(
-        '/auth/refresh',
-        {
-          refreshToken,
-        },
-      );
+      const response =
+        await api.post(
+          '/auth/refresh',
+          {
+            refreshToken,
+          },
+        );
 
-    return response.data;
+      return response.data.data;
+    }
 
-  }
+ async logout(
+  refreshToken: string,
+    ) {
 
-  async logout(
-    refreshToken: string,
-  ) {
+      const response =
+        await api.post(
+          '/auth/logout',
+          {
+            refreshToken,
+          },
+        );
 
-    const response =
-      await api.post(
-        '/auth/logout',
-        {
-          refreshToken,
-        },
-      );
-
-    return response.data;
-
-  }
+      return response.data.data;
+    }
 
   async getProfile() {
-
-  const response =
-    await api.get('/auth/profile');
-
-  return response.data;
-
+      const response =
+        await api.get(
+          '/auth/profile',
+        );
+      return response.data.data;
+    }
 }
-
-  
-
-}
-
 export default new AuthService();

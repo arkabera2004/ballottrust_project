@@ -7,7 +7,7 @@ import { ElectionController } from './controllers';
 
 import { ElectionRepository } from './repository';
 
-import { ElectionValidator } from './validators';
+import { ElectionValidator, ElectionWorkflowValidator } from './validators';
 
 import {
   CreateElectionService,
@@ -17,6 +17,8 @@ import {
   DeleteElectionService,
   SubmitElectionForApprovalService,
   ApproveElectionService,
+  PublishElectionService,
+  ListElectionsService,
 } from './services';
 
 @Module({
@@ -31,6 +33,7 @@ import {
   providers: [
     ElectionRepository,
     ElectionValidator,
+    ElectionWorkflowValidator,
     ElectionCodeGenerator,
     CreateElectionService,
     UpdateElectionService,
@@ -39,6 +42,8 @@ import {
     DeleteElectionService,
     SubmitElectionForApprovalService,
     ApproveElectionService,
+    PublishElectionService,
+    ListElectionsService,
 ],
 
   exports: [

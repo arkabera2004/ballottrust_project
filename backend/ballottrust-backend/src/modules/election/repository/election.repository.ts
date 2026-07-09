@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma, Election, ElectionStatus } from '@prisma/client';
 import { NotFoundException } from '@nestjs/common';
+import { QueryElectionDto } from '../dto/query-election.dto';
 
 @Injectable()
 export class ElectionRepository {
@@ -121,15 +122,101 @@ async electionCodeExists(
   return !!election;
 }
 
-async findAll(): Promise<Election[]> {
-  return this.prisma.election.findMany({
-    where: {
-      deletedAt: null,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+async findAll(query: QueryElectionDto) {
+
+  const {
+    search,
+    status,
+    type,
+    page,
+    limit,
+  } = query;
+
+  const where: Prisma.ElectionWhereInput = {
+
+    deletedAt: null,
+
+    ...(status && {
+      status,
+    }),
+
+    ...(type && {
+      electionType: type,
+    }),
+
+    ...(search && {
+
+      OR: [
+
+        {
+          title: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+
+        {
+          electionCode: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+
+        {
+          description: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+
+      ],
+
+    }),
+
+  };
+
+  const [data, total] =
+    await this.prisma.$transaction([
+
+      this.prisma.election.findMany({
+
+        where,
+
+        skip:
+          (page - 1) * limit,
+
+        take:
+          limit,
+
+        orderBy: {
+          createdAt: 'desc',
+        },
+
+      }),
+
+      this.prisma.election.count({
+        where,
+      }),
+
+    ]);
+
+  return {
+
+    data,
+
+    total,
+
+    page,
+
+    limit,
+
+    totalPages:
+      Math.ceil(
+        total / limit,
+      ),
+
+  };
+
 }
 
 // ======================================================
@@ -198,6 +285,156 @@ async approveElection(
     data: {
       status: ElectionStatus.APPROVED,
       approvedById,
+      approvedAt: new Date(),
+    },
+  });
+}
+
+// ======================================================
+// Publish Election
+// ======================================================
+
+async publishElection(
+  id: string,
+  publishedById: string,
+) {
+  return this.prisma.election.update({
+    where: {
+      id,
+    },
+    data: {
+      status: ElectionStatus.PUBLISHED,
+      publishedById,
+      publishedAt: new Date(),
+    },
+  });
+}
+
+// ======================================================
+// Published Elections Ready For Activation
+// ======================================================
+
+async findPublishedReadyToActivate() {
+
+  return this.prisma.election.findMany({
+
+    where: {
+
+      status: ElectionStatus.PUBLISHED,
+
+      deletedAt: null,
+
+      startDate: {
+        lte: new Date(),
+      },
+
+    },
+
+  });
+
+}
+
+// ======================================================
+// Activate Election
+// ======================================================
+
+async activateElection(
+  id: string,
+) {
+
+  return this.prisma.election.update({
+
+    where: {
+      id,
+    },
+
+    data: {
+      status: ElectionStatus.ACTIVE,
+    },
+
+  });
+
+}
+
+// ======================================================
+// Active Elections Ready To Close
+// ======================================================
+
+async findActiveReadyToClose() {
+  return this.prisma.election.findMany({
+    where: {
+      status: ElectionStatus.ACTIVE,
+      deletedAt: null,
+      endDate: {
+        lte: new Date(),
+      },
+    },
+  });
+}
+
+// ======================================================
+// Close Election
+// ======================================================
+
+async closeElection(id: string) {
+  return this.prisma.election.update({
+    where: {
+      id,
+    },
+    data: {
+      status: ElectionStatus.VOTING_CLOSED,
+      closedAt: new Date(),
+    },
+  });
+}
+
+// ======================================================
+// Elections Ready To Publish Results
+// ======================================================
+
+async findReadyToPublishResults() {
+  return this.prisma.election.findMany({
+    where: {
+      status: ElectionStatus.VOTING_CLOSED,
+      deletedAt: null,
+      autoPublish: true,
+    },
+  });
+}
+
+// ======================================================
+// Publish Results
+// ======================================================
+
+async publishResults(
+  id: string,
+) {
+  return this.prisma.election.update({
+    where: {
+      id,
+    },
+    data: {
+      status: ElectionStatus.RESULT_PUBLISHED,
+      resultDate: new Date(),
+    },
+  });
+}
+
+async findReadyToArchive() {
+  return this.prisma.election.findMany({
+    where: {
+      status: ElectionStatus.RESULT_PUBLISHED,
+      deletedAt: null,
+      autoArchive: true,
+    },
+  });
+}
+
+async archiveElection(id: string) {
+  return this.prisma.election.update({
+    where: { id },
+    data: {
+      status: ElectionStatus.ARCHIVED,
     },
   });
 }

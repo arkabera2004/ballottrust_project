@@ -8,7 +8,7 @@ export class GetElectionService {
     private readonly repository: ElectionRepository,
   ) {}
 
-  async getAll() {
-    return this.repository.findAll();
+  async getAll(filter?: any) {
+    return this.repository.findAll(filter);
   }
 }

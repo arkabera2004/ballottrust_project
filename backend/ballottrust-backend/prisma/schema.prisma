@@ -348,6 +348,8 @@ model Election {
 
   approvedBy User? @relation("ElectionApprover", fields: [approvedById], references: [id], onDelete: SetNull)
 
+  approvedAt DateTime?
+
   publishedById String?
 
   publishedBy User? @relation("ElectionPublisher", fields: [publishedById], references: [id], onDelete: SetNull)

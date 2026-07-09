@@ -8,9 +8,7 @@ class TokenStorage {
     );
   }
 
-  setAccessToken(
-    token: string,
-  ) {
+  setAccessToken(token: string) {
     localStorage.setItem(
       AUTH_KEYS.ACCESS_TOKEN,
       token,
@@ -23,9 +21,7 @@ class TokenStorage {
     );
   }
 
-  setRefreshToken(
-    token: string,
-  ) {
+  setRefreshToken(token: string) {
     localStorage.setItem(
       AUTH_KEYS.REFRESH_TOKEN,
       token,
@@ -33,35 +29,46 @@ class TokenStorage {
   }
 
   getUser() {
+    const user = localStorage.getItem(
+      AUTH_KEYS.USER,
+    );
 
-    const user =
-      localStorage.getItem(
+    if (
+      !user ||
+      user === 'undefined' ||
+      user === 'null'
+    ) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(user);
+    } catch (error) {
+      console.error(
+        'Invalid user in localStorage:',
+        error,
+      );
+
+      localStorage.removeItem(
         AUTH_KEYS.USER,
       );
 
-    return user
-      ? JSON.parse(user)
-      : null;
+      return null;
+    }
   }
 
   setUser(user: unknown) {
-
     localStorage.setItem(
       AUTH_KEYS.USER,
       JSON.stringify(user),
     );
-
   }
 
   clear() {
-
     Object.values(AUTH_KEYS).forEach(
       (key) =>
-        localStorage.removeItem(
-          key,
-        ),
+        localStorage.removeItem(key),
     );
-
   }
 
 }

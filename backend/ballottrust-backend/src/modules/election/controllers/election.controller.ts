@@ -6,12 +6,13 @@ import {
   Patch,
   Delete,
   Param,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 
 import { Role } from '@prisma/client';
 
-import { CreateElectionDto } from '../dto';
+import { CreateElectionDto, QueryElectionDto } from '../dto';
 import { CreateElectionService } from '../services';
 
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -23,10 +24,11 @@ import type { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
 import { UpdateElectionService } from '../services';
 import {UpdateElectionDto} from '../dto';
 import { GetElectionService} from '../services';
-import {GetElectionByIdService} from '../services';
+import {GetElectionByIdService, ListElectionsService} from '../services';
 import {DeleteElectionService} from '../services';
 import {SubmitElectionForApprovalService} from '../services';
 import { ApproveElectionService } from '../services';
+import { PublishElectionService } from '../services';
 
 @Controller('elections')
 export class ElectionController {
@@ -38,6 +40,8 @@ export class ElectionController {
   private readonly deleteElectionService: DeleteElectionService,
   private readonly submitElectionForApprovalService: SubmitElectionForApprovalService,
   private readonly approveElectionService: ApproveElectionService,
+  private readonly publishElectionService: PublishElectionService,
+  private readonly listElectionsService: ListElectionsService,
   ) {}
 
   @Post()
@@ -71,10 +75,15 @@ export class ElectionController {
       );
     }
 
-    @Get()
+   @Get()
     @UseGuards(JwtAuthGuard)
-    async findAll() {
-        return this.getElectionService.getAll();
+    findAll(
+      @Query()
+      query: QueryElectionDto,
+    ) {
+      return this.listElectionsService.execute(
+        query,
+      );
     }
 
     @Get(':id')
@@ -123,6 +132,22 @@ export class ElectionController {
         @CurrentUser() user: JwtPayload,
       ) {
         return this.approveElectionService.execute(
+          id,
+          user.id,
+        );
+      }
+
+      @Patch(':id/publish')
+      @UseGuards(JwtAuthGuard, RolesGuard)
+      @Roles(
+        Role.ELECTION_COMMISSIONER,
+        Role.SUPER_ADMIN,
+      )
+      async publish(
+        @Param('id') id: string,
+        @CurrentUser() user: JwtPayload,
+      ) {
+        return this.publishElectionService.execute(
           id,
           user.id,
         );
