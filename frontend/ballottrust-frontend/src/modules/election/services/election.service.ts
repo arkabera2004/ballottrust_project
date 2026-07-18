@@ -140,6 +140,54 @@ async getById(id: string) {
 
   }
 
+  // ======================================================
+// Start Election
+// ======================================================
+
+async start(id: string) {
+  const response = await api.patch(
+    `/elections/${id}/start`,
+  );
+
+  return response.data;
+}
+
+// ======================================================
+// Close Election
+// ======================================================
+
+async close(id: string) {
+  const response = await api.patch(
+    `/elections/${id}/close`,
+  );
+
+  return response.data;
+}
+
+// ======================================================
+// Publish Results
+// ======================================================
+
+async publishResults(id: string) {
+  const response = await api.patch(
+    `/elections/${id}/publish-results`,
+  );
+
+  return response.data;
+}
+
+// ======================================================
+// Archive Election
+// ======================================================
+
+async archive(id: string) {
+  const response = await api.patch(
+    `/elections/${id}/archive`,
+  );
+
+  return response.data;
+}
+
 }
 
 export default new ElectionService();

@@ -1,31 +1,27 @@
 import { StrictMode } from 'react';
-
-import { createRoot }
-from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
+import { Toaster } from 'react-hot-toast';
 
 import './index.css';
 
 import App from './App';
 
-import {
-  AuthProvider,
-} from './context/AuthContext';
-import { Toaster } from 'react-hot-toast';
+import { AuthProvider } from './context/AuthContext';
+import { ElectionProvider } from './modules/election/context/ElectionContext';
 
 createRoot(
-  document.getElementById('root')!
+  document.getElementById('root')!,
 ).render(
   <StrictMode>
-
     <AuthProvider>
-      <Toaster
-  position="top-right"
-  reverseOrder={false}
-/>
+      <ElectionProvider>
+        <Toaster
+          position="top-right"
+          reverseOrder={false}
+        />
 
-      <App />
-
+        <App />
+      </ElectionProvider>
     </AuthProvider>
-
-  </StrictMode>
+  </StrictMode>,
 );

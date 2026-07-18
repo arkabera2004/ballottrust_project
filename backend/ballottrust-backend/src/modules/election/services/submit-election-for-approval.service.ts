@@ -1,28 +1,27 @@
-import {
-  Injectable,
-  BadRequestException,
-} from '@nestjs/common';
-
-import { ElectionStatus } from '@prisma/client';
+import { Injectable } from '@nestjs/common';
 
 import { ElectionRepository } from '../repository';
+import { ElectionWorkflowValidator } from '../validators';
 
 @Injectable()
 export class SubmitElectionForApprovalService {
+
   constructor(
     private readonly repository: ElectionRepository,
+    private readonly workflowValidator: ElectionWorkflowValidator,
   ) {}
 
   async execute(id: string) {
+
     const election =
       await this.repository.findByIdOrThrow(id);
 
-    if (election.status !== ElectionStatus.DRAFT) {
-      throw new BadRequestException(
-        'Only draft elections can be submitted for approval.',
-      );
-    }
+    this.workflowValidator.ensureCanSubmit(
+      election.status,
+    );
 
     return this.repository.submitForApproval(id);
+
   }
+
 }

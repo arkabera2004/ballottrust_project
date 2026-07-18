@@ -96,9 +96,7 @@ export default function ElectionsPage() {
 
       <DataTable
         data={elections}
-        columns={electionColumns(
-          handleDelete,
-        )}
+        columns={electionColumns}
       />
 
       <Pagination

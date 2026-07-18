@@ -1,33 +1,39 @@
-import {
-  Injectable,
-} from '@nestjs/common';
-
-import { ElectionStatus } from '@prisma/client';
+import { Injectable } from '@nestjs/common';
 
 import { ElectionRepository } from '../repository';
 import { ElectionWorkflowValidator } from '../validators';
 
 @Injectable()
 export class PublishElectionService {
+
   constructor(
     private readonly repository: ElectionRepository,
-    private readonly workflow: ElectionWorkflowValidator,
+    private readonly workflowValidator: ElectionWorkflowValidator,
   ) {}
 
   async execute(
     id: string,
     publishedById: string,
   ) {
+
     const election =
       await this.repository.findByIdOrThrow(id);
 
-    this.workflow.ensureCanPublish(
+    this.workflowValidator.ensureCanPublish(
       election.status,
     );
 
-    return this.repository.publishElection(
-      id,
-      publishedById,
-    );
+    const publishedElection =
+      await this.repository.publishElection(
+        id,
+        publishedById,
+      );
+
+    return {
+      message: 'Election published successfully.',
+      data: publishedElection,
+    };
+
   }
+
 }

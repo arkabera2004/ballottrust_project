@@ -3,3 +3,7 @@ export * from './useElections';
 export * from './useCreateElection';
 export * from './useUpdateElection';
 export * from './useDeleteElection';
+export * from './useStartElection';
+export * from './useCloseElection';
+export * from './usePublishResults';
+export * from './useArchiveElection';

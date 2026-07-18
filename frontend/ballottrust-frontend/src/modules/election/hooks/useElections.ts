@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { ElectionService } from '../services';
+import { useElectionRefresh } from '../context/ElectionContext';
 
 import type {
   Election,
@@ -10,6 +11,9 @@ import type {
 export function useElections(
   query?: QueryElectionDto,
 ) {
+  const { refreshKey } =
+    useElectionRefresh();
+
   const [loading, setLoading] =
     useState(true);
 
@@ -25,10 +29,6 @@ export function useElections(
   const [totalPages, setTotalPages] =
     useState(1);
 
-  useEffect(() => {
-    load();
-  }, [JSON.stringify(query)]);
-
   async function load() {
     try {
       setLoading(true);
@@ -38,9 +38,13 @@ export function useElections(
           query,
         );
 
-      setElections(result.data);
+      setElections(
+        result.data,
+      );
 
-      setTotal(result.total);
+      setTotal(
+        result.total,
+      );
 
       setTotalPages(
         result.totalPages,
@@ -61,6 +65,13 @@ export function useElections(
 
     }
   }
+
+  useEffect(() => {
+    load();
+  }, [
+    JSON.stringify(query),
+    refreshKey,
+  ]);
 
   return {
 

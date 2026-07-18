@@ -136,7 +136,7 @@ async findAll(query: QueryElectionDto) {
 
     deletedAt: null,
 
-    ...(status && {
+    ...(status && { 
       status,
     }),
 
@@ -298,16 +298,27 @@ async publishElection(
   id: string,
   publishedById: string,
 ) {
+
   return this.prisma.election.update({
+
     where: {
       id,
     },
+
     data: {
-      status: ElectionStatus.PUBLISHED,
+
+      status:
+        ElectionStatus.PUBLISHED,
+
       publishedById,
-      publishedAt: new Date(),
+
+      publishedAt:
+        new Date(),
+
     },
+
   });
+
 }
 
 // ======================================================
@@ -437,6 +448,72 @@ async archiveElection(id: string) {
       status: ElectionStatus.ARCHIVED,
     },
   });
+}
+
+async publishElectionTransaction(
+  id: string,
+  publishedById: string,
+) {
+
+  return this.prisma.$transaction(
+    async (tx) => {
+
+      const election =
+        await tx.election.update({
+
+          where: {
+            id,
+          },
+
+          data: {
+
+            status:
+              ElectionStatus.PUBLISHED,
+
+            publishedById,
+
+            publishedAt:
+              new Date(),
+
+          },
+
+        });
+
+      // =====================================
+      // TODO
+      // Audit Log
+      // =====================================
+
+      /*
+      await tx.auditLog.create({
+
+        data: {
+
+          ...
+
+        },
+
+      });
+      */
+
+      // =====================================
+      // TODO
+      // Notification
+      // =====================================
+
+      /*
+      await tx.notification.create({
+
+        ...
+
+      });
+      */
+
+      return election;
+
+    },
+  );
+
 }
 
 }

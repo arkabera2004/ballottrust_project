@@ -1,31 +1,12 @@
-import type {
-  ColumnDef,
-} from '@tanstack/react-table';
+import type { ColumnDef } from '@tanstack/react-table';
 
-import {
-  Eye,
-  Pencil,
-  Trash2,
-  Upload,
-} from 'lucide-react';
+import type { Election } from '../types';
 
-import {
-  Link,
-} from 'react-router-dom';
-
-import Button from '../../../components/buttons/Button';
 import StatusBadge from '../../../components/badges/StatusBadge';
 
-import type {
-  Election,
-} from '../types';
+import ElectionActions from '../components/ElectionActions';
 
-export const electionColumns = (
-  onDelete: (
-    id: string,
-  ) => void,
-): ColumnDef<Election>[] => [
-
+export const electionColumns: ColumnDef<Election>[] = [
   {
     accessorKey: 'electionCode',
     header: 'Code',
@@ -43,21 +24,17 @@ export const electionColumns = (
 
   {
     accessorKey: 'status',
-
     header: 'Status',
 
     cell: ({ row }) => (
-
       <StatusBadge
         status={row.original.status}
       />
-
     ),
   },
 
   {
     accessorKey: 'startDate',
-
     header: 'Start',
 
     cell: ({ row }) =>
@@ -68,7 +45,6 @@ export const electionColumns = (
 
   {
     accessorKey: 'endDate',
-
     header: 'End',
 
     cell: ({ row }) =>
@@ -79,65 +55,12 @@ export const electionColumns = (
 
   {
     id: 'actions',
-
     header: 'Actions',
 
-    cell: ({ row }) => {
-
-      const election =
-        row.original;
-
-      return (
-
-        <div className="flex items-center gap-2">
-
-          <Link
-            to={`/elections/${election.id}`}
-          >
-            <Button
-              size="sm"
-              variant="outline"
-            >
-              <Eye size={16} />
-            </Button>
-          </Link>
-
-          <Link
-            to={`/elections/${election.id}/edit`}
-          >
-            <Button
-              size="sm"
-              variant="secondary"
-            >
-              <Pencil size={16} />
-            </Button>
-          </Link>
-
-          <Button
-            size="sm"
-            variant="success"
-          >
-            <Upload size={16} />
-          </Button>
-
-          <Button
-            size="sm"
-            variant="danger"
-            onClick={() =>
-              onDelete(
-                election.id,
-              )
-            }
-          >
-            <Trash2 size={16} />
-          </Button>
-
-        </div>
-
-      );
-
-    },
-
+    cell: ({ row }) => (
+      <ElectionActions
+        election={row.original}
+      />
+    ),
   },
-
 ];

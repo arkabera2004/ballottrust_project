@@ -13,22 +13,29 @@ import {
 import { Role } from '@prisma/client';
 
 import { CreateElectionDto, QueryElectionDto } from '../dto';
-import { CreateElectionService } from '../services';
-
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 
 import type { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
-import { UpdateElectionService } from '../services';
 import {UpdateElectionDto} from '../dto';
-import { GetElectionService} from '../services';
-import {GetElectionByIdService, ListElectionsService} from '../services';
-import {DeleteElectionService} from '../services';
-import {SubmitElectionForApprovalService} from '../services';
-import { ApproveElectionService } from '../services';
-import { PublishElectionService } from '../services';
+import {
+  CreateElectionService,
+  UpdateElectionService,
+  GetElectionService,
+  GetElectionByIdService,
+  ListElectionsService,
+  DeleteElectionService,
+  SubmitElectionForApprovalService,
+  ApproveElectionService,
+  PublishElectionService,
+  StartElectionService,
+  CloseElectionService,
+  PublishResultsService,
+  ArchiveElectionService,
+} from '../services';
+
 
 @Controller('elections')
 export class ElectionController {
@@ -41,8 +48,12 @@ export class ElectionController {
   private readonly submitElectionForApprovalService: SubmitElectionForApprovalService,
   private readonly approveElectionService: ApproveElectionService,
   private readonly publishElectionService: PublishElectionService,
+  private readonly startElectionService: StartElectionService,
+  private readonly closeElectionService: CloseElectionService,
+  private readonly publishResultsService: PublishResultsService,
+  private readonly archiveElectionService: ArchiveElectionService,
   private readonly listElectionsService: ListElectionsService,
-  ) {}
+) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -150,6 +161,63 @@ export class ElectionController {
         return this.publishElectionService.execute(
           id,
           user.id,
+        );
+      }
+
+      @Patch(':id/start')
+      @UseGuards(JwtAuthGuard, RolesGuard)
+      @Roles(
+        Role.ELECTION_COMMISSIONER,
+        Role.SUPER_ADMIN,
+      )
+      async start(
+        @Param('id') id: string,
+      ) {
+        return this.startElectionService.execute(
+          id,
+        );
+      }
+
+      @Patch(':id/close')
+      @UseGuards(JwtAuthGuard, RolesGuard)
+      @Roles(
+        Role.ELECTION_COMMISSIONER,
+        Role.SUPER_ADMIN,
+      )
+      async close(
+        @Param('id') id: string,
+      ) {
+        return this.closeElectionService.execute(
+          id,
+        );
+      }
+
+
+      @Patch(':id/publish-results')
+      @UseGuards(JwtAuthGuard, RolesGuard)
+      @Roles(
+        Role.ELECTION_COMMISSIONER,
+        Role.SUPER_ADMIN,
+      )
+      async publishResults(
+        @Param('id') id: string,
+      ) {
+        return this.publishResultsService.execute(
+          id,
+        );
+      }
+
+      @Patch(':id/archive')
+      @UseGuards(JwtAuthGuard, RolesGuard)
+      @Roles(
+        Role.ELECTION_COMMISSIONER,
+        Role.SUPER_ADMIN,
+      )
+      async archive(
+        @Param('id') id: string,
+      ) {
+        return this.archiveElectionService.execute(
+          id,
         );
       }
 }

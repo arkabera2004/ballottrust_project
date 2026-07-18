@@ -19,6 +19,10 @@ import {
   ApproveElectionService,
   PublishElectionService,
   ListElectionsService,
+  StartElectionService,
+  CloseElectionService,
+  PublishResultsService,
+  ArchiveElectionService,
 } from './services';
 
 @Module({
@@ -44,6 +48,10 @@ import {
     ApproveElectionService,
     PublishElectionService,
     ListElectionsService,
+    StartElectionService,
+    CloseElectionService,
+    PublishResultsService,
+    ArchiveElectionService,
 ],
 
   exports: [
