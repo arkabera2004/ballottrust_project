@@ -1,31 +1,26 @@
 import {
+  IsEnum,
   IsOptional,
   IsString,
+  IsUUID,
 } from 'class-validator';
 
+import { CandidateType } from '@prisma/client';
+
 export class CreateCandidateDto {
-  @IsString()
-  name!: string;
+  @IsUUID()
+  electionId!: string;
+
+  @IsEnum(CandidateType)
+  candidateType!: CandidateType;
 
   @IsOptional()
-  @IsString()
-  email?: string;
-
-  @IsOptional()
-  @IsString()
-  registrationNumber?: string;
-
-  @IsOptional()
-  @IsString()
-  department?: string;
+  @IsUUID()
+  partyId?: string;
 
   @IsOptional()
   @IsString()
   position?: string;
-
-  @IsOptional()
-  @IsString()
-  bio?: string;
 
   @IsOptional()
   @IsString()
@@ -41,12 +36,13 @@ export class CreateCandidateDto {
 
   @IsOptional()
   @IsString()
+  nominationStatement?: string;
+
+  @IsOptional()
+  @IsString()
   photoUrl?: string;
 
   @IsOptional()
   @IsString()
   documentUrl?: string;
-
-  @IsString()
-  electionId!: string;
 }

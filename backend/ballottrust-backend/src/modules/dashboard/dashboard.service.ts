@@ -4,193 +4,286 @@ import { PrismaService } from '../../prisma/prisma.service';
 @Injectable()
 export class DashboardService {
   constructor(
-    private prisma: PrismaService,
+    private readonly prisma: PrismaService,
   ) {}
 
+  // ======================================================
+  // Dashboard Statistics
+  // ======================================================
 
-async getStats() {
-  const elections =
-    await this.prisma.election.count();
+  async getStats() {
+    const elections =
+      await this.prisma.election.count({
+        where: {
+          deletedAt: null,
+        },
+      });
 
-  const candidates =
-    await this.prisma.candidate.count();
+    const candidates =
+      await this.prisma.candidate.count({
+        where: {
+          deletedAt: null,
+        },
+      });
 
-  const votes =
-    await this.prisma.vote.count();
+    const votes =
+      await this.prisma.vote.count();
 
-  const activeElections =
-    await this.prisma.election.count({
-      where: {
-        status: 'ACTIVE',
-      }, 
-    });
+    const activeElections =
+      await this.prisma.election.count({
+        where: {
+          status: 'ACTIVE',
+          deletedAt: null,
+        },
+      });
 
-  const closedElections =
-    await this.prisma.election.count({
-      where: {
-        status: 'VOTING_CLOSED',
-      },
-    });
+    const closedElections =
+      await this.prisma.election.count({
+        where: {
+          status: 'VOTING_CLOSED',
+          deletedAt: null,
+        },
+      });
 
-  const draftElections =
-    await this.prisma.election.count({
-      where: {
-        status: 'DRAFT',
-      },
-    });
+    const draftElections =
+      await this.prisma.election.count({
+        where: {
+          status: 'DRAFT',
+          deletedAt: null,
+        },
+      });
 
-  const recentElections =
-    await this.prisma.election.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: 5,
-    });
+    const recentElections =
+      await this.prisma.election.findMany({
+        where: {
+          deletedAt: null,
+        },
+
+        orderBy: {
+          createdAt: 'desc',
+        },
+
+        take: 5,
+      });
 
     const registeredVoters =
-  await this.prisma.user.count({
-    where: {
-      role: 'VOTER',
-    },
-  });
+      await this.prisma.user.count({
+        where: {
+          role: 'VOTER',
+          deletedAt: null,
+        },
+      });
 
-  const pendingVoters =
-  await this.prisma.user.count({
-    where: {
-      role: 'VOTER',
-      status: 'PENDING',
-    },
-  });
+    const pendingVoters =
+      await this.prisma.user.count({
+        where: {
+          role: 'VOTER',
+          status: 'PENDING',
+          deletedAt: null,
+        },
+      });
 
-const turnout =
-  registeredVoters === 0
-    ? 0
-    : (
-        (votes / registeredVoters) *
-        100
-      ).toFixed(1);
+    const turnout =
+      registeredVoters === 0
+        ? 0
+        : Number(
+            (
+              (votes / registeredVoters) *
+              100
+            ).toFixed(1),
+          );
 
-
-
-
-  return {
-  elections,
-  candidates,
-  votes,
-
-  activeElections,
-  closedElections,
-  draftElections,
-
-  registeredVoters,
-  pendingVoters,
-  
-  turnout,
-
-  recentElections,
-};
-}
-
-async getWinnerSummary() {
-
-  const latestElection =
-    await this.prisma.election.findFirst({
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-
-  if (!latestElection) {
     return {
-      message: 'No elections found',
+      elections,
+      candidates,
+      votes,
+
+      activeElections,
+      closedElections,
+      draftElections,
+
+      registeredVoters,
+      pendingVoters,
+
+      turnout,
+
+      recentElections,
     };
   }
 
-  const candidates =
-    await this.prisma.candidate.findMany({
-      where: {
-        electionId: latestElection.id,
-      },
-      include: {
-        votes: true,
-      },
-    });
+  // ======================================================
+  // Latest Election Winner
+  // ======================================================
 
-  if (candidates.length === 0) {
+  async getWinnerSummary() {
+    const latestElection =
+      await this.prisma.election.findFirst({
+        where: {
+          deletedAt: null,
+        },
+
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+    if (!latestElection) {
+      return {
+        message: 'No elections found',
+      };
+    }
+
+    const candidates =
+      await this.prisma.candidate.findMany({
+        where: {
+          electionId: latestElection.id,
+          deletedAt: null,
+          status: 'APPROVED',
+        },
+
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+            },
+          },
+
+          votes: true,
+        },
+      });
+
+    if (candidates.length === 0) {
+      return {
+        message: 'No candidates found',
+      };
+    }
+
+    const results = candidates.map(
+      (candidate) => ({
+        candidateId: candidate.id,
+
+        candidateName:
+          candidate.user.fullName,
+
+        candidateNumber:
+          candidate.candidateNumber,
+
+        votes:
+          candidate.votes.length,
+      }),
+    );
+
+    results.sort(
+      (a, b) =>
+        b.votes - a.votes,
+    );
+
     return {
-      message: 'No candidates found',
+      electionId:
+        latestElection.id,
+
+      election:
+        latestElection.title,
+
+      winner:
+        results[0],
     };
   }
 
-  const results = candidates.map(
-    (candidate) => ({
-      candidateId: candidate.id,
-      candidateName: candidate.name,
-      votes: candidate.votes.length,
-    }),
-  );
+  // ======================================================
+  // Election Results Chart
+  // ======================================================
 
-  results.sort(
-    (a, b) => b.votes - a.votes,
-  );
+  async getResultsChart(
+    electionId: string,
+  ) {
+    const candidates =
+      await this.prisma.candidate.findMany({
+        where: {
+          electionId,
+          deletedAt: null,
+          status: 'APPROVED',
+        },
 
-  return {
-    election: latestElection.title,
-    winner: results[0],
-  };
-}
+        include: {
+          user: {
+            select: {
+              fullName: true,
+            },
+          },
 
-async getResultsChart(
-  electionId: string,
-) {
-  const candidates =
-    await this.prisma.candidate.findMany({
-      where: {
-        electionId,
-      },
-      include: {
-        votes: true,
-      },
-    });
+          votes: true,
+        },
+      });
 
-  return candidates.map(
-    (candidate) => ({
-      name: candidate.name,
-      votes: candidate.votes.length,
-    }),
-  );
-}
+    return candidates.map(
+      (candidate) => ({
+        candidateId:
+          candidate.id,
 
-async getCurrentElection() {
-  const election =
-    await this.prisma.election.findFirst({
-      where: {
-        status: 'ACTIVE',
-      },
-      include: {
-        candidates: true,
-        votes: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+        candidateNumber:
+          candidate.candidateNumber,
 
-  if (!election) {
-    return null;
+        name:
+          candidate.user.fullName,
+
+        votes:
+          candidate.votes.length,
+      }),
+    );
   }
 
-  return {
-    title: election.title,
-    status: election.status,
-    candidates:
-      election.candidates.length,
-    votes:
-      election.votes.length,
-  };
-}
+  // ======================================================
+  // Current Active Election
+  // ======================================================
 
+  async getCurrentElection() {
+    const election =
+      await this.prisma.election.findFirst({
+        where: {
+          status: 'ACTIVE',
+          deletedAt: null,
+        },
 
+        include: {
+          candidates: {
+            where: {
+              status: 'APPROVED',
+              deletedAt: null,
+            },
+          },
 
+          votes: true,
+        },
 
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+    if (!election) {
+      return null;
+    }
+
+    return {
+      id:
+        election.id,
+
+      title:
+        election.title,
+
+      electionCode:
+        election.electionCode,
+
+      status:
+        election.status,
+
+      candidates:
+        election.candidates.length,
+
+      votes:
+        election.votes.length,
+    };
+  }
 }

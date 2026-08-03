@@ -7,9 +7,550 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-//////////////////////////////////////////////////////
-// ENUMS
-//////////////////////////////////////////////////////
+model User {
+  id                            String           @id @default(uuid())
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  fullName                      String
+  email                         String           @unique
+  password                      String?
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  createdAt                     DateTime         @default(now())
+  role                          Role             @default(VOTER)
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  department                    String?
+  profilePhoto                  String?
+  registrationNumber            String?
+  status                        UserStatus       @default(PENDING)
+  studentIdCard                 String?
+  updatedAt                     DateTime         @updatedAt
+  emailVerified                 Boolean          @default(false)
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  failedLoginAttempts           Int              @default(0)
+  lastLogin                     DateTime?
+  lockedUntil                   DateTime?
+  phoneNumber                   String?
+  profileCompleted              Boolean          @default(false)
+  providerId                    String?
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  address                       String?
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  avatarUrl                     String?
+  bio                           String?
+  city                          String?
+  country                       String?
+  course                        String?
+  dateOfBirth                   DateTime?
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  deletedAt                     DateTime?
+  gender                        String?
+  lastPasswordChange            DateTime?
+  mfaEnabled                    Boolean          @default(false)
+  mfaSecret                     String?
+  postalCode                    String?
+  semester                      Int?
+  state                         String?
+  year                          Int?
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  provider                      AuthProvider     @default(LOCAL)
+  emailVerificationOtp          String?
+  emailVerificationOtpExpiresAt DateTime?
+  passwordResetToken            String?
+  passwordResetTokenExpiresAt   DateTime?
+  avatar                        String?
+  googleLinked                  Boolean          @default(false)
+  auditLogs                     AuditLog[]
+  candidates                    Candidate[]      @relation("CandidateUser")
+  verifiedCandidates            Candidate[]      @relation("CandidateVerifiedBy")
+  approvedCandidates            Candidate[]      @relation("CandidateApprovedBy")
+  approvedElections             Election[]       @relation("ElectionApprover")
+  createdElections              Election[]       @relation("ElectionCreator")
+  publishedElections            Election[]       @relation("ElectionPublisher")
+  reports                       ElectionReport[]
+  notifications                 Notification[]
+  refreshTokens                 RefreshToken[]
+  sessions                      Session[]
+  votes                         Vote[]
+
+  @@index([email])
+  @@index([role])
+  @@index([status])
+  @@index([provider])
+  @@index([department])
+  @@index([registrationNumber])
+  @@index([emailVerified])
+  @@index([failedLoginAttempts])
+}
+
+model Election {
+  id                String             @id @default(uuid())
+  title             String
+  description       String?
+  startDate         DateTime
+  endDate           DateTime
+  status            ElectionStatus     @default(DRAFT)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  closedAt          DateTime?
+  createdById       String?
+  deletedAt         DateTime?
+  publishedAt       DateTime?
+  allowRevote       Boolean            @default(false)
+  approvedById      String?
+  auditEnabled      Boolean            @default(true)
+  autoArchive       Boolean            @default(false)
+  autoPublish       Boolean            @default(false)
+  banner            String?
+  blockchainEnabled Boolean            @default(true)
+  campaignEnd       DateTime?
+  campaignStart     DateTime?
+  candidateLimit    Int                @default(0)
+  electionCode      String             @unique
+  electionType      ElectionType
+  ballotOrderMethod BallotOrderMethod?
+  logo              String?
+  maximumVotes      Int                @default(1)
+  nominationEnd     DateTime?
+  nominationStart   DateTime?
+  publishedById     String?
+  registrationEnd   DateTime?
+  registrationStart DateTime?
+  resultDate        DateTime?
+  resultVisibility  ResultVisibility   @default(AFTER_CLOSURE)
+  approvedAt        DateTime?
+  candidates        Candidate[]
+  dashboardMetrics  DashboardMetric[]
+  approvedBy        User?              @relation("ElectionApprover", fields: [approvedById], references: [id])
+  createdBy         User?              @relation("ElectionCreator", fields: [createdById], references: [id])
+  publishedBy       User?              @relation("ElectionPublisher", fields: [publishedById], references: [id])
+  reports           ElectionReport[]
+  votes             Vote[]
+
+  @@index([status])
+  @@index([startDate])
+  @@index([endDate])
+  @@index([createdById])
+  @@index([electionCode])
+}
+
+model Party {
+  id           String    @id @default(uuid())
+  name         String
+  shortName    String?
+  abbreviation String?
+  symbol       String?
+  logo         String?
+  color        String?
+  description  String?
+  website      String?
+  email        String?
+  phone        String?
+  foundedOn    DateTime?
+  headquarters String?
+
+  status PartyStatus @default(ACTIVE)
+
+  candidates Candidate[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@unique([name])
+  @@index([status])
+}
+
+model Candidate {
+  id String @id @default(uuid())
+
+  // ==========================================
+  // Core Relations
+  // ==========================================
+
+  electionId String
+  userId     String
+
+  election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+
+  user User @relation("CandidateUser", fields: [userId], references: [id])
+
+  // ==========================================
+  // Candidate Type / Party
+  // ==========================================
+
+  candidateType CandidateType @default(INDEPENDENT)
+
+  partyId String?
+
+  party Party? @relation(fields: [partyId], references: [id])
+
+  // ==========================================
+  // Election Information
+  // ==========================================
+
+  candidateNumber Int?
+
+  ballotOrder Int?
+
+  position String?
+
+  // ==========================================
+  // Nomination Information
+  // ==========================================
+
+  manifesto    String?
+  agenda       String?
+  achievements String?
+
+  nominationStatement String?
+
+  // ==========================================
+  // Candidate Documents
+  // ==========================================
+
+  photoUrl    String?
+  documentUrl String?
+
+  // ==========================================
+  // Workflow
+  // ==========================================
+
+  status CandidateStatus @default(DRAFT)
+
+  submittedAt DateTime?
+
+  // ==========================================
+  // Verification
+  // ==========================================
+
+  verifiedById String?
+  verifiedAt   DateTime?
+
+  verifiedBy User? @relation("CandidateVerifiedBy", fields: [verifiedById], references: [id])
+
+  // ==========================================
+  // Approval
+  // ==========================================
+
+  approvedById String?
+  approvedAt   DateTime?
+
+  approvedBy User? @relation("CandidateApprovedBy", fields: [approvedById], references: [id])
+
+  // ==========================================
+  // Rejection
+  // ==========================================
+
+  rejectionReason String?
+  rejectedAt      DateTime?
+
+  // ==========================================
+  // Withdrawal / Disqualification
+  // ==========================================
+
+  withdrawnAt DateTime?
+
+  withdrawalReason String?
+
+  disqualifiedAt DateTime?
+
+  disqualificationReason String?
+
+  // ==========================================
+  // Relations
+  // ==========================================
+
+  votes Vote[]
+
+  // ==========================================
+  // System
+  // ==========================================
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // ==========================================
+  // Constraints
+  // ==========================================
+
+  @@unique([userId, electionId])
+  @@unique([electionId, candidateNumber])
+  @@unique([electionId, ballotOrder])
+  @@index([status])
+  @@index([candidateType])
+  @@index([partyId])
+  @@index([electionId])
+  @@index([userId])
+}
+
+model Vote {
+  id                    String                 @id @default(uuid())
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  voterId               String
+  candidateId           String
+  electionId            String
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  createdAt             DateTime               @default(now())
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  hash                  String?
+  previousHash          String?
+  encryptedVote         String?
+  signature             String?
+  blockchainTransaction BlockchainTransaction?
+  candidate             Candidate              @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  election              Election               @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  voter                 User                   @relation(fields: [voterId], references: [id], onDelete: Cascade)
+  receipt               VoteReceipt?
+
+  @@unique([voterId, electionId])
+  @@index([voterId])
+  @@index([candidateId])
+  @@index([electionId])
+  @@index([hash])
+}
+
+model RefreshToken {
+  id              String    @id @default(uuid())
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  userId          String
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  expiresAt       DateTime
+  revoked         Boolean   @default(false)
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  createdAt       DateTime  @default(now())
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  deviceName      String?
+  ipAddress       String?
+  lastUsedAt      DateTime?
+  tokenHash       String    @unique
+  userAgent       String?
+  tokenVersion    Int       @default(1)
+  browser         String?
+  city            String?
+  country         String?
+  operatingSystem String?
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([revoked])
+  @@index([tokenVersion])
+}
+
+model Session {
+  id              String    @id @default(uuid())
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  userId          String
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  device          String?
+  ipAddress       String?
+  userAgent       String?
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  createdAt       DateTime  @default(now())
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  expiresAt       DateTime
+  revoked         Boolean   @default(false)
+  browser         String?
+  city            String?
+  country         String?
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  lastActive      DateTime?
+  operatingSystem String?
+  trusted         Boolean   @default(false)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([revoked])
+  @@index([expiresAt])
+  @@index([trusted])
+}
+
+model Notification {
+  id          String           @id @default(uuid())
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  userId      String
+  title       String
+  message     String
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  isRead      Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  actionLabel String?
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  deletedAt   DateTime?
+  isArchived  Boolean          @default(false)
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  link        String?
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  readAt      DateTime?
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  type        NotificationType @default(INFO)
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id              String        @id @default(uuid())
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  userId          String?
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  action          String
+  module          String
+  description     String?
+  ipAddress       String?
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  createdAt       DateTime      @default(now())
+  browser         String?
+  city            String?
+  country         String?
+  entityId        String?
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  entityType      String?
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  metadata        Json?
+  operatingSystem String?
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  severity        AuditSeverity @default(LOW)
+  user            User?         @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([module])
+  @@index([action])
+  @@index([severity])
+  @@index([createdAt])
+}
+
+model BlockchainTransaction {
+  id               String           @id @default(uuid())
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  voteId           String           @unique
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  transactionHash  String           @unique
+  network          String?          @default("Polygon Amoy")
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  createdAt        DateTime         @default(now())
+  blockHash        String?
+  chainId          String?
+  confirmations    Int              @default(0)
+  contractAddress  String?
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  errorMessage     String?
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  explorerUrl      String?
+  gasPrice         String?
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  gasUsed          String?
+  retryCount       Int              @default(0)
+  transactionFee   String?
+  updatedAt        DateTime         @updatedAt
+  verificationTime DateTime?
+  verified         Boolean          @default(false)
+  blockNumber      BigInt?
+  status           BlockchainStatus @default(PENDING)
+  vote             Vote             @relation(fields: [voteId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([network])
+  @@index([createdAt])
+}
+
+model VoteReceipt {
+  id               String    @id @default(uuid())
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  voteId           String    @unique
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  receiptNumber    String    @unique
+  verificationCode String    @unique
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  createdAt        DateTime  @default(now())
+  downloaded       Boolean   @default(false)
+  downloadedAt     DateTime?
+  downloadedCount  Int       @default(0)
+  pdfUrl           String?
+  qrCodeUrl        String?
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  verificationHash String?
+  vote             Vote      @relation(fields: [voteId], references: [id], onDelete: Cascade)
+
+  @@index([receiptNumber])
+  @@index([verificationCode])
+}
+
+model ElectionReport {
+  id            String   @id @default(uuid())
+  electionId    String
+  reportName    String
+  reportType    String
+  generatedById String?
+  fileUrl       String?
+  fileSize      String?
+  format        String?
+  status        String   @default("GENERATED")
+  createdAt     DateTime @default(now())
+  election      Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  generatedBy   User?    @relation(fields: [generatedById], references: [id])
+
+  @@index([electionId])
+  @@index([generatedById])
+}
+
+model DashboardMetric {
+  id           String    @id @default(uuid())
+  metricName   String
+  metricValue  Float
+  category     String?
+  calculatedAt DateTime  @default(now())
+  electionId   String?
+  election     Election? @relation(fields: [electionId], references: [id], onDelete: Cascade)
+
+  @@index([metricName])
+  @@index([calculatedAt])
+}
 
 enum Role {
   SUPER_ADMIN
@@ -29,10 +570,6 @@ enum UserStatus {
   APPROVED
   REJECTED
 }
-
-//////////////////////////////////////////////////////
-// ELECTION ENUMS
-//////////////////////////////////////////////////////
 
 enum ElectionType {
   STUDENT_COUNCIL
@@ -60,21 +597,15 @@ enum ResultVisibility {
   MANUAL
 }
 
-//////////////////////////////////////////////////////
-// CANDIDATE
-//////////////////////////////////////////////////////
-
 enum CandidateStatus {
   DRAFT
   PENDING
+  VERIFIED
   APPROVED
   REJECTED
   WITHDRAWN
+  DISQUALIFIED
 }
-
-//////////////////////////////////////////////////////
-// NOTIFICATION
-//////////////////////////////////////////////////////
 
 enum NotificationType {
   INFO
@@ -84,10 +615,6 @@ enum NotificationType {
   SECURITY
 }
 
-//////////////////////////////////////////////////////
-// AUDIT
-//////////////////////////////////////////////////////
-
 enum AuditSeverity {
   LOW
   MEDIUM
@@ -95,892 +622,26 @@ enum AuditSeverity {
   CRITICAL
 }
 
-//////////////////////////////////////////////////////
-// BLOCKCHAIN
-//////////////////////////////////////////////////////
-
 enum BlockchainStatus {
   PENDING
   CONFIRMED
   FAILED
 }
 
-//////////////////////////////////////////////////////
-// USER
-//////////////////////////////////////////////////////
-
-model User {
-  id String @id @default(uuid())
-
-  //////////////////////////////////////////////////////
-  // BASIC
-  //////////////////////////////////////////////////////
-
-  fullName String
-
-  email String @unique
-
-  password String?
-
-  role Role @default(VOTER)
-
-  status UserStatus @default(PENDING)
-
-  //////////////////////////////////////////////////////
-  // PROFILE
-  //////////////////////////////////////////////////////
-
-  avatarUrl String?
-
-  profilePhoto String?
-
-  bio String?
-
-  phoneNumber String?
-
-  dateOfBirth DateTime?
-
-  gender String?
-
-  //////////////////////////////////////////////////////
-  // ACADEMIC
-  //////////////////////////////////////////////////////
-
-  department String?
-
-  course String?
-
-  year Int?
-
-  semester Int?
-
-  registrationNumber String?
-
-  studentIdCard String?
-
-  //////////////////////////////////////////////////////
-  // ADDRESS
-  //////////////////////////////////////////////////////
-
-  address String?
-
-  city String?
-
-  state String?
-
-  country String?
-
-  postalCode String?
-
-  //////////////////////////////////////////////////////
-  // AUTHENTICATION
-  //////////////////////////////////////////////////////
-
-  provider AuthProvider @default(LOCAL)
-
-  providerId String?
-
-  googleLinked Boolean @default(false)
-
-  avatar String?
-
-  emailVerified Boolean @default(false)
-
-  profileCompleted Boolean @default(false)
-
-  lastLogin DateTime?
-
-  lastPasswordChange DateTime?
-
-  //////////////////////////////////////////////////////
-  // SECURITY
-  //////////////////////////////////////////////////////
-
-  failedLoginAttempts Int @default(0)
-
-  lockedUntil DateTime?
-
-  mfaEnabled Boolean @default(false)
-
-  mfaSecret String?
-
-  //////////////////////////////////////////////////////
-  // SOFT DELETE
-  //////////////////////////////////////////////////////
-
-  deletedAt DateTime?
-
-  //////////////////////////////////////////////////////
-  // TIMESTAMPS
-  //////////////////////////////////////////////////////
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  emailVerificationOtp String?
-
-  emailVerificationOtpExpiresAt DateTime?
-
-  passwordResetToken String?
-
-  passwordResetTokenExpiresAt DateTime?
-
-  //////////////////////////////////////////////////////
-  // RELATIONS
-  //////////////////////////////////////////////////////
-
-  votes Vote[]
-
-  reports ElectionReport[]
-
-  refreshTokens RefreshToken[]
-
-  sessions Session[]
-
-  notifications Notification[]
-
-  auditLogs AuditLog[]
-
-  createdElections Election[] @relation("ElectionCreator")
-
-  approvedElections Election[] @relation("ElectionApprover")
-
-  publishedElections Election[] @relation("ElectionPublisher")
-
-  candidateProfile Candidate? @relation("CandidateUser")
-
-  reviewedCandidates Candidate[] @relation("CandidateReviewer")
-
-  //////////////////////////////////////////////////////
-  // INDEXES
-  //////////////////////////////////////////////////////
-
-  @@index([email])
-  @@index([role])
-  @@index([status])
-  @@index([provider])
-  @@index([department])
-  @@index([registrationNumber])
-  @@index([emailVerified])
-  @@index([failedLoginAttempts])
+enum CandidateType {
+  INDEPENDENT
+  PARTY
 }
 
-//////////////////////////////////////////////////////
-// ELECTION
-//////////////////////////////////////////////////////
-
-model Election {
-
-  id                 String             @id @default(uuid())
-
-  // ======================================================
-  // Basic Information
-  // ======================================================
-
-  title              String
-  electionCode       String             @unique
-  description        String?
-
-  electionType       ElectionType
-
-  status             ElectionStatus     @default(DRAFT)
-
-  // ======================================================
-  // Timeline
-  // ======================================================
-
-  registrationStart  DateTime?
-  registrationEnd    DateTime?
-
-  nominationStart    DateTime?
-  nominationEnd      DateTime?
-
-  campaignStart      DateTime?
-  campaignEnd        DateTime?
-
-  startDate          DateTime
-  endDate            DateTime
-
-  resultDate         DateTime?
-
-  publishedAt        DateTime?
-  closedAt           DateTime?
-  deletedAt          DateTime?
-
-  // ======================================================
-  // Election Configuration
-  // ======================================================
-
-  candidateLimit     Int                @default(0)
-
-  maximumVotes       Int                @default(1)
-
-  allowRevote        Boolean            @default(false)
-
-  blockchainEnabled  Boolean            @default(true)
-
-  auditEnabled       Boolean            @default(true)
-
-  autoPublish        Boolean            @default(false)
-
-  autoArchive        Boolean            @default(false)
-
-  resultVisibility   ResultVisibility   @default(AFTER_CLOSURE)
-
-  // ======================================================
-  // Branding
-  // ======================================================
-
-  banner             String?
-
-  logo               String?
-
-  // ======================================================
-  // Ownership
-  // ======================================================
-
-  createdById        String?
-
-  createdBy          User? @relation("ElectionCreator", fields: [createdById], references: [id], onDelete: SetNull)
-
-  approvedById       String?
-
-  approvedBy User? @relation("ElectionApprover", fields: [approvedById], references: [id], onDelete: SetNull)
-
-  approvedAt DateTime?
-
-  publishedById String?
-
-  publishedBy User? @relation("ElectionPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
-
-  // ======================================================
-  // Relations
-  // ======================================================
-
-  candidates         Candidate[]
-
-  votes              Vote[]
-
-  reports            ElectionReport[]
-
-  dashboardMetrics   DashboardMetric[]
-
-  // ======================================================
-  // Audit
-  // ======================================================
-
-  createdAt          DateTime           @default(now())
-
-  updatedAt          DateTime           @updatedAt
-
-  // ======================================================
-  // Indexes
-  // ======================================================
-
-  @@index([status])
-
-  @@index([startDate])
-
-  @@index([endDate])
-
-  @@index([createdById])
-
-  @@index([electionCode])
-
+enum PartyStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
 }
 
-//////////////////////////////////////////////////////
-// CANDIDATE
-//////////////////////////////////////////////////////
-
-model Candidate {
-  id String @id @default(uuid())
-
-  userId String? @unique
-
-  user User? @relation("CandidateUser", fields: [userId], references: [id], onDelete: SetNull)
-
-  name String
-
-  email String?
-
-  registrationNumber String?
-
-  department String?
-
-  position String?
-
-  bio String?
-
-  manifesto String?
-
-  agenda String?
-
-  achievements String?
-
-  photoUrl String?
-
-  documentUrl String?
-
-  status CandidateStatus @default(DRAFT)
-
-  reviewedById String?
-
-  reviewedBy User? @relation("CandidateReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
-
-  reviewedAt DateTime?
-
-  rejectionReason String?
-
-  electionId String
-
-  election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
-
-  deletedAt DateTime?
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  votes Vote[]
-
-  @@index([status])
-  @@index([department])
-  @@index([position])
-  @@index([electionId])
-}
-
-//////////////////////////////////////////////////////
-// VOTE
-//////////////////////////////////////////////////////
-
-model Vote {
-  id String @id @default(uuid())
-
-  //////////////////////////////////////////////////////
-  // RELATIONS
-  //////////////////////////////////////////////////////
-
-  voterId String
-
-  candidateId String
-
-  electionId String
-
-  //////////////////////////////////////////////////////
-  // SECURITY
-  //////////////////////////////////////////////////////
-
-  hash String?
-
-  previousHash String?
-
-  encryptedVote String?
-
-  signature String?
-
-  //////////////////////////////////////////////////////
-  // TIMESTAMPS
-  //////////////////////////////////////////////////////
-
-  createdAt DateTime @default(now())
-
-  //////////////////////////////////////////////////////
-  // RELATIONS
-  //////////////////////////////////////////////////////
-
-  voter User @relation(fields: [voterId], references: [id], onDelete: Cascade)
-
-  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-
-  election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
-
-  receipt VoteReceipt?
-
-  blockchainTransaction BlockchainTransaction?
-
-  @@unique([voterId, electionId])
-  @@index([voterId])
-  @@index([candidateId])
-  @@index([electionId])
-  @@index([hash])
-}
-
-//////////////////////////////////////////////////////
-// REFRESH TOKEN
-//////////////////////////////////////////////////////
-
-model RefreshToken {
-  id String @id @default(uuid())
-
-  tokenHash String @unique
-
-  tokenVersion Int @default(1)
-
-  //////////////////////////////////////////////////////
-  // USER
-  //////////////////////////////////////////////////////
-
-  userId String
-
-  //////////////////////////////////////////////////////
-  // DEVICE
-  //////////////////////////////////////////////////////
-
-  deviceName String?
-
-  browser String?
-
-  operatingSystem String?
-
-  ipAddress String?
-
-  userAgent String?
-
-  country String?
-
-  city String?
-
-  //////////////////////////////////////////////////////
-  // STATUS
-  //////////////////////////////////////////////////////
-
-  expiresAt DateTime
-
-  lastUsedAt DateTime?
-
-  revoked Boolean @default(false)
-
-  //////////////////////////////////////////////////////
-  // TIMESTAMPS
-  //////////////////////////////////////////////////////
-
-  createdAt DateTime @default(now())
-
-  //////////////////////////////////////////////////////
-  // RELATION
-  //////////////////////////////////////////////////////
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  //////////////////////////////////////////////////////
-  // INDEXES
-  //////////////////////////////////////////////////////
-
-  @@index([userId])
-  @@index([expiresAt])
-  @@index([revoked])
-  @@index([tokenVersion])
-}
-
-//////////////////////////////////////////////////////
-// SESSION
-//////////////////////////////////////////////////////
-
-model Session {
-  id String @id @default(uuid())
-
-  //////////////////////////////////////////////////////
-  // USER
-  //////////////////////////////////////////////////////
-
-  userId String
-
-  //////////////////////////////////////////////////////
-  // DEVICE
-  //////////////////////////////////////////////////////
-
-  device String?
-
-  browser String?
-
-  operatingSystem String?
-
-  ipAddress String?
-
-  country String?
-
-  city String?
-
-  userAgent String?
-
-  trusted Boolean @default(false)
-
-  //////////////////////////////////////////////////////
-  // ACTIVITY
-  //////////////////////////////////////////////////////
-
-  lastActive DateTime?
-
-  //////////////////////////////////////////////////////
-  // STATUS
-  //////////////////////////////////////////////////////
-
-  expiresAt DateTime
-
-  revoked Boolean @default(false)
-
-  //////////////////////////////////////////////////////
-  // TIMESTAMPS
-  //////////////////////////////////////////////////////
-
-  createdAt DateTime @default(now())
-
-  //////////////////////////////////////////////////////
-  // RELATION
-  //////////////////////////////////////////////////////
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  //////////////////////////////////////////////////////
-  // INDEXES
-  //////////////////////////////////////////////////////
-
-  @@index([userId])
-  @@index([revoked])
-  @@index([expiresAt])
-  @@index([trusted])
-}
-
-//////////////////////////////////////////////////////
-// NOTIFICATION
-//////////////////////////////////////////////////////
-
-model Notification {
-  id String @id @default(uuid())
-
-  //////////////////////////////////////////////////////
-  // USER
-  //////////////////////////////////////////////////////
-
-  userId String
-
-  //////////////////////////////////////////////////////
-  // TYPE
-  //////////////////////////////////////////////////////
-
-  type NotificationType @default(INFO)
-
-  title String
-
-  message String
-
-  //////////////////////////////////////////////////////
-  // ACTION
-  //////////////////////////////////////////////////////
-
-  link String?
-
-  actionLabel String?
-
-  //////////////////////////////////////////////////////
-  // STATUS
-  //////////////////////////////////////////////////////
-
-  isRead Boolean @default(false)
-
-  isArchived Boolean @default(false)
-
-  //////////////////////////////////////////////////////
-  // SOFT DELETE
-  //////////////////////////////////////////////////////
-
-  deletedAt DateTime?
-
-  //////////////////////////////////////////////////////
-  // TIMESTAMPS
-  //////////////////////////////////////////////////////
-
-  readAt DateTime?
-
-  createdAt DateTime @default(now())
-
-  //////////////////////////////////////////////////////
-  // RELATION
-  //////////////////////////////////////////////////////
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  //////////////////////////////////////////////////////
-  // INDEXES
-  //////////////////////////////////////////////////////
-
-  @@index([userId])
-  @@index([type])
-  @@index([isRead])
-  @@index([createdAt])
-}
-
-//////////////////////////////////////////////////////
-// AUDIT LOG
-//////////////////////////////////////////////////////
-
-model AuditLog {
-  id String @id @default(uuid())
-
-  //////////////////////////////////////////////////////
-  // USER
-  //////////////////////////////////////////////////////
-
-  userId String?
-
-  //////////////////////////////////////////////////////
-  // ACTION
-  //////////////////////////////////////////////////////
-
-  action String
-
-  module String
-
-  description String?
-
-  //////////////////////////////////////////////////////
-  // ENTITY
-  //////////////////////////////////////////////////////
-
-  entityType String?
-
-  entityId String?
-
-  //////////////////////////////////////////////////////
-  // SECURITY
-  //////////////////////////////////////////////////////
-
-  severity AuditSeverity @default(LOW)
-
-  ipAddress String?
-
-  browser String?
-
-  operatingSystem String?
-
-  country String?
-
-  city String?
-
-  //////////////////////////////////////////////////////
-  // EXTRA DATA
-  //////////////////////////////////////////////////////
-
-  metadata Json?
-
-  //////////////////////////////////////////////////////
-  // TIMESTAMPS
-  //////////////////////////////////////////////////////
-
-  createdAt DateTime @default(now())
-
-  //////////////////////////////////////////////////////
-  // RELATION
-  //////////////////////////////////////////////////////
-
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  //////////////////////////////////////////////////////
-  // INDEXES
-  //////////////////////////////////////////////////////
-
-  @@index([userId])
-  @@index([module])
-  @@index([action])
-  @@index([severity])
-  @@index([createdAt])
-}
-
-//////////////////////////////////////////////////////
-// BLOCKCHAIN TRANSACTION
-//////////////////////////////////////////////////////
-
-model BlockchainTransaction {
-  id String @id @default(uuid())
-
-  //////////////////////////////////////////////////////
-  // RELATION
-  //////////////////////////////////////////////////////
-
-  voteId String @unique
-
-  //////////////////////////////////////////////////////
-  // BLOCKCHAIN
-  //////////////////////////////////////////////////////
-
-  transactionHash String @unique
-
-  blockHash String?
-
-  blockNumber BigInt?
-
-  network String? @default("Polygon Amoy")
-
-  contractAddress String?
-
-  chainId String?
-
-  //////////////////////////////////////////////////////
-  // GAS
-  //////////////////////////////////////////////////////
-
-  gasUsed String?
-
-  gasPrice String?
-
-  transactionFee String?
-
-  //////////////////////////////////////////////////////
-  // VERIFICATION
-  //////////////////////////////////////////////////////
-
-  explorerUrl String?
-
-  confirmations Int @default(0)
-
-  status BlockchainStatus @default(PENDING)
-
-  verified Boolean @default(false)
-
-  verificationTime DateTime?
-
-  //////////////////////////////////////////////////////
-  // FAILURE
-  //////////////////////////////////////////////////////
-
-  errorMessage String?
-
-  retryCount Int @default(0)
-
-  //////////////////////////////////////////////////////
-  // TIMESTAMPS
-  //////////////////////////////////////////////////////
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  //////////////////////////////////////////////////////
-  // RELATION
-  //////////////////////////////////////////////////////
-
-  vote Vote @relation(fields: [voteId], references: [id], onDelete: Cascade)
-
-  //////////////////////////////////////////////////////
-  // INDEXES
-  //////////////////////////////////////////////////////
-
-  @@index([status])
-  @@index([network])
-  @@index([createdAt])
-}
-
-//////////////////////////////////////////////////////
-// VOTE RECEIPT
-//////////////////////////////////////////////////////
-
-model VoteReceipt {
-  id String @id @default(uuid())
-
-  //////////////////////////////////////////////////////
-  // RELATION
-  //////////////////////////////////////////////////////
-
-  voteId String @unique
-
-  //////////////////////////////////////////////////////
-  // RECEIPT
-  //////////////////////////////////////////////////////
-
-  receiptNumber String @unique
-
-  verificationCode String @unique
-
-  qrCodeUrl String?
-
-  pdfUrl String?
-
-  //////////////////////////////////////////////////////
-  // SECURITY
-  //////////////////////////////////////////////////////
-
-  verificationHash String?
-
-  downloaded Boolean @default(false)
-
-  downloadedCount Int @default(0)
-
-  downloadedAt DateTime?
-
-  //////////////////////////////////////////////////////
-  // TIMESTAMPS
-  //////////////////////////////////////////////////////
-
-  createdAt DateTime @default(now())
-
-  //////////////////////////////////////////////////////
-  // RELATION
-  //////////////////////////////////////////////////////
-
-  vote Vote @relation(fields: [voteId], references: [id], onDelete: Cascade)
-
-  //////////////////////////////////////////////////////
-  // INDEXES
-  //////////////////////////////////////////////////////
-
-  @@index([receiptNumber])
-  @@index([verificationCode])
-}
-
-//////////////////////////////////////////////////////
-// ELECTION REPORT
-//////////////////////////////////////////////////////
-
-model ElectionReport {
-  id String @id @default(uuid())
-
-  electionId String
-
-  reportName String
-
-  reportType String
-
-  generatedById String?
-
-  generatedBy User? @relation(fields: [generatedById], references: [id], onDelete: SetNull)
-
-  fileUrl String?
-
-  fileSize String?
-
-  format String? // PDF / Excel / CSV
-
-  status String @default("GENERATED")
-
-  createdAt DateTime @default(now())
-
-  election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
-
-  @@index([electionId])
-  @@index([generatedById])
-}
-
-//////////////////////////////////////////////////////
-// DASHBOARD METRICS
-//////////////////////////////////////////////////////
-
-model DashboardMetric {
-  id String @id @default(uuid())
-
-  metricName String
-
-  metricValue Float
-
-  category String?
-
-  calculatedAt DateTime @default(now())
-
-  electionId String?
-
-  election Election? @relation(fields: [electionId], references: [id], onDelete: Cascade)
-
-  @@index([metricName])
-  @@index([calculatedAt])
+enum BallotOrderMethod {
+  CANDIDATE_NUMBER
+  ALPHABETICAL
+  RANDOM
+  MANUAL
 }

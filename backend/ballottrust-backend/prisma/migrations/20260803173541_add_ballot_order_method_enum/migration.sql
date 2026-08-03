@@ -1,0 +1,2 @@
+-- CreateEnum
+CREATE TYPE "BallotOrderMethod" AS ENUM ('CANDIDATE_NUMBER', 'ALPHABETICAL', 'RANDOM', 'MANUAL');
