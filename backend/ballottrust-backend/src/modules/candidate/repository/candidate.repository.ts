@@ -399,6 +399,189 @@ async replaceBallotOrders(
   );
 }
 
+// ==========================================
+// Get Ordered Ballot
+// ==========================================
+
+async findOrderedBallot(
+  electionId: string,
+) {
+  return this.prisma.candidate.findMany({
+    where: {
+      electionId,
+
+      status:
+        CandidateStatus.APPROVED,
+
+      candidateNumber: {
+        not: null,
+      },
+
+      ballotOrder: {
+        not: null,
+      },
+
+      deletedAt: null,
+    },
+
+    orderBy: {
+      ballotOrder: 'asc',
+    },
+
+    select: {
+      id: true,
+
+      candidateNumber: true,
+      ballotOrder: true,
+
+      candidateType: true,
+      position: true,
+
+      manifesto: true,
+      agenda: true,
+      achievements: true,
+
+      photoUrl: true,
+
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          profilePhoto: true,
+        },
+      },
+
+      party: {
+        select: {
+          id: true,
+          name: true,
+          abbreviation: true,
+          symbol: true,
+          logo: true,
+        },
+      },
+    },
+  });
+}
+
+// ==========================================
+// Find Election Ballot State
+// ==========================================
+
+async findElectionBallotState(
+  electionId: string,
+) {
+  return this.prisma.election.findFirst({
+    where: {
+      id: electionId,
+      deletedAt: null,
+    },
+
+    select: {
+      id: true,
+      status: true,
+      ballotOrderMethod: true,
+      startDate: true,
+      endDate: true,
+      ballotFinalizedAt: true,
+      ballotFinalizedById: true,
+    },
+  });
+}
+
+// ==========================================
+// Get Ballot Readiness
+// ==========================================
+
+async getBallotReadiness(
+  electionId: string,
+) {
+  const [
+    totalApprovedCandidates,
+    readyCandidates,
+  ] = await this.prisma.$transaction([
+    this.prisma.candidate.count({
+      where: {
+        electionId,
+
+        status:
+          CandidateStatus.APPROVED,
+
+        deletedAt: null,
+      },
+    }),
+
+    this.prisma.candidate.count({
+      where: {
+        electionId,
+
+        status:
+          CandidateStatus.APPROVED,
+
+        candidateNumber: {
+          not: null,
+        },
+
+        ballotOrder: {
+          not: null,
+        },
+
+        deletedAt: null,
+      },
+    }),
+  ]);
+
+  return {
+    totalApprovedCandidates,
+    readyCandidates,
+  };
+}
+
+// ==========================================
+// Finalize Election Ballot
+// ==========================================
+
+async finalizeBallot(
+  electionId: string,
+  finalizedById: string,
+) {
+  return this.prisma.election.update({
+    where: {
+      id: electionId,
+    },
+
+    data: {
+      ...( {
+        ballotFinalizedAt:
+          new Date(),
+
+        ballotFinalizedBy: {
+          connect: {
+            id: finalizedById,
+          },
+        },
+      } as any ),
+    },
+
+    select: {
+      id: true,
+      title: true,
+      status: true,
+
+      ballotOrderMethod: true,
+
+      ballotFinalizedAt: true,
+
+      ballotFinalizedBy: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+        },
+      },
+    },
+  });
+}
   // ==========================================
   // Soft Delete
   // ==========================================

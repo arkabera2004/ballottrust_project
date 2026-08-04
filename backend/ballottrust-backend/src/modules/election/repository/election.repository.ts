@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma, Election, ElectionStatus } from '@prisma/client';
+import { Prisma, Election, ElectionStatus,CandidateStatus  } from '@prisma/client';
 import { NotFoundException } from '@nestjs/common';
 import { QueryElectionDto } from '../dto/query-election.dto';
 
@@ -514,6 +514,54 @@ async publishElectionTransaction(
     },
   );
 
+}
+
+// ==========================================
+// Get Ballot Readiness
+// ==========================================
+
+async getBallotReadiness(
+  electionId: string,
+) {
+  const [
+    totalApprovedCandidates,
+    readyCandidates,
+  ] = await this.prisma.$transaction([
+    this.prisma.candidate.count({
+      where: {
+        electionId,
+
+        status:
+          CandidateStatus.APPROVED,
+
+        deletedAt: null,
+      },
+    }),
+
+    this.prisma.candidate.count({
+      where: {
+        electionId,
+
+        status:
+          CandidateStatus.APPROVED,
+
+        candidateNumber: {
+          not: null,
+        },
+
+        ballotOrder: {
+          not: null,
+        },
+
+        deletedAt: null,
+      },
+    }),
+  ]);
+
+  return {
+    totalApprovedCandidates,
+    readyCandidates,
+  };
 }
 
 }

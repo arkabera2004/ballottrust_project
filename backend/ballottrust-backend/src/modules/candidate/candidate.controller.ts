@@ -7,6 +7,7 @@ import {
   Post,
   Query,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 
 import { Role } from '@prisma/client';
@@ -41,6 +42,8 @@ import { GenerateBallotOrderDto } from './dto/generate-ballot-order.dto';
 import { GenerateBallotOrderService } from './services/generate-ballot-order.service';
 import { ManualBallotOrderDto } from './dto/manual-ballot-order.dto';
 import { ManualBallotOrderService } from './services/manual-ballot-order.service';
+import { GetBallotService } from './services/get-ballot.service';
+import { FinalizeBallotService } from './services/finalize-ballot.service';
 
 @Controller('candidates')
 export class CandidateController {
@@ -83,6 +86,12 @@ export class CandidateController {
 
     private readonly manualBallotOrderService:
       ManualBallotOrderService,
+
+    private readonly getBallotService:
+      GetBallotService,
+
+    private readonly finalizeBallotService:
+      FinalizeBallotService,
   ) {}
 
   // ======================================================
@@ -331,6 +340,10 @@ async autoAssignCandidateNumber(
 // ======================================================
 
 @Patch('election/:electionId/ballot-order/generate')
+@UseGuards(
+  JwtAuthGuard,
+  RolesGuard,
+)
 @Roles(
   Role.SUPER_ADMIN,
   Role.ELECTION_COMMISSIONER,
@@ -353,6 +366,10 @@ async generateBallotOrder(
 // ======================================================
 
 @Patch('election/:electionId/ballot-order/manual')
+@UseGuards(
+  JwtAuthGuard,
+  RolesGuard,
+)
 @Roles(
   Role.SUPER_ADMIN,
   Role.ELECTION_COMMISSIONER,
@@ -367,6 +384,46 @@ async manualBallotOrder(
   return this.manualBallotOrderService.execute(
     electionId,
     dto.candidateIds,
+  );
+}
+
+// ======================================================
+// Get Election Ballot
+// ======================================================
+
+@Get('election/:electionId/ballot')
+async getElectionBallot(
+  @Param('electionId')
+  electionId: string,
+) {
+  return this.getBallotService.execute(
+    electionId,
+  );
+}
+
+// ======================================================
+// Finalize Election Ballot
+// ======================================================
+
+@Patch('election/:electionId/ballot/finalize')
+@UseGuards(
+  JwtAuthGuard,
+  RolesGuard,
+)
+@Roles(
+  Role.SUPER_ADMIN,
+  Role.ELECTION_COMMISSIONER,
+)
+async finalizeBallot(
+  @Param('electionId')
+  electionId: string,
+
+  @CurrentUser()
+  user: JwtPayload,
+) {
+  return this.finalizeBallotService.execute(
+    electionId,
+    user.userId,
   );
 }
 }

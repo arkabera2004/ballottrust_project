@@ -9,18 +9,44 @@ import {
 } from '@prisma/client';
 
 import { CandidateRepository } from '../repository/candidate.repository';
+import { BallotLifecycleValidator } from '../validators/ballot-lifecycle.validator';
 
 @Injectable()
 export class GenerateBallotOrderService {
   constructor(
-    private readonly candidateRepository:
-      CandidateRepository,
-  ) {}
+  private readonly candidateRepository:
+    CandidateRepository,
+
+  private readonly ballotLifecycleValidator:
+    BallotLifecycleValidator,
+) {}
 
   async execute(
     electionId: string,
     method: BallotOrderMethod,
   ) {
+
+    // ======================================================
+// 1. Validate Election Lifecycle
+// ======================================================
+
+const election =
+  await this.candidateRepository
+    .findElectionBallotState(
+      electionId,
+    );
+
+if (!election) {
+  throw new NotFoundException(
+    'Election not found.',
+  );
+}
+
+this.ballotLifecycleValidator
+  .validateModification(
+    election.status,
+    null,
+  );
     // ======================================================
     // 1. Get Eligible Candidates
     // ======================================================

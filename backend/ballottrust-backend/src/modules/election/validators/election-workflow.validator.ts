@@ -4,6 +4,7 @@ import {
 } from '@nestjs/common';
 
 import {
+  BallotOrderMethod,
   ElectionStatus,
 } from '@prisma/client';
 
@@ -132,4 +133,55 @@ export class ElectionWorkflowValidator {
 
   }
 
+ // ===========================================
+// Ensure Ballot Is Ready
+// ===========================================
+
+ensureBallotReady(
+  ballotOrderMethod:
+    BallotOrderMethod | null,
+
+  ballotFinalizedAt:
+    Date | null,
+
+  totalApprovedCandidates:
+    number,
+
+  readyCandidates:
+    number,
+): void {
+  // Ballot must first be generated.
+  if (!ballotOrderMethod) {
+    throw new BadRequestException(
+      'Election cannot be started because the ballot has not been generated.',
+    );
+  }
+
+  // Election must contain approved candidates.
+  if (
+    totalApprovedCandidates === 0
+  ) {
+    throw new BadRequestException(
+      'Election cannot be started without approved candidates.',
+    );
+  }
+
+  // Every approved candidate must have both
+  // candidateNumber and ballotOrder.
+  if (
+    readyCandidates !==
+    totalApprovedCandidates
+  ) {
+    throw new BadRequestException(
+      'Election cannot be started because the ballot is incomplete.',
+    );
+  }
+
+  // Explicit finalization is required before voting.
+  if (!ballotFinalizedAt) {
+    throw new BadRequestException(
+      'Election cannot be started because the ballot has not been finalized.',
+    );
+  }
+}
 }

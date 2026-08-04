@@ -19,6 +19,9 @@ import { AssignCandidateNumberService } from './services/assign-candidate-number
 import { AutoAssignCandidateNumberService } from './services/auto-assign-candidate-number.service';
 import { GenerateBallotOrderService } from './services/generate-ballot-order.service';
 import { ManualBallotOrderService } from './services/manual-ballot-order.service';
+import { GetBallotService } from './services/get-ballot.service';
+import { BallotLifecycleValidator } from './validators/ballot-lifecycle.validator';
+import { FinalizeBallotService } from './services/finalize-ballot.service';
 
 @Module({
   imports: [
@@ -46,6 +49,9 @@ import { ManualBallotOrderService } from './services/manual-ballot-order.service
   AutoAssignCandidateNumberService,
   GenerateBallotOrderService,
   ManualBallotOrderService,
+  GetBallotService,
+  BallotLifecycleValidator,
+  FinalizeBallotService,
 ],
 
   exports: [

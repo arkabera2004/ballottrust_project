@@ -73,6 +73,7 @@ model User {
   approvedElections             Election[]       @relation("ElectionApprover")
   createdElections              Election[]       @relation("ElectionCreator")
   publishedElections            Election[]       @relation("ElectionPublisher")
+  ballotFinalizedElections      Election[]       @relation("ElectionBallotFinalizer")
   reports                       ElectionReport[]
   notifications                 Notification[]
   refreshTokens                 RefreshToken[]
@@ -90,54 +91,58 @@ model User {
 }
 
 model Election {
-  id                String             @id @default(uuid())
-  title             String
-  description       String?
-  startDate         DateTime
-  endDate           DateTime
-  status            ElectionStatus     @default(DRAFT)
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  closedAt          DateTime?
-  createdById       String?
-  deletedAt         DateTime?
-  publishedAt       DateTime?
-  allowRevote       Boolean            @default(false)
-  approvedById      String?
-  auditEnabled      Boolean            @default(true)
-  autoArchive       Boolean            @default(false)
-  autoPublish       Boolean            @default(false)
-  banner            String?
-  blockchainEnabled Boolean            @default(true)
-  campaignEnd       DateTime?
-  campaignStart     DateTime?
-  candidateLimit    Int                @default(0)
-  electionCode      String             @unique
-  electionType      ElectionType
-  ballotOrderMethod BallotOrderMethod?
-  logo              String?
-  maximumVotes      Int                @default(1)
-  nominationEnd     DateTime?
-  nominationStart   DateTime?
-  publishedById     String?
-  registrationEnd   DateTime?
-  registrationStart DateTime?
-  resultDate        DateTime?
-  resultVisibility  ResultVisibility   @default(AFTER_CLOSURE)
-  approvedAt        DateTime?
-  candidates        Candidate[]
-  dashboardMetrics  DashboardMetric[]
-  approvedBy        User?              @relation("ElectionApprover", fields: [approvedById], references: [id])
-  createdBy         User?              @relation("ElectionCreator", fields: [createdById], references: [id])
-  publishedBy       User?              @relation("ElectionPublisher", fields: [publishedById], references: [id])
-  reports           ElectionReport[]
-  votes             Vote[]
+  id                  String             @id @default(uuid())
+  title               String
+  description         String?
+  startDate           DateTime
+  endDate             DateTime
+  status              ElectionStatus     @default(DRAFT)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  closedAt            DateTime?
+  createdById         String?
+  deletedAt           DateTime?
+  publishedAt         DateTime?
+  allowRevote         Boolean            @default(false)
+  approvedById        String?
+  auditEnabled        Boolean            @default(true)
+  autoArchive         Boolean            @default(false)
+  autoPublish         Boolean            @default(false)
+  banner              String?
+  blockchainEnabled   Boolean            @default(true)
+  campaignEnd         DateTime?
+  campaignStart       DateTime?
+  candidateLimit      Int                @default(0)
+  electionCode        String             @unique
+  electionType        ElectionType
+  ballotOrderMethod   BallotOrderMethod?
+  ballotFinalizedAt   DateTime?
+  ballotFinalizedById String?
+  logo                String?
+  maximumVotes        Int                @default(1)
+  nominationEnd       DateTime?
+  nominationStart     DateTime?
+  publishedById       String?
+  registrationEnd     DateTime?
+  registrationStart   DateTime?
+  resultDate          DateTime?
+  resultVisibility    ResultVisibility   @default(AFTER_CLOSURE)
+  approvedAt          DateTime?
+  candidates          Candidate[]
+  dashboardMetrics    DashboardMetric[]
+  approvedBy          User?              @relation("ElectionApprover", fields: [approvedById], references: [id])
+  createdBy           User?              @relation("ElectionCreator", fields: [createdById], references: [id])
+  publishedBy         User?              @relation("ElectionPublisher", fields: [publishedById], references: [id])
+  ballotFinalizedBy   User?              @relation("ElectionBallotFinalizer", fields: [ballotFinalizedById], references: [id])
+  reports             ElectionReport[]
+  votes               Vote[]
 
   @@index([status])
   @@index([startDate])
   @@index([endDate])
   @@index([createdById])
   @@index([electionCode])
+  @@index([ballotFinalizedById])
 }
 
 model Party {

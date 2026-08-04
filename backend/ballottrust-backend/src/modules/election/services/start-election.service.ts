@@ -18,6 +18,29 @@ export class StartElectionService {
       election.status,
     );
 
+    // ===========================================
+// Validate Ballot Readiness
+// ===========================================
+
+const ballotReadiness =
+  await this.repository
+    .getBallotReadiness(
+      id,
+    );
+
+this.workflowValidator
+  .ensureBallotReady(
+    election.ballotOrderMethod,
+
+    election.ballotFinalizedAt,
+
+    ballotReadiness
+      .totalApprovedCandidates,
+
+    ballotReadiness
+      .readyCandidates,
+  );
+
     return {
       message: 'Election started successfully.',
       data: await this.repository.activateElection(

@@ -21,6 +21,7 @@ import {
 import {
   CreateElectionService,
   UpdateElectionService,
+  StartElectionService,
   GetElectionService,
   GetElectionByIdService,
   ListElectionsService,
@@ -67,6 +68,9 @@ export class ElectionController {
 
     private readonly listElectionsService:
       ListElectionsService,
+
+      private readonly startElectionService:
+  StartElectionService,
   ) {}
 
   // ======================================================
@@ -94,6 +98,28 @@ export class ElectionController {
       user.userId,
     );
   }
+
+// ======================================================
+// Start Election
+// ======================================================
+
+@Patch(':id/start')
+@UseGuards(
+  JwtAuthGuard,
+  RolesGuard,
+)
+@Roles(
+  Role.SUPER_ADMIN,
+  Role.ELECTION_COMMISSIONER,
+)
+async startElection(
+  @Param('id')
+  id: string,
+) {
+  return this.startElectionService.execute(
+    id,
+  );
+}
 
   // ======================================================
   // Update Election
