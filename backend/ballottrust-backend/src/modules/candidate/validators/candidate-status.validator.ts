@@ -89,4 +89,20 @@ export class CandidateStatusValidator {
 
   return finalStatuses.includes(status);
 }
+
+// ======================================================
+// Validate Candidate Editing
+// ======================================================
+
+validateEditable(
+  status: CandidateStatus,
+): void {
+  if (
+    status !== CandidateStatus.PENDING
+  ) {
+    throw new BadRequestException(
+      `Candidate information cannot be modified while the candidate is in ${status} status.`,
+    );
+  }
+}
 }

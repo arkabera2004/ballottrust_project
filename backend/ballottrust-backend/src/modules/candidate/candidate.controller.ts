@@ -1,16 +1,38 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Patch,
   Param,
   Post,
   Query,
   UseGuards,
-  Req,
+  NotFoundException,
 } from '@nestjs/common';
 
 import { Role } from '@prisma/client';
+
+import {
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+
+import {
+  FileInterceptor,
+} from '@nestjs/platform-express';
+
+import {
+  UploadCandidateDocumentDto,
+} from './documents/dto/upload-candidate-document.dto';
+
+import {
+  UploadCandidateDocumentService,
+} from './documents/services/upload-candidate-document.service';
+
+import {
+  candidateDocumentMulterConfig,
+} from './documents/candidate-document-upload.config';
 
 import { CreateCandidateDto } from './dto/create-candidate.dto';
 import { QueryCandidateDto } from './dto/query-candidate.dto';
@@ -44,6 +66,20 @@ import { ManualBallotOrderDto } from './dto/manual-ballot-order.dto';
 import { ManualBallotOrderService } from './services/manual-ballot-order.service';
 import { GetBallotService } from './services/get-ballot.service';
 import { FinalizeBallotService } from './services/finalize-ballot.service';
+import { UpdateCandidateDto } from './dto/update-candidate.dto';
+import { UpdateCandidateService } from './services/update-candidate.service';
+import { CancelNominationService } from './services/cancel-nomination.service';
+import { UpdateCandidateProfileDto } from './dto/update-candidate-profile.dto';
+import { UpdateCandidateProfileService } from './services/update-candidate-profile.service';
+import { GetPublicCandidateProfileService } from './services/get-public-candidate-profile.service';
+import { ListCandidateDocumentsService } from './documents/services/list-candidate-documents.service';
+import { GetCandidateDocumentService } from './documents/services/get-candidate-document.service';
+import { ReplaceCandidateDocumentService } from './documents/services/replace-candidate-document.service';
+import { VerifyCandidateDocumentService } from './documents/services/verify-candidate-document.service';
+import { RejectCandidateDocumentService } from './documents/services/reject-candidate-document.service';
+import { RejectCandidateDocumentDto } from './documents/dto/reject-candidate-document.dto';
+import { DeleteCandidateDocumentService } from './documents/services/delete-candidate-document.service';
+
 
 @Controller('candidates')
 export class CandidateController {
@@ -92,6 +128,39 @@ export class CandidateController {
 
     private readonly finalizeBallotService:
       FinalizeBallotService,
+
+    private readonly updateCandidateService:
+      UpdateCandidateService,
+
+    private readonly cancelNominationService:
+      CancelNominationService,
+
+    private readonly updateCandidateProfileService:
+      UpdateCandidateProfileService,
+
+    private readonly getPublicCandidateProfileService:
+      GetPublicCandidateProfileService,
+
+    private readonly uploadCandidateDocumentService:
+      UploadCandidateDocumentService,
+
+    private readonly listCandidateDocumentsService:
+      ListCandidateDocumentsService,
+
+    private readonly getCandidateDocumentService:
+      GetCandidateDocumentService,
+
+    private readonly replaceCandidateDocumentService:
+      ReplaceCandidateDocumentService,
+
+    private readonly verifyCandidateDocumentService:
+      VerifyCandidateDocumentService,
+
+    private readonly rejectCandidateDocumentService:
+      RejectCandidateDocumentService,
+
+    private readonly deleteCandidateDocumentService:
+      DeleteCandidateDocumentService,
   ) {}
 
   // ======================================================
@@ -114,6 +183,53 @@ export class CandidateController {
   }
 
   // ======================================================
+// Get Public Candidate Profile
+// ======================================================
+
+@Get('public/:id')
+async getPublicCandidateProfile(
+  @Param('id')
+  id: string,
+) {
+  return this.getPublicCandidateProfileService.execute(
+    id,
+  );
+}
+
+// ======================================================
+// Upload Candidate Document
+// ======================================================
+
+@Post(':id/documents')
+@UseGuards(JwtAuthGuard)
+@UseInterceptors(
+  FileInterceptor(
+    'file',
+    candidateDocumentMulterConfig,
+  ),
+)
+async uploadCandidateDocument(
+  @Param('id')
+  id: string,
+
+  @Body()
+  dto: UploadCandidateDocumentDto,
+
+  @UploadedFile()
+  file: Express.Multer.File,
+
+  @CurrentUser()
+  user: JwtPayload,
+) {
+  return this.uploadCandidateDocumentService.execute(
+    id,
+    user.userId,
+    dto,
+    file,
+  );
+}
+
+  // ======================================================
   // Get My Candidacies
   // IMPORTANT: Must be before @Get(':id')
   // ======================================================
@@ -134,15 +250,22 @@ export class CandidateController {
   // ======================================================
 
   @Get()
-  @UseGuards(JwtAuthGuard)
-  async findAll(
-    @Query()
-    query: QueryCandidateDto,
-  ) {
-    return this.listCandidatesService.execute(
-      query,
-    );
-  }
+@UseGuards(
+  JwtAuthGuard,
+  RolesGuard,
+)
+@Roles(
+  Role.SUPER_ADMIN,
+  Role.ELECTION_COMMISSIONER,
+)
+async findAll(
+  @Query()
+  query: QueryCandidateDto,
+) {
+  return this.listCandidatesService.execute(
+    query,
+  );
+}
 
   // ======================================================
   // Verify Candidate
@@ -210,17 +333,21 @@ export class CandidateController {
     Role.SUPER_ADMIN,
   )
   async reject(
-    @Param('id')
-    id: string,
+  @Param('id')
+  id: string,
 
-    @Body()
-    dto: RejectCandidateDto,
-  ) {
-    return this.rejectCandidateService.execute(
-      id,
-      dto.reason,
-    );
-  }
+  @Body()
+  dto: RejectCandidateDto,
+
+  @CurrentUser()
+  user: JwtPayload,
+) {
+  return this.rejectCandidateService.execute(
+    id,
+    user.userId,
+    dto.reason,
+  );
+}
 
   // ======================================================
 // Withdraw Candidacy
@@ -264,9 +391,13 @@ async disqualify(
 
   @Body()
   dto: DisqualifyCandidateDto,
+
+  @CurrentUser()
+  user: JwtPayload,
 ) {
   return this.disqualifyCandidateService.execute(
     id,
+    user.userId,
     dto.reason,
   );
 }
@@ -277,15 +408,20 @@ async disqualify(
   // ======================================================
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
-  async findOne(
-    @Param('id')
-    id: string,
-  ) {
-    return this.getCandidateService.execute(
-      id,
-    );
-  }
+@UseGuards(JwtAuthGuard)
+async findOne(
+  @Param('id')
+  id: string,
+
+  @CurrentUser()
+  user: JwtPayload,
+) {
+  return this.getCandidateService.execute(
+    id,
+    user.userId,
+    user.role,
+  );
+}
 
   // ======================================================
 // Assign Candidate Number
@@ -423,6 +559,246 @@ async finalizeBallot(
 ) {
   return this.finalizeBallotService.execute(
     electionId,
+    user.userId,
+  );
+}
+
+// ======================================================
+// Update Own Pending Nomination
+// ======================================================
+
+@Patch(':id')
+@UseGuards(JwtAuthGuard)
+async updateCandidate(
+  @Param('id')
+  id: string,
+
+  @Body()
+  dto: UpdateCandidateDto,
+
+  @CurrentUser()
+  user: JwtPayload,
+) {
+  return this.updateCandidateService.execute(
+    id,
+    user.userId,
+    dto,
+  );
+}
+
+// ======================================================
+// Cancel Own Pending Nomination
+// ======================================================
+
+@Delete(':id/nomination')
+@UseGuards(JwtAuthGuard)
+async cancelNomination(
+  @Param('id')
+  id: string,
+
+  @CurrentUser()
+  user: JwtPayload,
+) {
+  return this.cancelNominationService.execute(
+    id,
+    user.userId,
+  );
+}
+
+// ======================================================
+// Update Candidate Profile
+// ======================================================
+
+@Patch(':id/profile')
+@UseGuards(JwtAuthGuard)
+async updateCandidateProfile(
+  @Param('id')
+  id: string,
+
+  @Body()
+  dto: UpdateCandidateProfileDto,
+
+  @CurrentUser()
+  user: JwtPayload,
+) {
+  return this.updateCandidateProfileService.execute(
+    id,
+    user.userId,
+    dto,
+  );
+}
+
+// ======================================================
+// List Candidate Documents
+// ======================================================
+
+@Get(':id/documents')
+@UseGuards(JwtAuthGuard)
+async listCandidateDocuments(
+  @Param('id')
+  id: string,
+
+  @CurrentUser()
+  user: JwtPayload,
+) {
+  return this.listCandidateDocumentsService.execute(
+    id,
+    user.userId,
+    user.role,
+  );
+}
+
+// ======================================================
+// Get Candidate Document
+// ======================================================
+
+@Get(':candidateId/documents/:documentId')
+@UseGuards(JwtAuthGuard)
+async getCandidateDocument(
+  @Param('candidateId')
+  candidateId: string,
+
+  @Param('documentId')
+  documentId: string,
+
+  @CurrentUser()
+  user: JwtPayload,
+) {
+  const document =
+    await this.getCandidateDocumentService.execute(
+      documentId,
+      user.userId,
+      user.role,
+    );
+
+  if (
+    document.candidateId !==
+    candidateId
+  ) {
+    throw new NotFoundException(
+      'Candidate document not found.',
+    );
+  }
+
+  return document;
+}
+
+// ======================================================
+// Replace Candidate Document
+// ======================================================
+
+@Post(':candidateId/documents/:documentId/replace')
+@UseGuards(JwtAuthGuard)
+@UseInterceptors(
+  FileInterceptor(
+    'file',
+    candidateDocumentMulterConfig,
+  ),
+)
+async replaceCandidateDocument(
+  @Param('candidateId')
+  candidateId: string,
+
+  @Param('documentId')
+  documentId: string,
+
+  @UploadedFile()
+  file: Express.Multer.File,
+
+  @CurrentUser()
+  user: JwtPayload,
+) {
+  return this.replaceCandidateDocumentService.execute(
+    candidateId,
+    documentId,
+    user.userId,
+    file,
+  );
+}
+
+// ======================================================
+// Verify Candidate Document
+// ======================================================
+
+@Patch(':candidateId/documents/:documentId/verify')
+@UseGuards(
+  JwtAuthGuard,
+  RolesGuard,
+)
+@Roles(
+  Role.SUPER_ADMIN,
+  Role.ELECTION_COMMISSIONER,
+)
+async verifyCandidateDocument(
+  @Param('candidateId')
+  candidateId: string,
+
+  @Param('documentId')
+  documentId: string,
+
+  @CurrentUser()
+  user: JwtPayload,
+) {
+  return this.verifyCandidateDocumentService.execute(
+    candidateId,
+    documentId,
+    user.userId,
+  );
+}
+
+// ======================================================
+// Reject Candidate Document
+// ======================================================
+
+@Patch(':candidateId/documents/:documentId/reject')
+@UseGuards(
+  JwtAuthGuard,
+  RolesGuard,
+)
+@Roles(
+  Role.SUPER_ADMIN,
+  Role.ELECTION_COMMISSIONER,
+)
+async rejectCandidateDocument(
+  @Param('candidateId')
+  candidateId: string,
+
+  @Param('documentId')
+  documentId: string,
+
+  @Body()
+  dto: RejectCandidateDocumentDto,
+
+  @CurrentUser()
+  user: JwtPayload,
+) {
+  return this.rejectCandidateDocumentService.execute(
+    candidateId,
+    documentId,
+    user.userId,
+    dto.reason,
+  );
+}
+
+// ======================================================
+// Delete Candidate Document
+// ======================================================
+
+@Delete(':candidateId/documents/:documentId')
+@UseGuards(JwtAuthGuard)
+async deleteCandidateDocument(
+  @Param('candidateId')
+  candidateId: string,
+
+  @Param('documentId')
+  documentId: string,
+
+  @CurrentUser()
+  user: JwtPayload,
+) {
+  return this.deleteCandidateDocumentService.execute(
+    candidateId,
+    documentId,
     user.userId,
   );
 }

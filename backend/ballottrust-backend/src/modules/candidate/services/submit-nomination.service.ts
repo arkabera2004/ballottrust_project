@@ -47,11 +47,12 @@ export class SubmitNominationService {
     // 3. Prevent Duplicate Nomination
     // ======================================================
 
-    await this.candidateValidator
-      .validateNoDuplicateNomination(
-        userId,
-        dto.electionId,
-      );
+    const existingCandidate =
+  await this.candidateValidator
+    .validateNoDuplicateNomination(
+      userId,
+      dto.electionId,
+    );
 
     // ======================================================
     // 4. Validate Candidate Limit
@@ -74,6 +75,116 @@ export class SubmitNominationService {
       );
 
     // ======================================================
+// 6. Restore Previously Cancelled Nomination
+// ======================================================
+
+if (
+  existingCandidate &&
+  existingCandidate.deletedAt
+) {
+  return this.candidateRepository.update(
+    existingCandidate.id,
+    {
+      candidateType:
+        dto.candidateType,
+
+      party:
+        dto.partyId
+          ? {
+              connect: {
+                id: dto.partyId,
+              },
+            }
+          : {
+              disconnect: true,
+            },
+
+      position:
+        dto.position,
+
+      manifesto:
+        dto.manifesto,
+
+      agenda:
+        dto.agenda,
+
+      achievements:
+        dto.achievements,
+
+      nominationStatement:
+        dto.nominationStatement,
+
+      photoUrl:
+        dto.photoUrl,
+
+      documentUrl:
+        dto.documentUrl,
+
+      status:
+        CandidateStatus.PENDING,
+
+      submittedAt:
+        new Date(),
+
+      deletedAt:
+        null,
+
+      // Reset verification workflow
+      verifiedBy: {
+        disconnect: true,
+      },
+
+      verifiedAt:
+        null,
+
+      // Reset approval workflow
+      approvedBy: {
+        disconnect: true,
+      },
+
+      approvedAt:
+        null,
+
+      // Reset rejection workflow
+      rejectedBy: {
+        disconnect: true,
+      },
+
+      rejectionReason:
+        null,
+
+      rejectedAt:
+        null,
+
+      // Reset withdrawal workflow
+      withdrawnAt:
+        null,
+
+      withdrawalReason:
+        null,
+
+      // Reset disqualification workflow
+      disqualifiedBy: {
+        disconnect: true,
+      },
+
+      disqualifiedAt:
+        null,
+
+      disqualificationReason:
+        null,
+
+      // Reset ballot assignment
+      candidateNumber:
+        null,
+
+      ballotOrder:
+        null,
+    },
+  );
+}
+
+    // ======================================================
     // 6. Create Nomination
     // ======================================================
 
@@ -90,19 +201,32 @@ export class SubmitNominationService {
         dto.partyId,
 
       position:
-        dto.position,
+  dto.position.trim(),
+
+      // ======================================================
+// Candidate Profile
+// ======================================================
+
+      biography:
+        dto.biography?.trim(),
+
+      campaignSlogan:
+        dto.campaignSlogan?.trim(),
+
+      campaignWebsite:
+        dto.campaignWebsite?.trim(),
 
       manifesto:
-        dto.manifesto,
+        dto.manifesto?.trim(),
 
       agenda:
-        dto.agenda,
+        dto.agenda?.trim(),
 
       achievements:
-        dto.achievements,
+        dto.achievements?.trim(),
 
       nominationStatement:
-        dto.nominationStatement,
+        dto.nominationStatement.trim(),
 
       photoUrl:
         dto.photoUrl,

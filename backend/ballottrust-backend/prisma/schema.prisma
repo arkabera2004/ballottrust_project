@@ -8,32 +8,32 @@ datasource db {
 }
 
 model User {
-  id                            String           @id @default(uuid())
+  id                            String              @id @default(uuid())
   /// ///////////////////////////////////////////////////
   /// ///////////////////////////////////////////////////
   fullName                      String
-  email                         String           @unique
+  email                         String              @unique
   password                      String?
   /// ///////////////////////////////////////////////////
   /// ///////////////////////////////////////////////////
-  createdAt                     DateTime         @default(now())
-  role                          Role             @default(VOTER)
+  createdAt                     DateTime            @default(now())
+  role                          Role                @default(VOTER)
   /// ///////////////////////////////////////////////////
   /// ///////////////////////////////////////////////////
   department                    String?
   profilePhoto                  String?
   registrationNumber            String?
-  status                        UserStatus       @default(PENDING)
+  status                        UserStatus          @default(PENDING)
   studentIdCard                 String?
-  updatedAt                     DateTime         @updatedAt
-  emailVerified                 Boolean          @default(false)
+  updatedAt                     DateTime            @updatedAt
+  emailVerified                 Boolean             @default(false)
   /// ///////////////////////////////////////////////////
   /// ///////////////////////////////////////////////////
-  failedLoginAttempts           Int              @default(0)
+  failedLoginAttempts           Int                 @default(0)
   lastLogin                     DateTime?
   lockedUntil                   DateTime?
   phoneNumber                   String?
-  profileCompleted              Boolean          @default(false)
+  profileCompleted              Boolean             @default(false)
   providerId                    String?
   /// ///////////////////////////////////////////////////
   /// ///////////////////////////////////////////////////
@@ -51,7 +51,7 @@ model User {
   deletedAt                     DateTime?
   gender                        String?
   lastPasswordChange            DateTime?
-  mfaEnabled                    Boolean          @default(false)
+  mfaEnabled                    Boolean             @default(false)
   mfaSecret                     String?
   postalCode                    String?
   semester                      Int?
@@ -59,21 +59,25 @@ model User {
   year                          Int?
   /// ///////////////////////////////////////////////////
   /// ///////////////////////////////////////////////////
-  provider                      AuthProvider     @default(LOCAL)
+  provider                      AuthProvider        @default(LOCAL)
   emailVerificationOtp          String?
   emailVerificationOtpExpiresAt DateTime?
   passwordResetToken            String?
   passwordResetTokenExpiresAt   DateTime?
   avatar                        String?
-  googleLinked                  Boolean          @default(false)
+  googleLinked                  Boolean             @default(false)
   auditLogs                     AuditLog[]
-  candidates                    Candidate[]      @relation("CandidateUser")
-  verifiedCandidates            Candidate[]      @relation("CandidateVerifiedBy")
-  approvedCandidates            Candidate[]      @relation("CandidateApprovedBy")
-  approvedElections             Election[]       @relation("ElectionApprover")
-  createdElections              Election[]       @relation("ElectionCreator")
-  publishedElections            Election[]       @relation("ElectionPublisher")
-  ballotFinalizedElections      Election[]       @relation("ElectionBallotFinalizer")
+  candidates                    Candidate[]         @relation("CandidateUser")
+  verifiedCandidates            Candidate[]         @relation("CandidateVerifiedBy")
+  approvedCandidates            Candidate[]         @relation("CandidateApprovedBy")
+  rejectedCandidates            Candidate[]         @relation("CandidateRejectedBy")
+  disqualifiedCandidates        Candidate[]         @relation("CandidateDisqualifiedBy")
+  verifiedCandidateDocuments    CandidateDocument[] @relation("CandidateDocumentVerifiedBy")
+  rejectedCandidateDocuments    CandidateDocument[] @relation("CandidateDocumentRejectedBy")
+  approvedElections             Election[]          @relation("ElectionApprover")
+  createdElections              Election[]          @relation("ElectionCreator")
+  publishedElections            Election[]          @relation("ElectionPublisher")
+  ballotFinalizedElections      Election[]          @relation("ElectionBallotFinalizer")
   reports                       ElectionReport[]
   notifications                 Notification[]
   refreshTokens                 RefreshToken[]
@@ -207,12 +211,24 @@ model Candidate {
   position String?
 
   // ==========================================
-  // Nomination Information
+  // Candidate Profile
+  // ==========================================
+
+  biography       String?
+  campaignSlogan  String?
+  campaignWebsite String?
+
+  // ==========================================
+  // Manifesto / Campaign Information
   // ==========================================
 
   manifesto    String?
   agenda       String?
   achievements String?
+
+  // ==========================================
+  // Nomination Information
+  // ==========================================
 
   nominationStatement String?
 
@@ -253,8 +269,11 @@ model Candidate {
   // Rejection
   // ==========================================
 
+  rejectedById    String?
   rejectionReason String?
   rejectedAt      DateTime?
+
+  rejectedBy User? @relation("CandidateRejectedBy", fields: [rejectedById], references: [id])
 
   // ==========================================
   // Withdrawal / Disqualification
@@ -264,13 +283,18 @@ model Candidate {
 
   withdrawalReason String?
 
-  disqualifiedAt DateTime?
+  disqualifiedById String?
+  disqualifiedAt   DateTime?
 
   disqualificationReason String?
+
+  disqualifiedBy User? @relation("CandidateDisqualifiedBy", fields: [disqualifiedById], references: [id])
 
   // ==========================================
   // Relations
   // ==========================================
+
+  documents CandidateDocument[]
 
   votes Vote[]
 
@@ -294,6 +318,78 @@ model Candidate {
   @@index([partyId])
   @@index([electionId])
   @@index([userId])
+}
+
+model CandidateDocument {
+  id String @id @default(uuid())
+
+  // ==========================================
+  // Candidate Relation
+  // ==========================================
+
+  candidateId String
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  // ==========================================
+  // Document Information
+  // ==========================================
+
+  documentType CandidateDocumentType
+
+  originalFileName String
+
+  fileUrl String
+
+  mimeType String
+
+  fileSize Int
+
+  // ==========================================
+  // Verification Workflow
+  // ==========================================
+
+  status CandidateDocumentStatus @default(PENDING)
+
+  verifiedById String?
+  verifiedAt   DateTime?
+
+  verifiedBy User? @relation("CandidateDocumentVerifiedBy", fields: [verifiedById], references: [id])
+
+  // ==========================================
+  // Rejection
+  // ==========================================
+
+  rejectedById    String?
+  rejectedAt      DateTime?
+  rejectionReason String?
+
+  rejectedBy User? @relation("CandidateDocumentRejectedBy", fields: [rejectedById], references: [id])
+
+  // ==========================================
+  // Replacement Tracking
+  // ==========================================
+
+  replacedAt DateTime?
+
+  // ==========================================
+  // System
+  // ==========================================
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // ==========================================
+  // Indexes
+  // ==========================================
+
+  @@index([candidateId])
+  @@index([documentType])
+  @@index([status])
+  @@index([verifiedById])
+  @@index([rejectedById])
+  @@index([candidateId, status])
 }
 
 model Vote {
@@ -649,4 +745,19 @@ enum BallotOrderMethod {
   ALPHABETICAL
   RANDOM
   MANUAL
+}
+
+enum CandidateDocumentType {
+  IDENTITY_PROOF
+  STUDENT_ID
+  ELIGIBILITY_PROOF
+  NOMINATION_FORM
+  SUPPORTING_DOCUMENT
+  OTHER
+}
+
+enum CandidateDocumentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
 }

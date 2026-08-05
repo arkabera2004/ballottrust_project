@@ -90,29 +90,31 @@ export class CandidateValidator {
   }
 
   // ======================================================
-  // Duplicate Nomination
-  // ======================================================
+// Duplicate Nomination / Previous Record
+// ======================================================
 
-  async validateNoDuplicateNomination(
-    userId: string,
-    electionId: string,
-  ) {
-    const existing =
-      await this.candidateRepository
-        .findByUserAndElection(
-          userId,
-          electionId,
-        );
-
-    if (
-      existing &&
-      !existing.deletedAt
-    ) {
-      throw new ConflictException(
-        'You have already submitted a nomination for this election.',
+async validateNoDuplicateNomination(
+  userId: string,
+  electionId: string,
+) {
+  const existing =
+    await this.candidateRepository
+      .findByUserAndElection(
+        userId,
+        electionId,
       );
-    }
+
+  if (
+    existing &&
+    !existing.deletedAt
+  ) {
+    throw new ConflictException(
+      'You have already submitted a nomination for this election.',
+    );
   }
+
+  return existing;
+}
 
   // ======================================================
   // Candidate Limit

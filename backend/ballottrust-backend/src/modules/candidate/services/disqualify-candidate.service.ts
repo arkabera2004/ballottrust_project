@@ -19,9 +19,10 @@ export class DisqualifyCandidateService {
   ) {}
 
   async execute(
-    candidateId: string,
-    reason: string,
-  ) {
+  candidateId: string,
+  disqualifiedById: string,
+  reason: string,
+) {
     const candidate =
       await this.candidateRepository.findById(
         candidateId,
@@ -44,17 +45,23 @@ export class DisqualifyCandidateService {
       );
 
     return this.candidateRepository.update(
-      candidateId,
-      {
-        status:
-          CandidateStatus.DISQUALIFIED,
+  candidateId,
+  {
+    status:
+      CandidateStatus.DISQUALIFIED,
 
-        disqualifiedAt:
-          new Date(),
+    disqualifiedBy: {
+  connect: {
+    id: disqualifiedById,
+  },
+},
 
-        disqualificationReason:
-          reason.trim(),
-      },
-    );
+    disqualifiedAt:
+      new Date(),
+
+    disqualificationReason:
+      reason.trim(),
+  },
+);
   }
 }

@@ -19,9 +19,10 @@ export class RejectCandidateService {
   ) {}
 
   async execute(
-    candidateId: string,
-    reason: string,
-  ) {
+  candidateId: string,
+  rejectedById: string,
+  reason: string,
+) {
     const candidate =
       await this.candidateRepository.findById(
         candidateId,
@@ -44,17 +45,23 @@ export class RejectCandidateService {
       );
 
     return this.candidateRepository.update(
-      candidateId,
-      {
-        status:
-          CandidateStatus.REJECTED,
+  candidateId,
+  {
+    status:
+      CandidateStatus.REJECTED,
 
-        rejectionReason:
-          reason.trim(),
-
-        rejectedAt:
-          new Date(),
+    rejectedBy: {
+      connect: {
+        id: rejectedById,
       },
-    );
+    },
+
+    rejectionReason:
+      reason.trim(),
+
+    rejectedAt:
+      new Date(),
+  },
+);
   }
 }

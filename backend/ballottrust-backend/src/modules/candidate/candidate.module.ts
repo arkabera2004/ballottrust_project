@@ -22,6 +22,21 @@ import { ManualBallotOrderService } from './services/manual-ballot-order.service
 import { GetBallotService } from './services/get-ballot.service';
 import { BallotLifecycleValidator } from './validators/ballot-lifecycle.validator';
 import { FinalizeBallotService } from './services/finalize-ballot.service';
+import { UpdateCandidateService } from './services/update-candidate.service';
+import { CancelNominationService } from './services/cancel-nomination.service';
+import { UpdateCandidateProfileService } from './services/update-candidate-profile.service';
+import { CandidateProfileCompletenessService } from './services/candidate-profile-completeness.service';
+import { GetPublicCandidateProfileService } from './services/get-public-candidate-profile.service';
+import { CandidateDocumentRepository } from './documents/candidate-document.repository';
+import { UploadCandidateDocumentService } from './documents/services/upload-candidate-document.service';
+import { ListCandidateDocumentsService } from './documents/services/list-candidate-documents.service';
+import { GetCandidateDocumentService } from './documents/services/get-candidate-document.service';
+import { ReplaceCandidateDocumentService } from './documents/services/replace-candidate-document.service';
+import { CandidateDocumentStatusValidator } from './documents/validators/candidate-document-status.validator';
+import { VerifyCandidateDocumentService } from './documents/services/verify-candidate-document.service';
+import { RejectCandidateDocumentService } from './documents/services/reject-candidate-document.service';
+import { DeleteCandidateDocumentService } from './documents/services/delete-candidate-document.service';
+import { CandidateDocumentCompletenessService } from './documents/services/candidate-document-completeness.service';
 
 @Module({
   imports: [
@@ -52,6 +67,21 @@ import { FinalizeBallotService } from './services/finalize-ballot.service';
   GetBallotService,
   BallotLifecycleValidator,
   FinalizeBallotService,
+  UpdateCandidateService,
+  CancelNominationService,
+  UpdateCandidateProfileService,
+  CandidateProfileCompletenessService,
+  GetPublicCandidateProfileService,
+  CandidateDocumentRepository,
+  UploadCandidateDocumentService,
+  ListCandidateDocumentsService,
+  GetCandidateDocumentService,
+  ReplaceCandidateDocumentService,
+  CandidateDocumentStatusValidator,
+  VerifyCandidateDocumentService,
+  RejectCandidateDocumentService,
+  DeleteCandidateDocumentService, 
+  CandidateDocumentCompletenessService,
 ],
 
   exports: [
