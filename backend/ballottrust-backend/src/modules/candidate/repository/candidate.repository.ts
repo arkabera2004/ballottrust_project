@@ -715,17 +715,14 @@ async finalizeBallot(
     },
 
     data: {
-      ...( {
-        ballotFinalizedAt:
-          new Date(),
+  ballotFinalizedAt: new Date(),
 
-        ballotFinalizedBy: {
-          connect: {
-            id: finalizedById,
-          },
-        },
-      } as any ),
+  ballotFinalizedBy: {
+    connect: {
+      id: finalizedById,
     },
+  },
+},
 
     select: {
       id: true,
@@ -839,5 +836,28 @@ async finalizeBallot(
         total / limit,
       ),
   };
+}
+
+// ==========================================
+// Find Election Campaign State
+// ==========================================
+
+async findElectionCampaignState(
+  electionId: string,
+) {
+  return this.prisma.election.findFirst({
+    where: {
+      id: electionId,
+      deletedAt: null,
+    },
+
+    select: {
+      id: true,
+      status: true,
+      campaignStart: true,
+      campaignEnd: true,
+      ballotFinalizedAt: true,
+    },
+  });
 }
 }

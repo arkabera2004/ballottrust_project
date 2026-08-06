@@ -37,6 +37,9 @@ import { VerifyCandidateDocumentService } from './documents/services/verify-cand
 import { RejectCandidateDocumentService } from './documents/services/reject-candidate-document.service';
 import { DeleteCandidateDocumentService } from './documents/services/delete-candidate-document.service';
 import { CandidateDocumentCompletenessService } from './documents/services/candidate-document-completeness.service';
+import { CampaignWindowValidator } from './validators/campaign-window.validator';
+import { UpdateCandidateCampaignService } from './services/update-candidate-campaign.service';
+
 
 @Module({
   imports: [
@@ -82,6 +85,8 @@ import { CandidateDocumentCompletenessService } from './documents/services/candi
   RejectCandidateDocumentService,
   DeleteCandidateDocumentService, 
   CandidateDocumentCompletenessService,
+  CampaignWindowValidator,
+  UpdateCandidateCampaignService,
 ],
 
   exports: [

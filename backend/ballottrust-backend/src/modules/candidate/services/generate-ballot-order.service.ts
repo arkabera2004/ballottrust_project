@@ -45,7 +45,7 @@ if (!election) {
 this.ballotLifecycleValidator
   .validateModification(
     election.status,
-    null,
+    election.ballotFinalizedAt,
   );
     // ======================================================
     // 1. Get Eligible Candidates

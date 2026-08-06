@@ -67,14 +67,16 @@ export class UpdateCandidateDto {
   // ======================================================
 
   @IsOptional()
-  @IsUrl({
-    require_protocol: true,
-  })
-  photoUrl?: string;
+@IsUrl({
+  protocols: ['http', 'https'],
+  require_protocol: true,
+})
+photoUrl?: string;
 
-  @IsOptional()
-  @IsUrl({
-    require_protocol: true,
-  })
-  documentUrl?: string;
+@IsOptional()
+@IsUrl({
+  protocols: ['http', 'https'],
+  require_protocol: true,
+})
+documentUrl?: string;
 }

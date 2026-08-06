@@ -105,4 +105,20 @@ validateEditable(
     );
   }
 }
+
+// ======================================================
+// Validate Campaign Editing
+// ======================================================
+
+validateCampaignEditable(
+  status: CandidateStatus,
+): void {
+  if (
+    status !== CandidateStatus.APPROVED
+  ) {
+    throw new BadRequestException(
+      `Campaign information cannot be modified while the candidate is in ${status} status.`,
+    );
+  }
+}
 }

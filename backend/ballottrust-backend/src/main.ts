@@ -26,7 +26,7 @@ app.useGlobalFilters(
     forbidNonWhitelisted: true,
     transform: true,
     transformOptions: {
-      enableImplicitConversion: true,
+      enableImplicitConversion: false,
     },
   }),
 );

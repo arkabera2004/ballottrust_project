@@ -5,6 +5,7 @@ import {
   Get,
   Patch,
   Param,
+  ParseUUIDPipe,
   Post,
   Query,
   UseGuards,
@@ -79,7 +80,8 @@ import { VerifyCandidateDocumentService } from './documents/services/verify-cand
 import { RejectCandidateDocumentService } from './documents/services/reject-candidate-document.service';
 import { RejectCandidateDocumentDto } from './documents/dto/reject-candidate-document.dto';
 import { DeleteCandidateDocumentService } from './documents/services/delete-candidate-document.service';
-
+import { UpdateCandidateCampaignService } from './services/update-candidate-campaign.service';
+import { UpdateCandidateCampaignDto } from './dto/update-candidate-campaign.dto';
 
 @Controller('candidates')
 export class CandidateController {
@@ -161,6 +163,9 @@ export class CandidateController {
 
     private readonly deleteCandidateDocumentService:
       DeleteCandidateDocumentService,
+
+    private readonly updateCandidateCampaignService:
+      UpdateCandidateCampaignService,
   ) {}
 
   // ======================================================
@@ -188,8 +193,13 @@ export class CandidateController {
 
 @Get('public/:id')
 async getPublicCandidateProfile(
-  @Param('id')
-  id: string,
+  @Param(
+  'id',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+id: string,
 ) {
   return this.getPublicCandidateProfileService.execute(
     id,
@@ -209,8 +219,13 @@ async getPublicCandidateProfile(
   ),
 )
 async uploadCandidateDocument(
-  @Param('id')
-  id: string,
+  @Param(
+  'id',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+id: string,
 
   @Body()
   dto: UploadCandidateDocumentDto,
@@ -281,8 +296,13 @@ async findAll(
     Role.SUPER_ADMIN,
   )
   async verify(
-    @Param('id')
-    id: string,
+    @Param(
+  'id',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+id: string,
 
     @CurrentUser()
     user: JwtPayload,
@@ -307,8 +327,13 @@ async findAll(
     Role.SUPER_ADMIN,
   )
   async approve(
-    @Param('id')
-    id: string,
+    @Param(
+  'id',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+id: string,
 
     @CurrentUser()
     user: JwtPayload,
@@ -333,8 +358,13 @@ async findAll(
     Role.SUPER_ADMIN,
   )
   async reject(
-  @Param('id')
-  id: string,
+  @Param(
+  'id',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+id: string,
 
   @Body()
   dto: RejectCandidateDto,
@@ -356,8 +386,13 @@ async findAll(
 @Patch(':id/withdraw')
 @UseGuards(JwtAuthGuard)
 async withdraw(
-  @Param('id')
-  id: string,
+  @Param(
+  'id',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+id: string,
 
   @Body()
   dto: WithdrawCandidateDto,
@@ -386,8 +421,13 @@ async withdraw(
   Role.SUPER_ADMIN,
 )
 async disqualify(
-  @Param('id')
-  id: string,
+  @Param(
+  'id',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+id: string,
 
   @Body()
   dto: DisqualifyCandidateDto,
@@ -410,8 +450,13 @@ async disqualify(
   @Get(':id')
 @UseGuards(JwtAuthGuard)
 async findOne(
-  @Param('id')
-  id: string,
+  @Param(
+  'id',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+id: string,
 
   @CurrentUser()
   user: JwtPayload,
@@ -437,8 +482,13 @@ async findOne(
   Role.ELECTION_COMMISSIONER,
 )
 async assignCandidateNumber(
-  @Param('id')
-  id: string,
+  @Param(
+  'id',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+id: string,
 
   @Body()
   dto: AssignCandidateNumberDto,
@@ -463,8 +513,13 @@ async assignCandidateNumber(
   Role.ELECTION_COMMISSIONER,
 )
 async autoAssignCandidateNumber(
-  @Param('id')
-  id: string,
+  @Param(
+  'id',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+id: string,
 ) {
   return this.autoAssignCandidateNumberService.execute(
     id,
@@ -485,8 +540,13 @@ async autoAssignCandidateNumber(
   Role.ELECTION_COMMISSIONER,
 )
 async generateBallotOrder(
-  @Param('electionId')
-  electionId: string,
+  @Param(
+  'electionId',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+electionId: string,
 
   @Body()
   dto: GenerateBallotOrderDto,
@@ -511,8 +571,13 @@ async generateBallotOrder(
   Role.ELECTION_COMMISSIONER,
 )
 async manualBallotOrder(
-  @Param('electionId')
-  electionId: string,
+  @Param(
+  'electionId',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+electionId: string,
 
   @Body()
   dto: ManualBallotOrderDto,
@@ -529,8 +594,13 @@ async manualBallotOrder(
 
 @Get('election/:electionId/ballot')
 async getElectionBallot(
-  @Param('electionId')
-  electionId: string,
+  @Param(
+  'electionId',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+electionId: string,
 ) {
   return this.getBallotService.execute(
     electionId,
@@ -551,8 +621,13 @@ async getElectionBallot(
   Role.ELECTION_COMMISSIONER,
 )
 async finalizeBallot(
-  @Param('electionId')
-  electionId: string,
+  @Param(
+  'electionId',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+electionId: string,
 
   @CurrentUser()
   user: JwtPayload,
@@ -570,8 +645,13 @@ async finalizeBallot(
 @Patch(':id')
 @UseGuards(JwtAuthGuard)
 async updateCandidate(
-  @Param('id')
-  id: string,
+  @Param(
+  'id',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+id: string,
 
   @Body()
   dto: UpdateCandidateDto,
@@ -593,8 +673,13 @@ async updateCandidate(
 @Delete(':id/nomination')
 @UseGuards(JwtAuthGuard)
 async cancelNomination(
-  @Param('id')
-  id: string,
+  @Param(
+  'id',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+id: string,
 
   @CurrentUser()
   user: JwtPayload,
@@ -612,8 +697,13 @@ async cancelNomination(
 @Patch(':id/profile')
 @UseGuards(JwtAuthGuard)
 async updateCandidateProfile(
-  @Param('id')
-  id: string,
+  @Param(
+  'id',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+id: string,
 
   @Body()
   dto: UpdateCandidateProfileDto,
@@ -635,8 +725,13 @@ async updateCandidateProfile(
 @Get(':id/documents')
 @UseGuards(JwtAuthGuard)
 async listCandidateDocuments(
-  @Param('id')
-  id: string,
+  @Param(
+  'id',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+id: string,
 
   @CurrentUser()
   user: JwtPayload,
@@ -655,21 +750,32 @@ async listCandidateDocuments(
 @Get(':candidateId/documents/:documentId')
 @UseGuards(JwtAuthGuard)
 async getCandidateDocument(
-  @Param('candidateId')
-  candidateId: string,
+  @Param(
+  'candidateId',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+candidateId: string,
 
-  @Param('documentId')
-  documentId: string,
+  @Param(
+  'documentId',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+documentId: string,
 
   @CurrentUser()
   user: JwtPayload,
 ) {
   const document =
-    await this.getCandidateDocumentService.execute(
-      documentId,
-      user.userId,
-      user.role,
-    );
+   await this.getCandidateDocumentService.execute(
+  candidateId,
+  documentId,
+  user.userId,
+  user.role,
+);
 
   if (
     document.candidateId !==
@@ -696,11 +802,21 @@ async getCandidateDocument(
   ),
 )
 async replaceCandidateDocument(
-  @Param('candidateId')
-  candidateId: string,
+  @Param(
+  'candidateId',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+candidateId: string,
 
-  @Param('documentId')
-  documentId: string,
+  @Param(
+  'documentId',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+documentId: string,
 
   @UploadedFile()
   file: Express.Multer.File,
@@ -730,11 +846,21 @@ async replaceCandidateDocument(
   Role.ELECTION_COMMISSIONER,
 )
 async verifyCandidateDocument(
-  @Param('candidateId')
-  candidateId: string,
+  @Param(
+  'candidateId',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+candidateId: string,
 
-  @Param('documentId')
-  documentId: string,
+  @Param(
+  'documentId',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+documentId: string,
 
   @CurrentUser()
   user: JwtPayload,
@@ -760,11 +886,21 @@ async verifyCandidateDocument(
   Role.ELECTION_COMMISSIONER,
 )
 async rejectCandidateDocument(
-  @Param('candidateId')
-  candidateId: string,
+  @Param(
+  'candidateId',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+candidateId: string,
 
-  @Param('documentId')
-  documentId: string,
+  @Param(
+  'documentId',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+documentId: string,
 
   @Body()
   dto: RejectCandidateDocumentDto,
@@ -787,11 +923,21 @@ async rejectCandidateDocument(
 @Delete(':candidateId/documents/:documentId')
 @UseGuards(JwtAuthGuard)
 async deleteCandidateDocument(
-  @Param('candidateId')
-  candidateId: string,
+  @Param(
+  'candidateId',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+candidateId: string,
 
-  @Param('documentId')
-  documentId: string,
+  @Param(
+  'documentId',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+documentId: string,
 
   @CurrentUser()
   user: JwtPayload,
@@ -800,6 +946,34 @@ async deleteCandidateDocument(
     candidateId,
     documentId,
     user.userId,
+  );
+}
+
+// ======================================================
+// Update Candidate Campaign
+// ======================================================
+
+@Patch(':id/campaign')
+@UseGuards(JwtAuthGuard)
+async updateCampaign(
+  @Param(
+  'id',
+  new ParseUUIDPipe({
+    version: '4',
+  }),
+)
+id: string,
+
+  @Body()
+  dto: UpdateCandidateCampaignDto,
+
+  @CurrentUser()
+  user: JwtPayload,
+) {
+  return this.updateCandidateCampaignService.execute(
+    id,
+    user.userId,
+    dto,
   );
 }
 }

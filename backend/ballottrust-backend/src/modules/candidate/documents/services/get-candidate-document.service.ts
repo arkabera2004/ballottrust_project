@@ -20,10 +20,11 @@ export class GetCandidateDocumentService {
   ) {}
 
   async execute(
-    documentId: string,
-    userId: string,
-    role: Role,
-  ) {
+  candidateId: string,
+  documentId: string,
+  userId: string,
+  role: Role,
+) {
     // ==========================================
     // 1. Find Document
     // ==========================================
@@ -39,6 +40,19 @@ export class GetCandidateDocumentService {
         'Candidate document not found.',
       );
     }
+
+    // ==========================================
+// 2. Validate Candidate Relationship
+// ==========================================
+
+if (
+  document.candidateId !==
+  candidateId
+) {
+  throw new NotFoundException(
+    'Candidate document not found.',
+  );
+}
 
     // ==========================================
     // 2. Determine Access

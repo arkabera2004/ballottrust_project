@@ -10,6 +10,7 @@ import {
 
 import { CandidateRepository } from '../repository/candidate.repository';
 import { CandidateValidator } from '../validators/candidate.validator';
+import { BallotLifecycleValidator } from '../validators/ballot-lifecycle.validator';
 
 @Injectable()
 export class AssignCandidateNumberService {
@@ -19,6 +20,9 @@ export class AssignCandidateNumberService {
 
     private readonly candidateValidator:
       CandidateValidator,
+
+    private readonly ballotLifecycleValidator:
+      BallotLifecycleValidator,
   ) {}
 
   async execute(
@@ -54,7 +58,29 @@ export class AssignCandidateNumberService {
     }
 
     // ======================================================
-    // 3. Prevent Reassignment
+    // 3. Validate Ballot Lifecycle
+    // ======================================================
+
+    const election =
+      await this.candidateRepository
+        .findElectionBallotState(
+          candidate.electionId,
+        );
+
+    if (!election) {
+      throw new NotFoundException(
+        'Election not found.',
+      );
+    }
+
+    this.ballotLifecycleValidator
+      .validateModification(
+        election.status,
+        election.ballotFinalizedAt,
+      );
+
+    // ======================================================
+    // 4. Prevent Reassignment
     // ======================================================
 
     if (
@@ -66,7 +92,7 @@ export class AssignCandidateNumberService {
     }
 
     // ======================================================
-    // 4. Validate Election-Scoped Uniqueness
+    // 5. Validate Election-Scoped Uniqueness
     // ======================================================
 
     await this.candidateValidator
@@ -76,7 +102,7 @@ export class AssignCandidateNumberService {
       );
 
     // ======================================================
-    // 5. Assign Candidate Number
+    // 6. Assign Candidate Number
     // ======================================================
 
     return this.candidateRepository.update(
