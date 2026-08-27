@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { ElectionRepository } from '../repository';
 import { ElectionWorkflowValidator } from '../validators';
+import { AuditService } from '../../audit/audit.service';
 
 @Injectable()
 export class PublishElectionService {
@@ -9,6 +10,7 @@ export class PublishElectionService {
   constructor(
     private readonly repository: ElectionRepository,
     private readonly workflowValidator: ElectionWorkflowValidator,
+    private readonly auditService: AuditService,
   ) {}
 
   async execute(
@@ -28,6 +30,16 @@ export class PublishElectionService {
         id,
         publishedById,
       );
+
+    await this.auditService.log({
+      userId: publishedById,
+      action: 'ELECTION_PUBLISHED',
+      module: 'election',
+      entityType: 'Election',
+      entityId: id,
+      result: 'SUCCESS',
+      metadata: { previousStatus: election.status },
+    });
 
     return {
       message: 'Election published successfully.',
