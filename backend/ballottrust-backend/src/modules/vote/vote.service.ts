@@ -1,11 +1,13 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
 } from '@nestjs/common';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateVoteDto } from './dto/create-vote.dto';
 import { AuditService } from '../audit/audit.service';
+import { CheckVoterEligibilityService } from '../eligibility/services/check-voter-eligibility.service';
 
 import * as crypto from 'crypto';
 
@@ -14,6 +16,7 @@ export class VoteService {
   constructor(
     private prisma: PrismaService,
     private auditService: AuditService,
+    private checkVoterEligibilityService: CheckVoterEligibilityService,
   ) {}
 
   /**
@@ -104,6 +107,23 @@ export class VoteService {
     if (election.status !== 'ACTIVE') {
       throw new BadRequestException(
         'Election is not active',
+      );
+    }
+
+    // Sec4: real-time eligibility enforcement. This also persists a
+    // VoterEligibilitySnapshot (via CheckVoterEligibilityService), so a
+    // rejected voter can query GET /elections/:id/eligibility/me for the
+    // full explanation of why — the exception here stays terse on
+    // purpose.
+    const { eligible } =
+      await this.checkVoterEligibilityService.execute(
+        userId,
+        data.electionId,
+      );
+
+    if (!eligible) {
+      throw new ForbiddenException(
+        'You are not eligible to vote in this election',
       );
     }
 

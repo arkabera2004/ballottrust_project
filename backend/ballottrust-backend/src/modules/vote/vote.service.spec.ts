@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { VoteService } from './vote.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { CheckVoterEligibilityService } from '../eligibility/services/check-voter-eligibility.service';
 
 describe('VoteService', () => {
   let service: VoteService;
@@ -34,6 +35,10 @@ describe('VoteService', () => {
     log: jest.fn(),
   };
 
+  const mockCheckVoterEligibilityService = {
+    execute: jest.fn(),
+  };
+
   const approvedCandidate = {
     id: 'candidate-1',
     electionId: 'election-1',
@@ -48,6 +53,13 @@ describe('VoteService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     mockPrismaService.$transaction.mockImplementation((cb) => cb(mockTx));
+    // Eligible by default — tests exercising ineligibility override this.
+    mockCheckVoterEligibilityService.execute.mockResolvedValue({
+      eligible: true,
+      explanation: { type: 'AND', passed: true, rules: [] },
+      ruleSetId: null,
+      ruleSetVersion: 0,
+    });
 
     const module: TestingModule =
       await Test.createTestingModule({
@@ -62,6 +74,11 @@ describe('VoteService', () => {
           {
             provide: AuditService,
             useValue: mockAuditService,
+          },
+
+          {
+            provide: CheckVoterEligibilityService,
+            useValue: mockCheckVoterEligibilityService,
           },
         ],
       }).compile();
@@ -266,6 +283,49 @@ describe('VoteService', () => {
     ).rejects.toThrow('Election is not active');
 
     expect(mockPrismaService.$transaction).not.toHaveBeenCalled();
+  });
+
+  // ============================================================
+  // INELIGIBLE VOTER (Sec4)
+  // ============================================================
+
+  it('should reject a voter the eligibility engine marks ineligible, without touching the ledger', async () => {
+    mockPrismaService.candidate.findUnique.mockResolvedValue(
+      approvedCandidate,
+    );
+    mockPrismaService.election.findUnique.mockResolvedValue(
+      activeElection,
+    );
+
+    mockCheckVoterEligibilityService.execute.mockResolvedValue({
+      eligible: false,
+      explanation: { type: 'AND', passed: false, rules: [] },
+      ruleSetId: 'ruleset-1',
+      ruleSetVersion: 2,
+    });
+
+    await expect(
+      service.castVote('user-1', {
+        candidateId: 'candidate-1',
+        electionId: 'election-1',
+      }),
+    ).rejects.toThrow('You are not eligible to vote in this election');
+
+    expect(mockCheckVoterEligibilityService.execute).toHaveBeenCalledWith(
+      'user-1',
+      'election-1',
+    );
+
+    expect(mockPrismaService.$transaction).not.toHaveBeenCalled();
+
+    expect(mockAuditService.log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'user-1',
+        action: 'VOTE_CAST_REJECTED',
+        entityId: 'election-1',
+        result: 'FAILURE',
+      }),
+    );
   });
 
   // ============================================================
