@@ -11,6 +11,7 @@ import { RejectCandidateDocumentService } from '../documents/services/reject-can
 import { CandidateDocumentRepository } from '../documents/candidate-document.repository';
 
 import { CandidateDocumentStatusValidator } from '../documents/validators/candidate-document-status.validator';
+import { AuditService } from '../../audit/audit.service';
 
 describe('RejectCandidateDocumentService', () => {
   let service: RejectCandidateDocumentService;
@@ -24,6 +25,10 @@ describe('RejectCandidateDocumentService', () => {
     validateTransition: jest.fn(),
   };
 
+  const auditService = {
+    log: jest.fn(),
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -31,6 +36,7 @@ describe('RejectCandidateDocumentService', () => {
       new RejectCandidateDocumentService(
         candidateDocumentRepository as unknown as CandidateDocumentRepository,
         candidateDocumentStatusValidator as unknown as CandidateDocumentStatusValidator,
+        auditService as unknown as AuditService,
       );
   });
 

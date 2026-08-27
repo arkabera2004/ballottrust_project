@@ -16,6 +16,8 @@ import {
   CandidateDocumentStatusValidator,
 } from '../validators/candidate-document-status.validator';
 
+import { AuditService } from '../../../audit/audit.service';
+
 @Injectable()
 export class RejectCandidateDocumentService {
   constructor(
@@ -24,6 +26,8 @@ export class RejectCandidateDocumentService {
 
     private readonly candidateDocumentStatusValidator:
       CandidateDocumentStatusValidator,
+
+    private readonly auditService: AuditService,
   ) {}
 
   async execute(
@@ -107,11 +111,24 @@ export class RejectCandidateDocumentService {
     // 7. Reject Document
     // ==========================================
 
-    return this.candidateDocumentRepository
+    const rejected = await this.candidateDocumentRepository
       .rejectDocument(
         document.id,
         reviewerId,
         rejectionReason,
       );
+
+    await this.auditService.log({
+      userId: reviewerId,
+      action: 'CANDIDATE_DOCUMENT_REJECTED',
+      module: 'candidate',
+      entityType: 'CandidateDocument',
+      entityId: document.id,
+      result: 'SUCCESS',
+      description: rejectionReason,
+      metadata: { candidateId, previousStatus: document.status },
+    });
+
+    return rejected;
   }
 }

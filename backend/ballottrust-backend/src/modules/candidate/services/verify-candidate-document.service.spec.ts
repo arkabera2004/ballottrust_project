@@ -21,6 +21,12 @@ import {
   CandidateDocumentStatusValidator,
 } from '../documents/validators/candidate-document-status.validator';
 
+import { AuditService } from '../../audit/audit.service';
+
+const noopAuditService = {
+  log: jest.fn(async (): Promise<void> => undefined),
+} as unknown as AuditService;
+
 describe(
   'VerifyCandidateDocumentService',
   () => {
@@ -66,6 +72,7 @@ describe(
           new VerifyCandidateDocumentService(
             repository as unknown as CandidateDocumentRepository,
             statusValidator as unknown as CandidateDocumentStatusValidator,
+            noopAuditService,
           );
 
         await expect(
@@ -107,6 +114,7 @@ describe(
             {} as CandidateDocumentRepository,
 
             {} as CandidateDocumentStatusValidator,
+            {} as AuditService,
           );
 
         expect(
@@ -179,6 +187,7 @@ describe(
             repository as unknown as CandidateDocumentRepository,
 
             statusValidator as unknown as CandidateDocumentStatusValidator,
+            noopAuditService,
           );
 
         const result =
@@ -267,6 +276,7 @@ describe(
             repository as unknown as CandidateDocumentRepository,
 
             statusValidator as unknown as CandidateDocumentStatusValidator,
+            noopAuditService,
           );
 
         await expect(
@@ -346,6 +356,7 @@ describe(
             repository as unknown as CandidateDocumentRepository,
 
             statusValidator as unknown as CandidateDocumentStatusValidator,
+            noopAuditService,
           );
 
         await expect(
@@ -425,6 +436,7 @@ describe(
             repository as unknown as CandidateDocumentRepository,
 
             statusValidator as unknown as CandidateDocumentStatusValidator,
+            noopAuditService,
           );
 
         await expect(
