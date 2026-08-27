@@ -82,7 +82,7 @@ model User {
   notifications                 Notification[]
   refreshTokens                 RefreshToken[]
   sessions                      Session[]
-  votes                         Vote[]
+  voterCredentials              VoterCredential[]
 
   @@index([email])
   @@index([role])
@@ -140,6 +140,7 @@ model Election {
   ballotFinalizedBy   User?              @relation("ElectionBallotFinalizer", fields: [ballotFinalizedById], references: [id])
   reports             ElectionReport[]
   votes               Vote[]
+  voterCredentials    VoterCredential[]
 
   @@index([status])
   @@index([startDate])
@@ -392,11 +393,17 @@ model CandidateDocument {
   @@index([candidateId, status])
 }
 
+/// Anonymous vote ledger. Deliberately has NO foreign key to User and NO
+/// voter-identifying column — this is the enforced structural boundary
+/// between voter identity and cast ballots. See VoterCredential below and
+/// /docs/privacy-architecture.md for the full design.
 model Vote {
   id                    String                 @id @default(uuid())
   /// ///////////////////////////////////////////////////
   /// ///////////////////////////////////////////////////
-  voterId               String
+  /// One-time, non-reversible anonymous voting credential consumed at cast
+  /// time. Never derived reversibly from the voter's userId.
+  anonymousToken        String                 @unique
   candidateId           String
   electionId            String
   /// ///////////////////////////////////////////////////
@@ -411,14 +418,32 @@ model Vote {
   blockchainTransaction BlockchainTransaction?
   candidate             Candidate              @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   election              Election               @relation(fields: [electionId], references: [id], onDelete: Cascade)
-  voter                 User                   @relation(fields: [voterId], references: [id], onDelete: Cascade)
   receipt               VoteReceipt?
 
-  @@unique([voterId, electionId])
-  @@index([voterId])
   @@index([candidateId])
   @@index([electionId])
   @@index([hash])
+}
+
+/// Eligibility/credential store — structurally separate from the Vote
+/// ledger above. Records ONLY that a voter has (or hasn't) consumed their
+/// single voting credential for an election; never records which candidate
+/// they chose. No query can join this table to Vote to reconstruct a
+/// voter -> candidate mapping.
+model VoterCredential {
+  id         String    @id @default(uuid())
+  userId     String
+  electionId String
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  hasVoted   Boolean   @default(false)
+  issuedAt   DateTime  @default(now())
+  usedAt     DateTime?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  election   Election  @relation(fields: [electionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, electionId])
+  @@index([electionId])
 }
 
 model RefreshToken {
@@ -548,12 +573,22 @@ model AuditLog {
   /// ///////////////////////////////////////////////////
   severity        AuditSeverity @default(LOW)
   user            User?         @relation(fields: [userId], references: [id])
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  /// Tamper-evident hash chain: hash = SHA256(previousHash + actor + action
+  /// + module + entityType + entityId + result + createdAt). Any past
+  /// record altered breaks every subsequent hash, making tampering
+  /// detectable via AuditService.verifyChain().
+  result          String?
+  hash            String?
+  previousHash    String?
 
   @@index([userId])
   @@index([module])
   @@index([action])
   @@index([severity])
   @@index([createdAt])
+  @@index([hash])
 }
 
 model BlockchainTransaction {

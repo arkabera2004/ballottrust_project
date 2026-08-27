@@ -9,6 +9,7 @@ import { CandidateRepository } from '../repository/candidate.repository';
 import { CandidateProfileCompletenessService } from './candidate-profile-completeness.service';
 import { CandidateDocumentCompletenessService } from '../documents/services/candidate-document-completeness.service';
 import { CandidateStatusValidator } from '../validators/candidate-status.validator';
+import { AuditService } from '../../audit/audit.service';
 
 describe('Candidate Ownership Authorization', () => {
   // ============================================================
@@ -299,12 +300,17 @@ describe('Candidate Ownership Authorization', () => {
       validateTransition: jest.fn(),
     };
 
+    const auditService = {
+      log: jest.fn().mockResolvedValue(undefined),
+    };
+
     beforeEach(() => {
       jest.clearAllMocks();
 
       service = new WithdrawCandidateService(
         candidateRepository as unknown as CandidateRepository,
         candidateStatusValidator as unknown as CandidateStatusValidator,
+        auditService as unknown as AuditService,
       );
     });
 

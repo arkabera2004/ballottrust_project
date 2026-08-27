@@ -7,6 +7,7 @@ import { CandidateStatus } from '@prisma/client';
 
 import { CandidateRepository } from '../repository/candidate.repository';
 import { CandidateStatusValidator } from '../validators/candidate-status.validator';
+import { AuditService } from '../../audit/audit.service';
 
 @Injectable()
 export class DisqualifyCandidateService {
@@ -16,6 +17,8 @@ export class DisqualifyCandidateService {
 
     private readonly candidateStatusValidator:
       CandidateStatusValidator,
+
+    private readonly auditService: AuditService,
   ) {}
 
   async execute(
@@ -44,7 +47,7 @@ export class DisqualifyCandidateService {
         CandidateStatus.DISQUALIFIED,
       );
 
-    return this.candidateRepository.update(
+    const updated = await this.candidateRepository.update(
   candidateId,
   {
     status:
@@ -63,5 +66,18 @@ export class DisqualifyCandidateService {
       reason.trim(),
   },
 );
+
+    await this.auditService.log({
+      userId: disqualifiedById,
+      action: 'CANDIDATE_DISQUALIFIED',
+      module: 'candidate',
+      entityType: 'Candidate',
+      entityId: candidateId,
+      result: 'SUCCESS',
+      description: reason.trim(),
+      metadata: { previousStatus: candidate.status },
+    });
+
+    return updated;
   }
 }

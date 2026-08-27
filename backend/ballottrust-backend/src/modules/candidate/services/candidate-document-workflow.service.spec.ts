@@ -11,11 +11,13 @@ import { DeleteCandidateDocumentService } from '../documents/services/delete-can
 import { CandidateRepository } from '../repository/candidate.repository';
 import { CandidateDocumentRepository } from '../documents/candidate-document.repository';
 import { CandidateDocumentStatusValidator } from '../documents/validators/candidate-document-status.validator';
+import { AuditService } from '../../audit/audit.service';
 
 describe('Candidate Document Workflow - 6.4', () => {
   let candidateRepository: any;
   let candidateDocumentRepository: any;
   let candidateDocumentStatusValidator: any;
+  let auditService: any;
 
   let uploadService: UploadCandidateDocumentService;
   let getService: GetCandidateDocumentService;
@@ -78,6 +80,10 @@ describe('Candidate Document Workflow - 6.4', () => {
       validateTransition: jest.fn(),
     };
 
+    auditService = {
+      log: jest.fn(),
+    };
+
     uploadService = new UploadCandidateDocumentService(
       candidateRepository as CandidateRepository,
       candidateDocumentRepository as CandidateDocumentRepository,
@@ -95,11 +101,13 @@ describe('Candidate Document Workflow - 6.4', () => {
     verifyService = new VerifyCandidateDocumentService(
       candidateDocumentRepository as CandidateDocumentRepository,
       candidateDocumentStatusValidator as CandidateDocumentStatusValidator,
+      auditService as AuditService,
     );
 
     rejectService = new RejectCandidateDocumentService(
       candidateDocumentRepository as CandidateDocumentRepository,
       candidateDocumentStatusValidator as CandidateDocumentStatusValidator,
+      auditService as AuditService,
     );
 
     replaceService = new ReplaceCandidateDocumentService(

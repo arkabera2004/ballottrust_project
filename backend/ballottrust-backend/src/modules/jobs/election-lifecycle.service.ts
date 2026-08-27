@@ -8,6 +8,7 @@ import {
 } from '@prisma/client';
 
 import { ElectionRepository } from '../election/repository';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class ElectionLifecycleService {
@@ -17,6 +18,7 @@ export class ElectionLifecycleService {
 
   constructor(
     private readonly repository: ElectionRepository,
+    private readonly auditService: AuditService,
   ) {}
 
   async activatePublishedElections() {
@@ -29,6 +31,16 @@ export class ElectionLifecycleService {
       await this.repository.activateElection(
         election.id,
       );
+
+      await this.auditService.log({
+        userId: null,
+        action: 'ELECTION_STARTED',
+        module: 'election',
+        entityType: 'Election',
+        entityId: election.id,
+        result: 'SUCCESS',
+        metadata: { triggeredBy: 'system', trigger: 'cron' },
+      });
 
       this.logger.log(
         `Election "${election.title}" activated.`,
@@ -45,6 +57,16 @@ export class ElectionLifecycleService {
     await this.repository.closeElection(
       election.id,
     );
+
+    await this.auditService.log({
+      userId: null,
+      action: 'ELECTION_CLOSED',
+      module: 'election',
+      entityType: 'Election',
+      entityId: election.id,
+      result: 'SUCCESS',
+      metadata: { triggeredBy: 'system', trigger: 'cron' },
+    });
 
     this.logger.log(
       `Election "${election.title}" voting closed.`,
@@ -63,6 +85,16 @@ async publishElectionResults() {
       election.id,
     );
 
+    await this.auditService.log({
+      userId: null,
+      action: 'ELECTION_RESULTS_PUBLISHED',
+      module: 'election',
+      entityType: 'Election',
+      entityId: election.id,
+      result: 'SUCCESS',
+      metadata: { triggeredBy: 'system', trigger: 'cron' },
+    });
+
     this.logger.log(
       `Results published for "${election.title}".`,
     );
@@ -79,6 +111,16 @@ async archiveElections() {
     await this.repository.archiveElection(
       election.id,
     );
+
+    await this.auditService.log({
+      userId: null,
+      action: 'ELECTION_ARCHIVED',
+      module: 'election',
+      entityType: 'Election',
+      entityId: election.id,
+      result: 'SUCCESS',
+      metadata: { triggeredBy: 'system', trigger: 'cron' },
+    });
 
     this.logger.log(
       `Election "${election.title}" archived.`,

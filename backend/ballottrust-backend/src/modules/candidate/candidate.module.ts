@@ -39,11 +39,13 @@ import { DeleteCandidateDocumentService } from './documents/services/delete-cand
 import { CandidateDocumentCompletenessService } from './documents/services/candidate-document-completeness.service';
 import { CampaignWindowValidator } from './validators/campaign-window.validator';
 import { UpdateCandidateCampaignService } from './services/update-candidate-campaign.service';
+import { AuditModule } from '../audit/audit.module';
 
 
 @Module({
   imports: [
     PrismaModule,
+    AuditModule,
   ],
 
   controllers: [

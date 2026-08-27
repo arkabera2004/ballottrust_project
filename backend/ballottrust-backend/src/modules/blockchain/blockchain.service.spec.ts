@@ -9,10 +9,29 @@ describe('BlockchainService', () => {
   let service: BlockchainService;
 
   const mockPrismaService = {
+    election: {
+      findMany: jest.fn(),
+    },
     vote: {
       findMany: jest.fn(),
     },
   };
+
+  const hashOf = (
+    anonymousToken: string,
+    candidateId: string,
+    electionId: string,
+    previousHash: string,
+  ) =>
+    crypto
+      .createHash('sha256')
+      .update(
+        anonymousToken +
+          candidateId +
+          electionId +
+          previousHash,
+      )
+      .digest('hex');
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -43,83 +62,65 @@ describe('BlockchainService', () => {
   });
 
   // ============================================================
-  // EMPTY BLOCKCHAIN
+  // SINGLE-ELECTION VERIFICATION (electionId provided)
   // ============================================================
 
-  it('should return valid when no votes exist', async () => {
-    mockPrismaService.vote.findMany
-      .mockResolvedValue([]);
+  describe('single election', () => {
+    it('should return valid when no votes exist', async () => {
+      mockPrismaService.vote.findMany.mockResolvedValue([]);
 
-    const result =
-      await service.verifyChain();
+      const result = await service.verifyChain('election-1');
 
-    expect(result).toEqual({
-      valid: true,
-      message: 'No votes found',
+      expect(result).toEqual({
+        electionId: 'election-1',
+        valid: true,
+        message: 'No votes found',
+      });
+
+      expect(mockPrismaService.vote.findMany).toHaveBeenCalledWith({
+        where: { electionId: 'election-1' },
+        orderBy: { createdAt: 'asc' },
+      });
+
+      // Scoped lookup never needs to enumerate every election.
+      expect(mockPrismaService.election.findMany).not.toHaveBeenCalled();
     });
 
-    expect(
-      mockPrismaService.vote.findMany,
-    ).toHaveBeenCalledWith({
-      orderBy: {
-        createdAt: 'asc',
-      },
-    });
-  });
+    it('should validate a chain using anonymousToken, not voterId', async () => {
+      const previousHash = 'GENESIS_BLOCK';
+      const hash = hashOf(
+        'anon-token-1',
+        'candidate-1',
+        'election-1',
+        previousHash,
+      );
 
-  // ============================================================
-  // VALID SINGLE VOTE
-  // ============================================================
-
-  it('should validate a single vote with a correct hash', async () => {
-    const voterId = 'voter-1';
-    const candidateId = 'candidate-1';
-    const electionId = 'election-1';
-    const previousHash = 'GENESIS_BLOCK';
-
-    const hash = crypto
-      .createHash('sha256')
-      .update(
-        voterId +
-          candidateId +
-          electionId +
-          previousHash,
-      )
-      .digest('hex');
-
-    mockPrismaService.vote.findMany
-      .mockResolvedValue([
+      mockPrismaService.vote.findMany.mockResolvedValue([
         {
           id: 'vote-1',
-          voterId,
-          candidateId,
-          electionId,
+          anonymousToken: 'anon-token-1',
+          candidateId: 'candidate-1',
+          electionId: 'election-1',
           previousHash,
           hash,
         },
       ]);
 
-    const result =
-      await service.verifyChain();
+      const result = await service.verifyChain('election-1');
 
-    expect(result).toEqual({
-      valid: true,
-      message:
-        'Blockchain integrity verified',
-      totalVotes: 1,
+      expect(result).toEqual({
+        electionId: 'election-1',
+        valid: true,
+        message: 'Blockchain integrity verified',
+        totalVotes: 1,
+      });
     });
-  });
 
-  // ============================================================
-  // HASH MISMATCH
-  // ============================================================
-
-  it('should detect a hash mismatch', async () => {
-    mockPrismaService.vote.findMany
-      .mockResolvedValue([
+    it('should detect a hash mismatch', async () => {
+      mockPrismaService.vote.findMany.mockResolvedValue([
         {
           id: 'vote-1',
-          voterId: 'voter-1',
+          anonymousToken: 'anon-token-1',
           candidateId: 'candidate-1',
           electionId: 'election-1',
           previousHash: 'GENESIS_BLOCK',
@@ -127,143 +128,178 @@ describe('BlockchainService', () => {
         },
       ]);
 
-    const result =
-      await service.verifyChain();
+      const result = await service.verifyChain('election-1');
 
-    expect(result).toEqual({
-      valid: false,
-      message:
-        'Hash mismatch at vote vote-1',
+      expect(result).toEqual({
+        electionId: 'election-1',
+        valid: false,
+        message: 'Hash mismatch at vote vote-1',
+        totalVotes: 1,
+      });
     });
-  });
 
-  // ============================================================
-  // BROKEN CHAIN
-  // ============================================================
+    it('should detect a broken chain', async () => {
+      const firstPreviousHash = 'GENESIS_BLOCK';
+      const firstHash = hashOf(
+        'anon-token-1',
+        'candidate-1',
+        'election-1',
+        firstPreviousHash,
+      );
 
-  it('should detect a broken blockchain chain', async () => {
-    const firstVote = {
-      id: 'vote-1',
-      voterId: 'voter-1',
-      candidateId: 'candidate-1',
-      electionId: 'election-1',
-      previousHash: 'GENESIS_BLOCK',
-    };
+      // Deliberately wrong previousHash on the second vote.
+      const secondPreviousHash = 'BROKEN_PREVIOUS_HASH';
+      const secondHash = hashOf(
+        'anon-token-2',
+        'candidate-2',
+        'election-1',
+        secondPreviousHash,
+      );
 
-    const firstHash = crypto
-      .createHash('sha256')
-      .update(
-        firstVote.voterId +
-          firstVote.candidateId +
-          firstVote.electionId +
-          firstVote.previousHash,
-      )
-      .digest('hex');
-
-    const secondVote = {
-      id: 'vote-2',
-      voterId: 'voter-2',
-      candidateId: 'candidate-2',
-      electionId: 'election-1',
-
-      // Deliberately incorrect previous hash.
-      previousHash: 'BROKEN_PREVIOUS_HASH',
-
-      hash: '',
-    };
-
-    const secondHash = crypto
-      .createHash('sha256')
-      .update(
-        secondVote.voterId +
-          secondVote.candidateId +
-          secondVote.electionId +
-          secondVote.previousHash,
-      )
-      .digest('hex');
-
-    secondVote.hash = secondHash;
-
-    mockPrismaService.vote.findMany
-      .mockResolvedValue([
+      mockPrismaService.vote.findMany.mockResolvedValue([
         {
-          ...firstVote,
+          id: 'vote-1',
+          anonymousToken: 'anon-token-1',
+          candidateId: 'candidate-1',
+          electionId: 'election-1',
+          previousHash: firstPreviousHash,
           hash: firstHash,
         },
-        secondVote,
+        {
+          id: 'vote-2',
+          anonymousToken: 'anon-token-2',
+          candidateId: 'candidate-2',
+          electionId: 'election-1',
+          previousHash: secondPreviousHash,
+          hash: secondHash,
+        },
       ]);
 
-    const result =
-      await service.verifyChain();
+      const result = await service.verifyChain('election-1');
 
-    expect(result).toEqual({
-      valid: false,
-      message:
-        'Broken chain at vote vote-2',
+      expect(result).toEqual({
+        electionId: 'election-1',
+        valid: false,
+        message: 'Broken chain at vote vote-2',
+        totalVotes: 2,
+      });
     });
-  });
 
-  // ============================================================
-  // VALID MULTIPLE VOTE CHAIN
-  // ============================================================
+    it('should validate a complete multi-vote chain', async () => {
+      const hash1 = hashOf(
+        'anon-token-1',
+        'candidate-1',
+        'election-1',
+        'GENESIS_BLOCK',
+      );
 
-  it('should validate a complete multi-vote chain', async () => {
-    const vote1 = {
-      id: 'vote-1',
-      voterId: 'voter-1',
-      candidateId: 'candidate-1',
-      electionId: 'election-1',
-      previousHash: 'GENESIS_BLOCK',
-    };
+      const hash2 = hashOf(
+        'anon-token-2',
+        'candidate-2',
+        'election-1',
+        hash1,
+      );
 
-    const hash1 = crypto
-      .createHash('sha256')
-      .update(
-        vote1.voterId +
-          vote1.candidateId +
-          vote1.electionId +
-          vote1.previousHash,
-      )
-      .digest('hex');
-
-    const vote2 = {
-      id: 'vote-2',
-      voterId: 'voter-2',
-      candidateId: 'candidate-2',
-      electionId: 'election-1',
-      previousHash: hash1,
-    };
-
-    const hash2 = crypto
-      .createHash('sha256')
-      .update(
-        vote2.voterId +
-          vote2.candidateId +
-          vote2.electionId +
-          vote2.previousHash,
-      )
-      .digest('hex');
-
-    mockPrismaService.vote.findMany
-      .mockResolvedValue([
+      mockPrismaService.vote.findMany.mockResolvedValue([
         {
-          ...vote1,
+          id: 'vote-1',
+          anonymousToken: 'anon-token-1',
+          candidateId: 'candidate-1',
+          electionId: 'election-1',
+          previousHash: 'GENESIS_BLOCK',
           hash: hash1,
         },
         {
-          ...vote2,
+          id: 'vote-2',
+          anonymousToken: 'anon-token-2',
+          candidateId: 'candidate-2',
+          electionId: 'election-1',
+          previousHash: hash1,
           hash: hash2,
         },
       ]);
 
-    const result =
-      await service.verifyChain();
+      const result = await service.verifyChain('election-1');
 
-    expect(result).toEqual({
-      valid: true,
-      message:
-        'Blockchain integrity verified',
-      totalVotes: 2,
+      expect(result).toEqual({
+        electionId: 'election-1',
+        valid: true,
+        message: 'Blockchain integrity verified',
+        totalVotes: 2,
+      });
+    });
+  });
+
+  // ============================================================
+  // ALL-ELECTIONS VERIFICATION (no electionId)
+  // ============================================================
+
+  describe('all elections', () => {
+    it('enumerates elections and verifies each chain independently', async () => {
+      mockPrismaService.election.findMany.mockResolvedValue([
+        { id: 'election-1' },
+        { id: 'election-2' },
+      ]);
+
+      const hash1 = hashOf(
+        'anon-token-1',
+        'candidate-1',
+        'election-1',
+        'GENESIS_BLOCK',
+      );
+
+      mockPrismaService.vote.findMany
+        .mockResolvedValueOnce([
+          {
+            id: 'vote-1',
+            anonymousToken: 'anon-token-1',
+            candidateId: 'candidate-1',
+            electionId: 'election-1',
+            previousHash: 'GENESIS_BLOCK',
+            hash: hash1,
+          },
+        ])
+        .mockResolvedValueOnce([]);
+
+      const result = await service.verifyChain();
+
+      expect(result).toEqual({
+        valid: true,
+        elections: [
+          {
+            electionId: 'election-1',
+            valid: true,
+            message: 'Blockchain integrity verified',
+            totalVotes: 1,
+          },
+          {
+            electionId: 'election-2',
+            valid: true,
+            message: 'No votes found',
+          },
+        ],
+      });
+    });
+
+    it('is invalid overall if any single election chain is invalid', async () => {
+      mockPrismaService.election.findMany.mockResolvedValue([
+        { id: 'election-1' },
+      ]);
+
+      mockPrismaService.vote.findMany.mockResolvedValue([
+        {
+          id: 'vote-1',
+          anonymousToken: 'anon-token-1',
+          candidateId: 'candidate-1',
+          electionId: 'election-1',
+          previousHash: 'GENESIS_BLOCK',
+          hash: 'INVALID_HASH',
+        },
+      ]);
+
+      const result = await service.verifyChain();
+
+      expect(result.valid).toBe(false);
     });
   });
 });

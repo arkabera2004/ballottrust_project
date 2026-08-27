@@ -16,6 +16,8 @@ import {
   CandidateDocumentStatusValidator,
 } from '../validators/candidate-document-status.validator';
 
+import { AuditService } from '../../../audit/audit.service';
+
 @Injectable()
 export class VerifyCandidateDocumentService {
   constructor(
@@ -24,6 +26,8 @@ export class VerifyCandidateDocumentService {
 
     private readonly candidateDocumentStatusValidator:
       CandidateDocumentStatusValidator,
+
+    private readonly auditService: AuditService,
   ) {}
 
   async execute(
@@ -93,10 +97,22 @@ export class VerifyCandidateDocumentService {
     // 6. Verify Document
     // ==========================================
 
-    return this.candidateDocumentRepository
+    const verified = await this.candidateDocumentRepository
       .verifyDocument(
         document.id,
         reviewerId,
       );
+
+    await this.auditService.log({
+      userId: reviewerId,
+      action: 'CANDIDATE_DOCUMENT_VERIFIED',
+      module: 'candidate',
+      entityType: 'CandidateDocument',
+      entityId: document.id,
+      result: 'SUCCESS',
+      metadata: { candidateId, previousStatus: document.status },
+    });
+
+    return verified;
   }
 }

@@ -2,9 +2,21 @@ import { Test, TestingModule } from '@nestjs/testing';
 
 import { VoteService } from './vote.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
 
 describe('VoteService', () => {
   let service: VoteService;
+
+  const mockTx = {
+    voterCredential: {
+      upsert: jest.fn(),
+      updateMany: jest.fn(),
+    },
+    vote: {
+      findFirst: jest.fn(),
+      create: jest.fn(),
+    },
+  };
 
   const mockPrismaService = {
     candidate: {
@@ -15,14 +27,27 @@ describe('VoteService', () => {
       findUnique: jest.fn(),
     },
 
-    vote: {
-      findFirst: jest.fn(),
-      create: jest.fn(),
-    },
+    $transaction: jest.fn((cb) => cb(mockTx)),
+  };
+
+  const mockAuditService = {
+    log: jest.fn(),
+  };
+
+  const approvedCandidate = {
+    id: 'candidate-1',
+    electionId: 'election-1',
+    status: 'APPROVED',
+  };
+
+  const activeElection = {
+    id: 'election-1',
+    status: 'ACTIVE',
   };
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    mockPrismaService.$transaction.mockImplementation((cb) => cb(mockTx));
 
     const module: TestingModule =
       await Test.createTestingModule({
@@ -32,6 +57,11 @@ describe('VoteService', () => {
           {
             provide: PrismaService,
             useValue: mockPrismaService,
+          },
+
+          {
+            provide: AuditService,
+            useValue: mockAuditService,
           },
         ],
       }).compile();
@@ -52,336 +82,298 @@ describe('VoteService', () => {
   // SUCCESSFUL VOTE
   // ============================================================
 
-  it('should cast a vote successfully', async () => {
-    const candidate = {
-      id: 'candidate-1',
-      electionId: 'election-1',
-    };
+  it('should cast a vote successfully without storing voter identity', async () => {
+    mockPrismaService.candidate.findUnique.mockResolvedValue(
+      approvedCandidate,
+    );
+    mockPrismaService.election.findUnique.mockResolvedValue(
+      activeElection,
+    );
 
-    const election = {
-      id: 'election-1',
-      status: 'ACTIVE',
-    };
+    mockTx.voterCredential.upsert.mockResolvedValue({
+      id: 'credential-1',
+      hasVoted: false,
+    });
+    mockTx.voterCredential.updateMany.mockResolvedValue({
+      count: 1,
+    });
+    mockTx.vote.findFirst.mockResolvedValue(null);
 
     const createdVote = {
       id: 'vote-1',
-      voterId: 'user-1',
       candidateId: 'candidate-1',
       electionId: 'election-1',
       hash: 'generated-hash',
       previousHash: 'GENESIS_BLOCK',
     };
-
-    mockPrismaService.candidate.findUnique.mockResolvedValue(
-      candidate,
-    );
-
-    mockPrismaService.election.findUnique.mockResolvedValue(
-      election,
-    );
-
-    // No existing vote
-    mockPrismaService.vote.findFirst
-      .mockResolvedValueOnce(null)
-      // No previous vote / genesis block
-      .mockResolvedValueOnce(null);
-
-    mockPrismaService.vote.create.mockResolvedValue(
-      createdVote,
-    );
+    mockTx.vote.create.mockResolvedValue(createdVote);
 
     const data = {
       candidateId: 'candidate-1',
       electionId: 'election-1',
     };
 
-    const result = await service.castVote(
-      'user-1',
-      data,
-    );
+    const result = await service.castVote('user-1', data);
 
     expect(result).toEqual(createdVote);
 
-    expect(
-      mockPrismaService.candidate.findUnique,
-    ).toHaveBeenCalledWith({
+    expect(mockPrismaService.candidate.findUnique).toHaveBeenCalledWith({
+      where: { id: 'candidate-1' },
+    });
+
+    expect(mockPrismaService.election.findUnique).toHaveBeenCalledWith({
+      where: { id: 'election-1' },
+    });
+
+    // Credential issued/consumed for the voter+election, never the choice.
+    expect(mockTx.voterCredential.upsert).toHaveBeenCalledWith({
       where: {
-        id: 'candidate-1',
+        userId_electionId: {
+          userId: 'user-1',
+          electionId: 'election-1',
+        },
+      },
+      update: {},
+      create: {
+        userId: 'user-1',
+        electionId: 'election-1',
       },
     });
 
-    expect(
-      mockPrismaService.election.findUnique,
-    ).toHaveBeenCalledWith({
-      where: {
-        id: 'election-1',
-      },
+    expect(mockTx.voterCredential.updateMany).toHaveBeenCalledWith({
+      where: { id: 'credential-1', hasVoted: false },
+      data: expect.objectContaining({ hasVoted: true }),
     });
 
-    expect(
-      mockPrismaService.vote.create,
-    ).toHaveBeenCalled();
+    expect(mockTx.vote.create).toHaveBeenCalled();
 
-    const createCall =
-      mockPrismaService.vote.create.mock.calls[0][0];
+    const createCall = mockTx.vote.create.mock.calls[0][0];
 
+    // No voterId anywhere in the Vote row — only an anonymous token.
+    expect(createCall.data).not.toHaveProperty('voterId');
     expect(createCall.data).toEqual(
       expect.objectContaining({
-        voterId: 'user-1',
+        anonymousToken: expect.any(String),
         candidateId: 'candidate-1',
         electionId: 'election-1',
         previousHash: 'GENESIS_BLOCK',
       }),
     );
+    expect(createCall.data.hash).toEqual(expect.any(String));
 
-    expect(createCall.data.hash).toEqual(
-      expect.any(String),
+    // Audit trail records that user-1 voted in this election, but never
+    // which candidate — that link must never exist next to a userId.
+    expect(mockAuditService.log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'user-1',
+        action: 'VOTE_CAST',
+        entityId: 'election-1',
+        result: 'SUCCESS',
+      }),
     );
+
+    const auditCall = mockAuditService.log.mock.calls[0][0];
+    expect(auditCall).not.toHaveProperty('candidateId');
+    expect(JSON.stringify(auditCall)).not.toContain('candidate-1');
   });
 
   // ============================================================
-  // CANDIDATE NOT FOUND
+  // CANDIDATE NOT FOUND / NOT APPROVED / WRONG ELECTION
   // ============================================================
 
   it('should reject when candidate does not exist', async () => {
-    mockPrismaService.candidate.findUnique.mockResolvedValue(
-      null,
-    );
-
-    const data = {
-      candidateId: 'candidate-1',
-      electionId: 'election-1',
-    };
+    mockPrismaService.candidate.findUnique.mockResolvedValue(null);
 
     await expect(
-      service.castVote('user-1', data),
-    ).rejects.toThrow(
-      'Candidate not found',
-    );
+      service.castVote('user-1', {
+        candidateId: 'candidate-1',
+        electionId: 'election-1',
+      }),
+    ).rejects.toThrow('Candidate not found');
 
-    expect(
-      mockPrismaService.election.findUnique,
-    ).not.toHaveBeenCalled();
+    expect(mockPrismaService.election.findUnique).not.toHaveBeenCalled();
+    expect(mockPrismaService.$transaction).not.toHaveBeenCalled();
+  });
 
-    expect(
-      mockPrismaService.vote.create,
-    ).not.toHaveBeenCalled();
+  it('should reject when candidate belongs to a different election', async () => {
+    mockPrismaService.candidate.findUnique.mockResolvedValue({
+      id: 'candidate-1',
+      electionId: 'some-other-election',
+      status: 'APPROVED',
+    });
+
+    await expect(
+      service.castVote('user-1', {
+        candidateId: 'candidate-1',
+        electionId: 'election-1',
+      }),
+    ).rejects.toThrow('Candidate not found');
+
+    expect(mockPrismaService.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('should reject when candidate is not approved', async () => {
+    mockPrismaService.candidate.findUnique.mockResolvedValue({
+      id: 'candidate-1',
+      electionId: 'election-1',
+      status: 'PENDING',
+    });
+
+    await expect(
+      service.castVote('user-1', {
+        candidateId: 'candidate-1',
+        electionId: 'election-1',
+      }),
+    ).rejects.toThrow('Candidate not found');
+
+    expect(mockPrismaService.$transaction).not.toHaveBeenCalled();
   });
 
   // ============================================================
-  // ELECTION NOT FOUND
+  // ELECTION NOT FOUND / INACTIVE
   // ============================================================
 
   it('should reject when election does not exist', async () => {
     mockPrismaService.candidate.findUnique.mockResolvedValue(
-      {
-        id: 'candidate-1',
-        electionId: 'election-1',
-      },
+      approvedCandidate,
     );
-
-    mockPrismaService.election.findUnique.mockResolvedValue(
-      null,
-    );
-
-    const data = {
-      candidateId: 'candidate-1',
-      electionId: 'election-1',
-    };
+    mockPrismaService.election.findUnique.mockResolvedValue(null);
 
     await expect(
-      service.castVote('user-1', data),
-    ).rejects.toThrow(
-      'Election not found',
-    );
+      service.castVote('user-1', {
+        candidateId: 'candidate-1',
+        electionId: 'election-1',
+      }),
+    ).rejects.toThrow('Election not found');
 
-    expect(
-      mockPrismaService.vote.create,
-    ).not.toHaveBeenCalled();
+    expect(mockPrismaService.$transaction).not.toHaveBeenCalled();
   });
-
-  // ============================================================
-  // INACTIVE ELECTION
-  // ============================================================
 
   it('should reject voting in an inactive election', async () => {
     mockPrismaService.candidate.findUnique.mockResolvedValue(
-      {
-        id: 'candidate-1',
-        electionId: 'election-1',
-      },
+      approvedCandidate,
     );
-
-    mockPrismaService.election.findUnique.mockResolvedValue(
-      {
-        id: 'election-1',
-        status: 'PUBLISHED',
-      },
-    );
-
-    const data = {
-      candidateId: 'candidate-1',
-      electionId: 'election-1',
-    };
+    mockPrismaService.election.findUnique.mockResolvedValue({
+      id: 'election-1',
+      status: 'PUBLISHED',
+    });
 
     await expect(
-      service.castVote('user-1', data),
-    ).rejects.toThrow(
-      'Election is not active',
-    );
+      service.castVote('user-1', {
+        candidateId: 'candidate-1',
+        electionId: 'election-1',
+      }),
+    ).rejects.toThrow('Election is not active');
 
-    expect(
-      mockPrismaService.vote.create,
-    ).not.toHaveBeenCalled();
+    expect(mockPrismaService.$transaction).not.toHaveBeenCalled();
   });
 
   // ============================================================
   // DUPLICATE VOTE
   // ============================================================
 
-  it('should reject when the user has already voted', async () => {
+  it('should reject when the credential shows the voter already voted', async () => {
     mockPrismaService.candidate.findUnique.mockResolvedValue(
-      {
-        id: 'candidate-1',
-        electionId: 'election-1',
-      },
+      approvedCandidate,
     );
-
     mockPrismaService.election.findUnique.mockResolvedValue(
-      {
-        id: 'election-1',
-        status: 'ACTIVE',
-      },
+      activeElection,
     );
 
-    mockPrismaService.vote.findFirst.mockResolvedValueOnce(
-      {
-        id: 'existing-vote',
-        voterId: 'user-1',
-        electionId: 'election-1',
-      },
-    );
-
-    const data = {
-      candidateId: 'candidate-1',
-      electionId: 'election-1',
-    };
+    mockTx.voterCredential.upsert.mockResolvedValue({
+      id: 'credential-1',
+      hasVoted: true,
+    });
 
     await expect(
-      service.castVote('user-1', data),
-    ).rejects.toThrow(
-      'You have already voted',
-    );
-
-    expect(
-      mockPrismaService.vote.create,
-    ).not.toHaveBeenCalled();
-  });
-
-  // ============================================================
-  // PREVIOUS HASH
-  // ============================================================
-
-  it('should use the previous vote hash when creating a new vote', async () => {
-    mockPrismaService.candidate.findUnique.mockResolvedValue(
-      {
-        id: 'candidate-2',
-        electionId: 'election-1',
-      },
-    );
-
-    mockPrismaService.election.findUnique.mockResolvedValue(
-      {
-        id: 'election-1',
-        status: 'ACTIVE',
-      },
-    );
-
-    // First call: check duplicate vote
-    mockPrismaService.vote.findFirst.mockResolvedValueOnce(
-      null,
-    );
-
-    // Second call: get latest vote
-    mockPrismaService.vote.findFirst.mockResolvedValueOnce(
-      {
-        id: 'previous-vote',
-        hash: 'previous-hash-123',
-      },
-    );
-
-    mockPrismaService.vote.create.mockResolvedValue(
-      {
-        id: 'vote-2',
-      },
-    );
-
-    const data = {
-      candidateId: 'candidate-2',
-      electionId: 'election-1',
-    };
-
-    await service.castVote(
-      'user-2',
-      data,
-    );
-
-    const createCall =
-      mockPrismaService.vote.create.mock.calls[0][0];
-
-    expect(createCall.data.previousHash).toBe(
-      'previous-hash-123',
-    );
-  });
-
-  // ============================================================
-  // LATEST VOTE QUERY
-  // ============================================================
-
-  it('should retrieve the latest vote by createdAt', async () => {
-    mockPrismaService.candidate.findUnique.mockResolvedValue(
-      {
-        id: 'candidate-1',
-        electionId: 'election-1',
-      },
-    );
-
-    mockPrismaService.election.findUnique.mockResolvedValue(
-      {
-        id: 'election-1',
-        status: 'ACTIVE',
-      },
-    );
-
-    mockPrismaService.vote.findFirst
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({
-        hash: 'previous-hash',
-      });
-
-    mockPrismaService.vote.create.mockResolvedValue(
-      {
-        id: 'vote-1',
-      },
-    );
-
-    await service.castVote(
-      'user-1',
-      {
+      service.castVote('user-1', {
         candidateId: 'candidate-1',
         electionId: 'election-1',
-      },
+      }),
+    ).rejects.toThrow('You have already voted');
+
+    expect(mockTx.voterCredential.updateMany).not.toHaveBeenCalled();
+    expect(mockTx.vote.create).not.toHaveBeenCalled();
+
+    expect(mockAuditService.log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'user-1',
+        action: 'VOTE_CAST_REJECTED',
+        entityId: 'election-1',
+        result: 'FAILURE',
+      }),
+    );
+  });
+
+  it('should reject a concurrent duplicate that loses the conditional update race', async () => {
+    mockPrismaService.candidate.findUnique.mockResolvedValue(
+      approvedCandidate,
+    );
+    mockPrismaService.election.findUnique.mockResolvedValue(
+      activeElection,
     );
 
-    expect(
-      mockPrismaService.vote.findFirst,
-    ).toHaveBeenNthCalledWith(
-      2,
-      {
-        orderBy: {
-          createdAt: 'desc',
-        },
-      },
+    mockTx.voterCredential.upsert.mockResolvedValue({
+      id: 'credential-1',
+      hasVoted: false,
+    });
+
+    // Another concurrent request already flipped hasVoted to true between
+    // the read and this write — the conditional update matches 0 rows.
+    mockTx.voterCredential.updateMany.mockResolvedValue({
+      count: 0,
+    });
+
+    await expect(
+      service.castVote('user-1', {
+        candidateId: 'candidate-1',
+        electionId: 'election-1',
+      }),
+    ).rejects.toThrow('You have already voted');
+
+    expect(mockTx.vote.create).not.toHaveBeenCalled();
+  });
+
+  // ============================================================
+  // PER-ELECTION HASH CHAIN
+  // ============================================================
+
+  it('should chain off the latest vote hash scoped to the election', async () => {
+    mockPrismaService.candidate.findUnique.mockResolvedValue({
+      id: 'candidate-2',
+      electionId: 'election-1',
+      status: 'APPROVED',
+    });
+    mockPrismaService.election.findUnique.mockResolvedValue(
+      activeElection,
     );
+
+    mockTx.voterCredential.upsert.mockResolvedValue({
+      id: 'credential-2',
+      hasVoted: false,
+    });
+    mockTx.voterCredential.updateMany.mockResolvedValue({
+      count: 1,
+    });
+
+    mockTx.vote.findFirst.mockResolvedValue({
+      id: 'previous-vote',
+      hash: 'previous-hash-123',
+    });
+
+    mockTx.vote.create.mockResolvedValue({ id: 'vote-2' });
+
+    await service.castVote('user-2', {
+      candidateId: 'candidate-2',
+      electionId: 'election-1',
+    });
+
+    expect(mockTx.vote.findFirst).toHaveBeenCalledWith({
+      where: { electionId: 'election-1' },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const createCall = mockTx.vote.create.mock.calls[0][0];
+    expect(createCall.data.previousHash).toBe('previous-hash-123');
   });
 });

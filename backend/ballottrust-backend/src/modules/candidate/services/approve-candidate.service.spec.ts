@@ -5,6 +5,7 @@ import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import { ApproveCandidateService } from './approve-candidate.service';
 import { CandidateRepository } from '../repository/candidate.repository';
 import { CandidateStatusValidator } from '../validators/candidate-status.validator';
+import { AuditService } from '../../audit/audit.service';
 
 describe('ApproveCandidateService', () => {
   let service: ApproveCandidateService;
@@ -19,12 +20,17 @@ const candidateStatusValidator = {
     jest.fn<(...args: any[]) => any>(),
 };
 
+const auditService = {
+  log: jest.fn<(...args: any[]) => any>(),
+};
+
   beforeEach(() => {
     jest.clearAllMocks();
 
     service = new ApproveCandidateService(
       candidateRepository as unknown as CandidateRepository,
       candidateStatusValidator as unknown as CandidateStatusValidator,
+      auditService as unknown as AuditService,
     );
   });
 
@@ -68,6 +74,15 @@ const candidateStatusValidator = {
     );
 
     expect(result).toEqual(updatedCandidate);
+
+    expect(auditService.log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: approvedById,
+        action: 'CANDIDATE_APPROVED',
+        entityId: candidateId,
+        result: 'SUCCESS',
+      }),
+    );
 
     expect(
       candidateRepository.findById,

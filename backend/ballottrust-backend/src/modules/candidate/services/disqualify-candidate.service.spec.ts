@@ -14,6 +14,7 @@ import { DisqualifyCandidateService } from './disqualify-candidate.service';
 import { CandidateRepository } from '../repository/candidate.repository';
 
 import { CandidateStatusValidator } from '../validators/candidate-status.validator';
+import { AuditService } from '../../audit/audit.service';
 
 describe('DisqualifyCandidateService', () => {
   let service: DisqualifyCandidateService;
@@ -45,6 +46,10 @@ describe('DisqualifyCandidateService', () => {
     >(),
   };
 
+  const auditService = {
+    log: jest.fn<(...args: any[]) => any>(),
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -52,6 +57,7 @@ describe('DisqualifyCandidateService', () => {
       new DisqualifyCandidateService(
         candidateRepository as unknown as CandidateRepository,
         candidateStatusValidator as unknown as CandidateStatusValidator,
+        auditService as unknown as AuditService,
       );
   });
 

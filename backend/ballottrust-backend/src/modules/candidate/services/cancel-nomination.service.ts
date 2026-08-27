@@ -11,6 +11,7 @@ import {
 
 import { CandidateRepository } from '../repository/candidate.repository';
 import { CandidateValidator } from '../validators/candidate.validator';
+import { AuditService } from '../../audit/audit.service';
 
 @Injectable()
 export class CancelNominationService {
@@ -20,6 +21,8 @@ export class CancelNominationService {
 
     private readonly candidateValidator:
       CandidateValidator,
+
+    private readonly auditService: AuditService,
   ) {}
 
   async execute(
@@ -90,6 +93,15 @@ export class CancelNominationService {
     await this.candidateRepository.softDelete(
       candidateId,
     );
+
+    await this.auditService.log({
+      userId,
+      action: 'CANDIDATE_NOMINATION_CANCELLED',
+      module: 'candidate',
+      entityType: 'Candidate',
+      entityId: candidateId,
+      result: 'SUCCESS',
+    });
 
     return {
       message:

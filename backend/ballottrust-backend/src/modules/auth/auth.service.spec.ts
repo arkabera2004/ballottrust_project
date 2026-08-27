@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RefreshTokenService } from './refresh-token.service';
 import { MailService } from '../mail/mail.service';
+import { AuditService } from '../audit/audit.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -35,6 +36,10 @@ describe('AuthService', () => {
     sendPasswordResetEmail: jest.fn(),
   };
 
+  const mockAuditService = {
+    log: jest.fn(),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -61,6 +66,11 @@ describe('AuthService', () => {
           {
             provide: MailService,
             useValue: mockMailService,
+          },
+
+          {
+            provide: AuditService,
+            useValue: mockAuditService,
           },
         ],
       }).compile();

@@ -115,9 +115,13 @@ export class ElectionController {
 async startElection(
   @Param('id')
   id: string,
+
+  @CurrentUser()
+  user: JwtPayload,
 ) {
   return this.startElectionService.execute(
     id,
+    user.userId,
   );
 }
 
@@ -215,9 +219,13 @@ async startElection(
   async submitForApproval(
     @Param('id')
     id: string,
+
+    @CurrentUser()
+    user: JwtPayload,
   ) {
     return this.submitElectionForApprovalService.execute(
       id,
+      user.userId,
     );
   }
 

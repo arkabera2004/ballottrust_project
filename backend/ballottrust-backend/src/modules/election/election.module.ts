@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 
 import { PrismaModule } from '../../prisma/prisma.module';
 import { ElectionCodeGenerator } from '../../common/utils';
+import { AuditModule } from '../audit/audit.module';
 
 import { ElectionController } from './controllers';
 
@@ -28,6 +29,7 @@ import {
 @Module({
   imports: [
     PrismaModule,
+    AuditModule,
   ],
 
   controllers: [

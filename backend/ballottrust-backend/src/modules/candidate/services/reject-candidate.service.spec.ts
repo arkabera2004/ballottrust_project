@@ -14,6 +14,7 @@ import { RejectCandidateService } from './reject-candidate.service';
 import { CandidateRepository } from '../repository/candidate.repository';
 
 import { CandidateStatusValidator } from '../validators/candidate-status.validator';
+import { AuditService } from '../../audit/audit.service';
 
 describe('RejectCandidateService', () => {
   let service: RejectCandidateService;
@@ -48,12 +49,17 @@ describe('RejectCandidateService', () => {
     validateTransition,
   };
 
+  const auditService = {
+    log: jest.fn<(...args: any[]) => any>(),
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
 
     service = new RejectCandidateService(
       candidateRepository as unknown as CandidateRepository,
       candidateStatusValidator as unknown as CandidateStatusValidator,
+      auditService as unknown as AuditService,
     );
   });
 
@@ -134,6 +140,15 @@ describe('RejectCandidateService', () => {
 
           rejectedAt:
             expect.any(Date),
+        }),
+      );
+
+      expect(auditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: rejectedById,
+          action: 'CANDIDATE_REJECTED',
+          entityId: candidateId,
+          result: 'SUCCESS',
         }),
       );
     },

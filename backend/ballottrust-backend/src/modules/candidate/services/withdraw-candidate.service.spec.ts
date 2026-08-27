@@ -8,6 +8,7 @@ import { CandidateStatus } from '@prisma/client';
 import { WithdrawCandidateService } from './withdraw-candidate.service';
 import { CandidateRepository } from '../repository/candidate.repository';
 import { CandidateStatusValidator } from '../validators/candidate-status.validator';
+import { AuditService } from '../../audit/audit.service';
 
 describe('WithdrawCandidateService', () => {
   let service: WithdrawCandidateService;
@@ -21,12 +22,17 @@ describe('WithdrawCandidateService', () => {
     validateTransition: jest.fn(),
   };
 
+  const auditService = {
+    log: jest.fn(),
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
 
     service = new WithdrawCandidateService(
       candidateRepository as unknown as CandidateRepository,
       candidateStatusValidator as unknown as CandidateStatusValidator,
+      auditService as unknown as AuditService,
     );
   });
 

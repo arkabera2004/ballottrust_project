@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Query,
 } from '@nestjs/common';
 
 import { BlockchainService } from './blockchain.service';
@@ -12,7 +13,11 @@ export class BlockchainController {
   ) {}
 
   @Get('verify')
-  verify() {
-    return this.blockchainService.verifyChain();
+  verify(
+    @Query('electionId') electionId?: string,
+  ) {
+    return this.blockchainService.verifyChain(
+      electionId,
+    );
   }
 }

@@ -42,32 +42,51 @@ describe('BlockchainController', () => {
   });
 
   // ============================================================
-  // VERIFY BLOCKCHAIN
+  // VERIFY ALL ELECTIONS (no query param)
   // ============================================================
 
-  it('should return blockchain verification result', async () => {
+  it('should verify all elections when no electionId is given', async () => {
     const verificationResult = {
       valid: true,
-      message:
-        'Blockchain integrity verified',
-      totalVotes: 5,
+      elections: [],
     };
 
-    mockBlockchainService.verifyChain
-      .mockResolvedValue(
-        verificationResult,
-      );
-
-    const result =
-      await controller.verify();
-
-    expect(result).toEqual(
+    mockBlockchainService.verifyChain.mockResolvedValue(
       verificationResult,
     );
 
-    expect(
-      mockBlockchainService.verifyChain,
-    ).toHaveBeenCalledTimes(1);
+    const result = await controller.verify(undefined);
+
+    expect(result).toEqual(verificationResult);
+
+    expect(mockBlockchainService.verifyChain).toHaveBeenCalledWith(
+      undefined,
+    );
+  });
+
+  // ============================================================
+  // VERIFY SINGLE ELECTION (electionId query param)
+  // ============================================================
+
+  it('should verify a single election when electionId is given', async () => {
+    const verificationResult = {
+      electionId: 'election-1',
+      valid: true,
+      message: 'Blockchain integrity verified',
+      totalVotes: 5,
+    };
+
+    mockBlockchainService.verifyChain.mockResolvedValue(
+      verificationResult,
+    );
+
+    const result = await controller.verify('election-1');
+
+    expect(result).toEqual(verificationResult);
+
+    expect(mockBlockchainService.verifyChain).toHaveBeenCalledWith(
+      'election-1',
+    );
   });
 
   // ============================================================
@@ -76,25 +95,17 @@ describe('BlockchainController', () => {
 
   it('should return an invalid blockchain result', async () => {
     const verificationResult = {
+      electionId: 'election-1',
       valid: false,
-      message:
-        'Hash mismatch at vote vote-1',
+      message: 'Hash mismatch at vote vote-1',
     };
 
-    mockBlockchainService.verifyChain
-      .mockResolvedValue(
-        verificationResult,
-      );
-
-    const result =
-      await controller.verify();
-
-    expect(result).toEqual(
+    mockBlockchainService.verifyChain.mockResolvedValue(
       verificationResult,
     );
 
-    expect(
-      mockBlockchainService.verifyChain,
-    ).toHaveBeenCalledTimes(1);
+    const result = await controller.verify('election-1');
+
+    expect(result).toEqual(verificationResult);
   });
 });

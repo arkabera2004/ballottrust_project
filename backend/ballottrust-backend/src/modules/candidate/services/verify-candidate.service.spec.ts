@@ -26,6 +26,8 @@ import {
   CandidateStatusValidator,
 } from '../validators/candidate-status.validator';
 
+import { AuditService } from '../../audit/audit.service';
+
 describe(
   'VerifyCandidateService',
   () => {
@@ -60,6 +62,10 @@ describe(
       validateTransition,
     };
 
+    const auditService = {
+      log: jest.fn(async (): Promise<void> => undefined),
+    };
+
     beforeEach(() => {
       jest.clearAllMocks();
 
@@ -67,6 +73,7 @@ describe(
         new VerifyCandidateService(
           candidateRepository as unknown as CandidateRepository,
           candidateStatusValidator as unknown as CandidateStatusValidator,
+          auditService as unknown as AuditService,
         );
     });
 
