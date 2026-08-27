@@ -8,63 +8,94 @@ export class BlockchainService {
     private prisma: PrismaService,
   ) {}
 
-  async verifyChain() {
-    const votes =
-      await this.prisma.vote.findMany({
-        orderBy: {
-          createdAt: 'asc',
-        },
-      });
+  /**
+   * Recomputes and verifies the per-election vote hash chain. Scoped per
+   * election (not globally) because vote.service.ts anchors each
+   * election's chain at its own genesis block — chaining across unrelated
+   * elections would make the "previousHash" comparison meaningless and
+   * report false tamper positives whenever elections interleave in time.
+   *
+   * Uses anonymousToken rather than voterId (Sec11): the chain must be
+   * verifiable without ever touching voter identity.
+   */
+  async verifyChain(electionId?: string) {
+    const elections = electionId
+      ? [{ id: electionId }]
+      : await this.prisma.election.findMany({
+          select: { id: true },
+        });
 
-    if (votes.length === 0) {
-      return {
-        valid: true,
-        message: 'No votes found',
-      };
-    }
+    const results: {
+      electionId: string;
+      valid: boolean;
+      message: string;
+      totalVotes?: number;
+    }[] = [];
 
-    for (let i = 0; i < votes.length; i++) {
-      const vote = votes[i];
+    for (const { id } of elections) {
+      const votes =
+        await this.prisma.vote.findMany({
+          where: {
+            electionId: id,
+          },
+          orderBy: {
+            createdAt: 'asc',
+          },
+        });
 
-      const expectedHash = crypto
-        .createHash('sha256')
-        .update(
-          vote.voterId +
-          vote.candidateId +
-          vote.electionId +
-          vote.previousHash,
-        )
-        .digest('hex');
-
-      if (vote.hash !== expectedHash) {
-        return {
-          valid: false,
-          message: `Hash mismatch at vote ${vote.id}`,
-        };
+      if (votes.length === 0) {
+        results.push({
+          electionId: id,
+          valid: true,
+          message: 'No votes found',
+        });
+        continue;
       }
 
-      if (i > 0) {
-        const previousVote =
-          votes[i - 1];
+      let valid = true;
+      let message = 'Blockchain integrity verified';
 
-        if (
-          vote.previousHash !==
-          previousVote.hash
-        ) {
-          return {
-            valid: false,
-            message:
-              `Broken chain at vote ${vote.id}`,
-          };
+      for (let i = 0; i < votes.length; i++) {
+        const vote = votes[i];
+
+        const expectedHash = crypto
+          .createHash('sha256')
+          .update(
+            vote.anonymousToken +
+            vote.candidateId +
+            vote.electionId +
+            vote.previousHash,
+          )
+          .digest('hex');
+
+        if (vote.hash !== expectedHash) {
+          valid = false;
+          message = `Hash mismatch at vote ${vote.id}`;
+          break;
+        }
+
+        if (i > 0 && vote.previousHash !== votes[i - 1].hash) {
+          valid = false;
+          message = `Broken chain at vote ${vote.id}`;
+          break;
         }
       }
+
+      results.push({
+        electionId: id,
+        valid,
+        message,
+        totalVotes: votes.length,
+      });
+    }
+
+    if (electionId) {
+      return results[0];
     }
 
     return {
-      valid: true,
-      message:
-        'Blockchain integrity verified',
-      totalVotes: votes.length,
+      valid: results.every((r) => r.valid),
+      elections: results,
     };
   }
 }
