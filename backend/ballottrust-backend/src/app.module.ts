@@ -25,6 +25,7 @@ import { ResultModule } from './modules/result/result.module';
 import { BlockchainModule } from './modules/blockchain/blockchain.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { EligibilityModule } from './modules/eligibility/eligibility.module';
 
 import { MailModule } from './modules/mail/mail.module';
 
@@ -73,6 +74,7 @@ import { JobsModule } from './modules/jobs/jobs.module';
     BlockchainModule,
     DashboardModule,
     AuditModule,
+    EligibilityModule,
 
     MailModule,
     JobsModule,
