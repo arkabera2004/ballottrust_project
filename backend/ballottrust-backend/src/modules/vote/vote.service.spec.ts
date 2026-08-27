@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 
 import { VoteService } from './vote.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
 
 describe('VoteService', () => {
   let service: VoteService;
@@ -29,6 +30,10 @@ describe('VoteService', () => {
     $transaction: jest.fn((cb) => cb(mockTx)),
   };
 
+  const mockAuditService = {
+    log: jest.fn(),
+  };
+
   const approvedCandidate = {
     id: 'candidate-1',
     electionId: 'election-1',
@@ -52,6 +57,11 @@ describe('VoteService', () => {
           {
             provide: PrismaService,
             useValue: mockPrismaService,
+          },
+
+          {
+            provide: AuditService,
+            useValue: mockAuditService,
           },
         ],
       }).compile();
@@ -150,6 +160,21 @@ describe('VoteService', () => {
       }),
     );
     expect(createCall.data.hash).toEqual(expect.any(String));
+
+    // Audit trail records that user-1 voted in this election, but never
+    // which candidate — that link must never exist next to a userId.
+    expect(mockAuditService.log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'user-1',
+        action: 'VOTE_CAST',
+        entityId: 'election-1',
+        result: 'SUCCESS',
+      }),
+    );
+
+    const auditCall = mockAuditService.log.mock.calls[0][0];
+    expect(auditCall).not.toHaveProperty('candidateId');
+    expect(JSON.stringify(auditCall)).not.toContain('candidate-1');
   });
 
   // ============================================================
@@ -269,6 +294,15 @@ describe('VoteService', () => {
 
     expect(mockTx.voterCredential.updateMany).not.toHaveBeenCalled();
     expect(mockTx.vote.create).not.toHaveBeenCalled();
+
+    expect(mockAuditService.log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'user-1',
+        action: 'VOTE_CAST_REJECTED',
+        entityId: 'election-1',
+        result: 'FAILURE',
+      }),
+    );
   });
 
   it('should reject a concurrent duplicate that loses the conditional update race', async () => {

@@ -5,6 +5,7 @@ import {
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateVoteDto } from './dto/create-vote.dto';
+import { AuditService } from '../audit/audit.service';
 
 import * as crypto from 'crypto';
 
@@ -12,6 +13,7 @@ import * as crypto from 'crypto';
 export class VoteService {
   constructor(
     private prisma: PrismaService,
+    private auditService: AuditService,
   ) {}
 
   /**
@@ -26,8 +28,46 @@ export class VoteService {
    * for the same voter+election) can't slip past the check: the second
    * writer's conditional update matches zero rows and is rejected, backed
    * by row-level locking rather than a check-then-insert gap.
+   *
+   * Audit records deliberately capture only userId + electionId (the fact
+   * that a voter voted), never candidateId — logging the choice next to
+   * the voter's identity would recreate exactly the joinable link Sec11
+   * forbids, even though Vote itself stays anonymous.
    */
   async castVote(
+    userId: string,
+    data: CreateVoteDto,
+  ) {
+    try {
+      const vote = await this.castVoteInternal(userId, data);
+
+      await this.auditService.log({
+        userId,
+        action: 'VOTE_CAST',
+        module: 'vote',
+        entityType: 'Election',
+        entityId: data.electionId,
+        result: 'SUCCESS',
+      });
+
+      return vote;
+    } catch (err) {
+      await this.auditService.log({
+        userId,
+        action: 'VOTE_CAST_REJECTED',
+        module: 'vote',
+        entityType: 'Election',
+        entityId: data.electionId,
+        result: 'FAILURE',
+        description:
+          err instanceof Error ? err.message : 'Unknown error',
+      });
+
+      throw err;
+    }
+  }
+
+  private async castVoteInternal(
     userId: string,
     data: CreateVoteDto,
   ) {
