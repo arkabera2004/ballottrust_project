@@ -24,6 +24,7 @@ import { ResultModule } from './modules/result/result.module';
 
 import { BlockchainModule } from './modules/blockchain/blockchain.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { AuditModule } from './modules/audit/audit.module';
 
 import { MailModule } from './modules/mail/mail.module';
 
@@ -71,7 +72,7 @@ import { JobsModule } from './modules/jobs/jobs.module';
 
     BlockchainModule,
     DashboardModule,
-
+    AuditModule,
 
     MailModule,
     JobsModule,
