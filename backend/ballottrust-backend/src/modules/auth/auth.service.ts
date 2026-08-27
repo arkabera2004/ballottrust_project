@@ -22,6 +22,7 @@ import { generatePasswordResetToken } from '../../common/utils/password-reset.ut
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Response } from 'express';
 import { Role, UserStatus } from '@prisma/client';
+import { AuditService } from '../audit/audit.service';
 
 
 
@@ -32,6 +33,7 @@ export class AuthService {
   private jwtService: JwtService,
   private refreshTokenService: RefreshTokenService,
   private mailService: MailService,
+  private auditService: AuditService,
 ) {}
 
             
@@ -91,6 +93,15 @@ export class AuthService {
               otp,
             );
 
+            await this.auditService.log({
+              userId: user.id,
+              action: 'REGISTER',
+              module: 'auth',
+              entityType: 'User',
+              entityId: user.id,
+              result: 'SUCCESS',
+            });
+
             return {
 
               success: true,
@@ -114,10 +125,29 @@ export class AuthService {
             });
 
             if (!user) {
+                await this.auditService.log({
+                  action: 'LOGIN_FAILED',
+                  module: 'auth',
+                  entityType: 'User',
+                  result: 'FAILURE',
+                  description: 'Unknown email',
+                  metadata: { email: data.email },
+                });
+
                 throw new UnauthorizedException('Invalid credentials');
             }
 
             if (!user.password) {
+
+              await this.auditService.log({
+                userId: user.id,
+                action: 'LOGIN_FAILED',
+                module: 'auth',
+                entityType: 'User',
+                entityId: user.id,
+                result: 'FAILURE',
+                description: 'Password login attempted on Google-only account',
+              });
 
               throw new UnauthorizedException(
                 'This account uses Google Sign-In. Please continue with Google.',
@@ -131,20 +161,50 @@ export class AuthService {
             );
 
             if (!validPassword) {
+                await this.auditService.log({
+                  userId: user.id,
+                  action: 'LOGIN_FAILED',
+                  module: 'auth',
+                  entityType: 'User',
+                  entityId: user.id,
+                  result: 'FAILURE',
+                  description: 'Invalid password',
+                });
+
                 throw new UnauthorizedException('Invalid credentials');
             }
-            
+
             if (user.status !== 'APPROVED') {
+            await this.auditService.log({
+              userId: user.id,
+              action: 'LOGIN_FAILED',
+              module: 'auth',
+              entityType: 'User',
+              entityId: user.id,
+              result: 'FAILURE',
+              description: `Account status is ${user.status}`,
+            });
+
             throw new UnauthorizedException('Account pending approval');
             }
             if (!user.emailVerified) {
+            await this.auditService.log({
+              userId: user.id,
+              action: 'LOGIN_FAILED',
+              module: 'auth',
+              entityType: 'User',
+              entityId: user.id,
+              result: 'FAILURE',
+              description: 'Email not verified',
+            });
+
             throw new UnauthorizedException(
               'Please verify your email first.',
             );
 
           }
 
-         
+
             const accessToken =
         await this.jwtService.signAsync({
           sub: user.id,
@@ -156,6 +216,15 @@ export class AuthService {
         await this.refreshTokenService.generateRefreshToken(
           user.id,
         );
+
+      await this.auditService.log({
+        userId: user.id,
+        action: 'LOGIN_SUCCESS',
+        module: 'auth',
+        entityType: 'User',
+        entityId: user.id,
+        result: 'SUCCESS',
+      });
 
       return {
         access_token: accessToken,

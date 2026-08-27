@@ -9,8 +9,9 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { RolesGuard } from './guards/roles.guard';
 import { RefreshTokenService } from './refresh-token.service';
 import { MailModule } from '../mail/mail.module';
-import { GoogleStrategy } from './strategies/google.strategy';  
+import { GoogleStrategy } from './strategies/google.strategy';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { AuditModule } from '../audit/audit.module';
 
 
 @Module({
@@ -26,6 +27,7 @@ import { GoogleAuthGuard } from './guards/google-auth.guard';
     }),
 
     MailModule,   // <-- ADD THIS
+    AuditModule,
   ],
 
   controllers: [AuthController],
