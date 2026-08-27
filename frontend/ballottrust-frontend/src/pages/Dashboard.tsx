@@ -4,8 +4,8 @@ import axios from 'axios';
 
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
-import StatsChart from '../components/StatCard';
 import ResultsPieChart from '../components/ResultsPieChart';
+import StatCard from '../components/StatCard';
 
 export default function Dashboard() {
   const [stats, setStats] = useState<any>({
@@ -300,11 +300,25 @@ const [currentElection, setCurrentElection] =
               System Analytics
             </h2>
 
-            <StatsChart
-              elections={stats.elections}
-              candidates={stats.candidates}
-              votes={stats.votes}
-            />
+            <div className="grid grid-cols-3 gap-6">
+              <StatCard
+                title="Elections"
+                value={stats.elections}
+                color="bg-blue-600"
+              />
+
+              <StatCard
+                title="Candidates"
+                value={stats.candidates}
+                color="bg-green-600"
+              />
+
+              <StatCard
+                title="Votes"
+                value={stats.votes}
+                color="bg-purple-600"
+              />
+            </div>
 
           </div>
 

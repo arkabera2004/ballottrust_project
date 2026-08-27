@@ -12,11 +12,18 @@ import {
 
 import { CandidateRepository } from '../repository/candidate.repository';
 
+import {
+  BallotLifecycleValidator,
+} from '../validators/ballot-lifecycle.validator';
+
 @Injectable()
 export class AutoAssignCandidateNumberService {
   constructor(
     private readonly candidateRepository:
       CandidateRepository,
+
+    private readonly ballotLifecycleValidator:
+      BallotLifecycleValidator,
   ) {}
 
   async execute(
@@ -63,7 +70,29 @@ export class AutoAssignCandidateNumberService {
     }
 
     // ======================================================
-    // 4. Find Next Candidate Number
+    // 4. Validate Election & Ballot Lifecycle
+    // ======================================================
+
+    const election =
+      await this.candidateRepository
+        .findElectionBallotState(
+          candidate.electionId,
+        );
+
+    if (!election) {
+      throw new NotFoundException(
+        'Election not found.',
+      );
+    }
+
+    this.ballotLifecycleValidator
+      .validateModification(
+        election.status,
+        election.ballotFinalizedAt,
+      );
+
+    // ======================================================
+    // 5. Find Next Candidate Number
     // ======================================================
 
     const highestCandidateNumber =
@@ -76,7 +105,7 @@ export class AutoAssignCandidateNumberService {
       highestCandidateNumber + 1;
 
     // ======================================================
-    // 5. Assign Candidate Number
+    // 6. Assign Candidate Number
     // ======================================================
 
     try {
@@ -90,6 +119,7 @@ export class AutoAssignCandidateNumberService {
     } catch (error) {
       // Database unique constraint is the final
       // protection against concurrent assignment.
+
       if (
         error instanceof
           Prisma.PrismaClientKnownRequestError &&

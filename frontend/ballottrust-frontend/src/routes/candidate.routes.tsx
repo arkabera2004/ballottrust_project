@@ -4,6 +4,7 @@ import RoleRoute from '../routes/RoleRoute';
 
 import CandidateDashboard from '../pages/CandidateDashboard';
 import CandidateNomination from '../pages/CandidateNomination';
+import EditCandidatePage from '../modules/candidate/pages/EditCandidatePage';
 
 export const CandidateRoutes = (
   <>
@@ -16,6 +17,19 @@ export const CandidateRoutes = (
           ]}
         >
           <CandidateDashboard />
+        </RoleRoute>
+      }
+    />
+
+    <Route
+      path="/candidate/:id/edit"
+      element={
+        <RoleRoute
+          allowedRoles={[
+            'CANDIDATE',
+          ]}
+        >
+          <EditCandidatePage />
         </RoleRoute>
       }
     />

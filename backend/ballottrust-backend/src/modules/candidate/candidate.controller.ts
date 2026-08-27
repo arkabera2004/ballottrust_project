@@ -10,6 +10,7 @@ import {
   Query,
   UseGuards,
   NotFoundException,
+  Req,
 } from '@nestjs/common';
 
 import { Role } from '@prisma/client';
@@ -166,6 +167,7 @@ export class CandidateController {
 
     private readonly updateCandidateCampaignService:
       UpdateCandidateCampaignService,
+
   ) {}
 
   // ======================================================
@@ -976,4 +978,5 @@ id: string,
     dto,
   );
 }
+
 }

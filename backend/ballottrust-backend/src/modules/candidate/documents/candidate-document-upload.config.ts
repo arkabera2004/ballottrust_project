@@ -8,11 +8,7 @@ export const candidateDocumentMulterConfig = {
   storage: diskStorage({
     destination: './uploads',
 
-    filename: (
-      _,
-      file,
-      callback,
-    ) => {
+    filename: (_, file, callback) => {
       const uniqueName =
         `${Date.now()}-${Math.round(
           Math.random() * 1e9,
@@ -27,31 +23,31 @@ export const candidateDocumentMulterConfig = {
     },
   }),
 
-  fileFilter: (
-  _,
-  file,
-  callback,
-) => {
-  const allowedMimeTypes = [
-    'application/pdf',
-    'image/jpeg',
-    'image/png',
-    'image/webp',
-  ];
+  fileFilter: (_, file, callback) => {
+    const allowedMimeTypes = [
+      'application/pdf',
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+    ];
 
-  if (
-    !allowedMimeTypes.includes(
-      file.mimetype,
-    )
-  ) {
-    return callback(
-      new BadRequestException(
-        'Only PDF, JPG, JPEG, PNG and WEBP files are allowed.',
-      ),
-      false,
-    );
-  }
+    if (
+      !allowedMimeTypes.includes(
+        file.mimetype,
+      )
+    ) {
+      return callback(
+        new BadRequestException(
+          'Only PDF, JPG, JPEG, PNG and WEBP files are allowed.',
+        ),
+        false,
+      );
+    }
 
-  callback(null, true);
-},
+    callback(null, true);
+  },
+
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
 };

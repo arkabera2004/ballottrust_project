@@ -1,240 +1,108 @@
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
-import { useEffect, useState } from 'react';
-import axios from 'axios';
+import Card from '../components/cards/Card';
+
+import CandidateNominationForm from '../modules/candidate/components/CandidateNominationForm';
+
+import {
+  useSubmitNomination,
+} from '../modules/candidate/hooks';
+
+import {
+  useElections,
+} from '../modules/election/hooks';
+
+import type {
+  CreateCandidateDto,
+} from '../modules/candidate/types';
 
 export default function CandidateNomination() {
-  const [elections, setElections] = useState<any[]>([]);
+  const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    registrationNumber: '',
-    department: '',
-    position: '',
-    bio: '',
-    manifesto: '',
-    agenda: '',
-    achievements: '',
-    photoUrl: '',
-    documentUrl: '',
-    electionId: '',
+  const {
+    submit,
+    loading,
+  } = useSubmitNomination();
+
+  const {
+    elections,
+    loading: electionsLoading,
+    error: electionsError,
+  } = useElections({
+    page: 1,
+    limit: 100,
   });
 
-  const token = localStorage.getItem('token');
-
-  useEffect(() => {
-    loadElections();
-  }, []);
-
-  const loadElections = async () => {
+  async function handleSubmit(
+    data: CreateCandidateDto,
+  ) {
     try {
-      const response = await axios.get(
-        'http://localhost:3000/elections'
+      await submit(data);
+
+      toast.success(
+        'Nomination submitted successfully.',
       );
 
-      setElections(response.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+      navigate('/candidate');
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement |
-      HTMLTextAreaElement |
-      HTMLSelectElement
-    >
-  ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const submitNomination = async () => {
-    try {
-      await axios.post(
-        'http://localhost:3000/candidates',
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      alert(
-        'Nomination Submitted Successfully'
-      );
-
-      setFormData({
-        name: '',
-        email: '',
-        registrationNumber: '',
-        department: '',
-        position: '',
-        bio: '',
-        manifesto: '',
-        agenda: '',
-        achievements: '',
-        photoUrl: '',
-        documentUrl: '',
-        electionId: '',
-      });
     } catch (error: any) {
-      alert(
-        error?.response?.data?.message ||
-          'Submission Failed'
+      toast.error(
+        error?.response?.data?.message ??
+          'Failed to submit nomination.',
       );
     }
-  };
+  }
+
+  if (electionsLoading) {
+    return (
+      <div className="mx-auto max-w-5xl">
+        <Card>
+          <p className="text-slate-500">
+            Loading elections...
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
+  if (electionsError) {
+    return (
+      <div className="mx-auto max-w-5xl">
+        <Card>
+          <h1 className="text-xl font-bold text-red-600">
+            Unable to load elections
+          </h1>
+
+          <p className="mt-2 text-slate-500">
+            {electionsError}
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="mx-auto max-w-5xl space-y-6">
 
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
-
-        <h1 className="text-3xl font-bold mb-2">
+      <Card>
+        <h1 className="text-3xl font-bold">
           Candidate Nomination
         </h1>
 
-        <p className="text-gray-600 mb-6">
-          Submit your nomination for the election.
+        <p className="mt-2 text-slate-500">
+          Submit your nomination for an available election.
         </p>
+      </Card>
 
-        <div className="grid md:grid-cols-2 gap-4">
-
-          <input
-            type="text"
-            name="name"
-            placeholder="Candidate Name"
-            value={formData.name}
-            onChange={handleChange}
-            className="border p-3 rounded"
-          />
-
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            className="border p-3 rounded"
-          />
-
-          <input
-            type="text"
-            name="registrationNumber"
-            placeholder="Registration Number"
-            value={formData.registrationNumber}
-            onChange={handleChange}
-            className="border p-3 rounded"
-          />
-
-          <input
-            type="text"
-            name="department"
-            placeholder="Department"
-            value={formData.department}
-            onChange={handleChange}
-            className="border p-3 rounded"
-          />
-
-          <input
-            type="text"
-            name="position"
-            placeholder="Position Contested"
-            value={formData.position}
-            onChange={handleChange}
-            className="border p-3 rounded"
-          />
-
-          <select
-            name="electionId"
-            value={formData.electionId}
-            onChange={handleChange}
-            className="border p-3 rounded"
-          >
-            <option value="">
-              Select Election
-            </option>
-
-            {elections.map((election) => (
-              <option
-                key={election.id}
-                value={election.id}
-              >
-                {election.title}
-              </option>
-            ))}
-          </select>
-
-        </div>
-
-        <textarea
-          name="bio"
-          placeholder="Biography"
-          value={formData.bio}
-          onChange={handleChange}
-          className="border p-3 rounded w-full mt-4"
-          rows={4}
+      <Card>
+        <CandidateNominationForm
+          elections={elections}
+          loading={loading}
+          onSubmit={handleSubmit}
         />
-
-        <textarea
-          name="manifesto"
-          placeholder="Manifesto"
-          value={formData.manifesto}
-          onChange={handleChange}
-          className="border p-3 rounded w-full mt-4"
-          rows={5}
-        />
-
-        <textarea
-          name="agenda"
-          placeholder="Agenda"
-          value={formData.agenda}
-          onChange={handleChange}
-          className="border p-3 rounded w-full mt-4"
-          rows={4}
-        />
-
-        <textarea
-          name="achievements"
-          placeholder="Achievements"
-          value={formData.achievements}
-          onChange={handleChange}
-          className="border p-3 rounded w-full mt-4"
-          rows={4}
-        />
-
-        <input
-          type="text"
-          name="photoUrl"
-          placeholder="Photo URL"
-          value={formData.photoUrl}
-          onChange={handleChange}
-          className="border p-3 rounded w-full mt-4"
-        />
-
-        <input
-          type="text"
-          name="documentUrl"
-          placeholder="Document URL"
-          value={formData.documentUrl}
-          onChange={handleChange}
-          className="border p-3 rounded w-full mt-4"
-        />
-
-        <button
-          onClick={submitNomination}
-          className="mt-6 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
-        >
-          Submit Nomination
-        </button>
-
-      </div>
+      </Card>
 
     </div>
   );
 }
-

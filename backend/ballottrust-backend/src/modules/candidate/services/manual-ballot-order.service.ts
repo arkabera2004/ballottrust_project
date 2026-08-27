@@ -83,26 +83,46 @@ this.ballotLifecycleValidator
     // ======================================================
 
     const eligibleCandidateIds =
-      new Set(
-        eligibleCandidates.map(
-          (candidate) =>
-            candidate.id,
-        ),
-      );
+  new Set(
+    eligibleCandidates.map(
+      (candidate) =>
+        candidate.id,
+    ),
+  );
 
-    for (
-      const candidateId of candidateIds
-    ) {
-      if (
-        !eligibleCandidateIds.has(
-          candidateId,
-        )
-      ) {
-        throw new BadRequestException(
-          'Manual ballot order contains a candidate who is not eligible for this election.',
-        );
-      }
-    }
+// ======================================================
+// Validate Candidate Membership
+// ======================================================
+
+for (
+  const candidateId of candidateIds
+) {
+  if (
+    !eligibleCandidateIds.has(
+      candidateId,
+    )
+  ) {
+    throw new BadRequestException(
+      'Manual ballot order contains a candidate who is not eligible for this election.',
+    );
+  }
+}
+
+// ======================================================
+// Prevent Duplicate Candidate IDs
+// ======================================================
+
+const uniqueCandidateIds =
+  new Set(candidateIds);
+
+if (
+  uniqueCandidateIds.size !==
+  candidateIds.length
+) {
+  throw new BadRequestException(
+    'Manual ballot order cannot contain duplicate candidates.',
+  );
+}
 
     // ======================================================
     // 4. Generate Sequential Positions

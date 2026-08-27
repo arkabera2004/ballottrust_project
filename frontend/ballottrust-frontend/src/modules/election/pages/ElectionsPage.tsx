@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import toast from 'react-hot-toast';
 
 import SearchInput from '../../../components/search/SearchInput';
 import Pagination from '../../../components/pagination/Pagination';
@@ -8,13 +7,10 @@ import EmptyState from '../../../components/empty-state/EmptyState';
 import TableSkeleton from '../../../components/skeleton/TableSkeleton';
 
 import {
-  useDeleteElection,
   useElections,
 } from '../hooks';
 
 import { electionColumns } from '../table';
-
-import { confirmDelete } from '../../../shared/utils/confirm';
 
 export default function ElectionsPage() {
 
@@ -28,45 +24,11 @@ export default function ElectionsPage() {
     elections,
     loading,
     totalPages,
-    refresh,
   } = useElections({
     page,
     limit: 10,
     search,
   });
-
-  const {
-    remove,
-  } = useDeleteElection();
-
-  async function handleDelete(
-    id: string,
-  ) {
-
-    const confirmed =
-      await confirmDelete();
-
-    if (!confirmed) return;
-
-    try {
-
-      await remove(id);
-
-      toast.success(
-        'Election deleted successfully.',
-      );
-
-      refresh();
-
-    } catch {
-
-      toast.error(
-        'Unable to delete election.',
-      );
-
-    }
-
-  }
 
   if (loading) {
     return <TableSkeleton />;

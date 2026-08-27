@@ -6,9 +6,6 @@ import ElectionsPage from '../modules/election/pages/ElectionsPage';
 import CreateElectionPage from '../modules/election/pages/CreateElectionPage';
 import ElectionDetailsPage from '../modules/election/pages/ElectionDetailsPage';
 import EditElectionPage from '../modules/election/pages/EditElectionPage';
-import {
-  ElectionProvider,
-} from '../modules/election/context/ElectionContext';
 
 export const ElectionRoutes = (
   <>
