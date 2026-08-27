@@ -20,6 +20,7 @@ import { SubmitNominationService } from './submit-nomination.service';
 
 import { CandidateRepository } from '../repository/candidate.repository';
 import { CandidateValidator } from '../validators/candidate.validator';
+import { AuditService } from '../../audit/audit.service';
 
 describe('SubmitNominationService', () => {
   let service: SubmitNominationService;
@@ -81,12 +82,17 @@ describe('SubmitNominationService', () => {
     validateCandidateType,
   };
 
+  const auditService = {
+    log: jest.fn(async (): Promise<void> => undefined),
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
 
     service = new SubmitNominationService(
       candidateRepository as unknown as CandidateRepository,
       candidateValidator as unknown as CandidateValidator,
+      auditService as unknown as AuditService,
     );
   });
 

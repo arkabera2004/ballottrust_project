@@ -8,6 +8,7 @@ import { CandidateStatus } from '@prisma/client';
 
 import { CandidateRepository } from '../repository/candidate.repository';
 import { CandidateStatusValidator } from '../validators/candidate-status.validator';
+import { AuditService } from '../../audit/audit.service';
 
 @Injectable()
 export class WithdrawCandidateService {
@@ -17,6 +18,8 @@ export class WithdrawCandidateService {
 
     private readonly candidateStatusValidator:
       CandidateStatusValidator,
+
+    private readonly auditService: AuditService,
   ) {}
 
   async execute(
@@ -55,7 +58,7 @@ export class WithdrawCandidateService {
         CandidateStatus.WITHDRAWN,
       );
 
-    return this.candidateRepository.update(
+    const updated = await this.candidateRepository.update(
       candidateId,
       {
         status:
@@ -68,5 +71,18 @@ export class WithdrawCandidateService {
           reason.trim(),
       },
     );
+
+    await this.auditService.log({
+      userId,
+      action: 'CANDIDATE_WITHDRAWN',
+      module: 'candidate',
+      entityType: 'Candidate',
+      entityId: candidateId,
+      result: 'SUCCESS',
+      description: reason.trim(),
+      metadata: { previousStatus: candidate.status },
+    });
+
+    return updated;
   }
 }

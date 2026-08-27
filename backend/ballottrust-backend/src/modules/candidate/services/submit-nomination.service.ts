@@ -9,6 +9,7 @@ import { CreateCandidateDto } from '../dto/create-candidate.dto';
 import { CandidateRepository } from '../repository/candidate.repository';
 
 import { CandidateValidator } from '../validators/candidate.validator';
+import { AuditService } from '../../audit/audit.service';
 
 @Injectable()
 export class SubmitNominationService {
@@ -18,6 +19,8 @@ export class SubmitNominationService {
 
     private readonly candidateValidator:
       CandidateValidator,
+
+    private readonly auditService: AuditService,
   ) {}
 
   async execute(
@@ -82,7 +85,7 @@ if (
   existingCandidate &&
   existingCandidate.deletedAt
 ) {
-  return this.candidateRepository.update(
+  const restored = await this.candidateRepository.update(
     existingCandidate.id,
     {
       candidateType:
@@ -182,13 +185,25 @@ if (
         null,
     },
   );
+
+  await this.auditService.log({
+    userId,
+    action: 'CANDIDATE_NOMINATION_SUBMITTED',
+    module: 'candidate',
+    entityType: 'Candidate',
+    entityId: restored.id,
+    result: 'SUCCESS',
+    description: 'Restored a previously cancelled nomination',
+  });
+
+  return restored;
 }
 
     // ======================================================
     // 6. Create Nomination
     // ======================================================
 
-    return this.candidateRepository.create({
+    const created = await this.candidateRepository.create({
       electionId:
         dto.electionId,
 
@@ -240,5 +255,16 @@ if (
       submittedAt:
         new Date(),
     });
+
+    await this.auditService.log({
+      userId,
+      action: 'CANDIDATE_NOMINATION_SUBMITTED',
+      module: 'candidate',
+      entityType: 'Candidate',
+      entityId: created.id,
+      result: 'SUCCESS',
+    });
+
+    return created;
   }
 }

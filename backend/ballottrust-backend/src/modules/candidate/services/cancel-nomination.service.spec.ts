@@ -1,13 +1,19 @@
 import { CancelNominationService } from './cancel-nomination.service';
 import { CandidateRepository } from '../repository/candidate.repository';
 import { CandidateValidator } from '../validators/candidate.validator';
+import { AuditService } from '../../audit/audit.service';
 import { CandidateStatus } from '@prisma/client';
+
+const noopAuditService = {
+  log: jest.fn().mockResolvedValue(undefined),
+} as unknown as AuditService;
 
 describe('CancelNominationService', () => {
   it('should be defined', () => {
     const service = new CancelNominationService(
       {} as CandidateRepository,
       {} as CandidateValidator,
+      noopAuditService,
     );
 
     expect(service).toBeDefined();
@@ -25,6 +31,7 @@ describe('CancelNominationService', () => {
     const service = new CancelNominationService(
       repository as unknown as CandidateRepository,
       {} as CandidateValidator,
+      noopAuditService,
     );
 
     await expect(
@@ -53,6 +60,7 @@ describe('CancelNominationService', () => {
   const service = new CancelNominationService(
     repository as unknown as CandidateRepository,
     candidateValidator as unknown as CandidateValidator,
+    noopAuditService,
   );
 
   await expect(
