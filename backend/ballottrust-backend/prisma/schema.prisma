@@ -83,6 +83,8 @@ model User {
   refreshTokens                 RefreshToken[]
   sessions                      Session[]
   voterCredentials              VoterCredential[]
+  createdEligibilityRuleSets    EligibilityRuleSet[]
+  eligibilitySnapshots          VoterEligibilitySnapshot[]
 
   @@index([email])
   @@index([role])
@@ -141,6 +143,8 @@ model Election {
   reports             ElectionReport[]
   votes               Vote[]
   voterCredentials    VoterCredential[]
+  eligibilityRuleSets EligibilityRuleSet[]
+  eligibilitySnapshots VoterEligibilitySnapshot[]
 
   @@index([status])
   @@index([startDate])
@@ -444,6 +448,53 @@ model VoterCredential {
 
   @@unique([userId, electionId])
   @@index([electionId])
+}
+
+/// Sec4: versioned voter-eligibility rule tree for an election. Editing
+/// rules never mutates a row in place — it creates a new version and
+/// deactivates the previous one, so every past evaluation stays
+/// explainable against the exact rule set that produced it.
+model EligibilityRuleSet {
+  id          String    @id @default(uuid())
+  electionId  String
+  version     Int
+  /// ///////////////////////////////////////////////////
+  /// ///////////////////////////////////////////////////
+  isActive    Boolean   @default(true)
+  description String?
+  /// AND/OR/NOT/CONDITION tree — see eligibility/types.ts for the shape.
+  rule        Json
+  createdById String
+  createdAt   DateTime  @default(now())
+  election    Election  @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  snapshots   VoterEligibilitySnapshot[]
+
+  @@unique([electionId, version])
+  @@index([electionId, isActive])
+}
+
+/// Sec4: persisted result of one eligibility evaluation. Doubles as the
+/// explainability/audit record — every check (real-time at vote-cast time
+/// or an admin's bulk preview) writes one row here, so "why was voter X
+/// eligible/ineligible for election Y" is always answerable after the
+/// fact without re-deriving it from mutable state.
+model VoterEligibilitySnapshot {
+  id             String              @id @default(uuid())
+  electionId     String
+  userId         String
+  /// Null when no EligibilityRuleSet existed yet — evaluated against the
+  /// default rule (role = VOTER AND status = APPROVED).
+  ruleSetId      String?
+  eligible       Boolean
+  explanation    Json
+  evaluatedAt    DateTime            @default(now())
+  election       Election            @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ruleSet        EligibilityRuleSet? @relation(fields: [ruleSetId], references: [id])
+
+  @@index([electionId, userId])
+  @@index([ruleSetId])
 }
 
 model RefreshToken {

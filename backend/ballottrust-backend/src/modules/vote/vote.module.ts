@@ -5,9 +5,10 @@ import { VoteService } from './vote.service';
 
 import { PrismaModule } from '../../prisma/prisma.module';
 import { AuditModule } from '../audit/audit.module';
+import { EligibilityModule } from '../eligibility/eligibility.module';
 
 @Module({
-  imports: [PrismaModule, AuditModule],
+  imports: [PrismaModule, AuditModule, EligibilityModule],
   controllers: [VoteController],
   providers: [VoteService],
 })
