@@ -5,6 +5,12 @@ import { ManifestoStatus } from '@prisma/client';
 import { ManifestoRepository } from '../repository/manifesto.repository';
 import { ManifestoStatusValidator } from '../validators/manifesto-status.validator';
 import { AuditService } from '../../audit/audit.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NotificationType } from '@prisma/client';
+import {
+  NOTIFICATION_REQUESTED,
+  type NotificationRequestedEvent,
+} from '../../notification/notification.events';
 
 /** Approving a version makes it the publicly visible manifesto. */
 @Injectable()
@@ -15,6 +21,8 @@ export class ApproveManifestoService {
     private readonly statusValidator: ManifestoStatusValidator,
 
     private readonly auditService: AuditService,
+
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(id: string, approvedById: string) {
@@ -47,6 +55,17 @@ export class ApproveManifestoService {
         version: manifesto.version,
       },
     });
+
+    this.eventEmitter.emit(NOTIFICATION_REQUESTED, {
+      userId: manifesto.candidate.userId,
+      title: 'Manifesto approved',
+      message:
+        'Your manifesto has been approved and is now visible on the public portal.',
+      type: NotificationType.SUCCESS,
+      entityType: 'CandidateManifesto',
+      entityId: id,
+      sendEmail: true,
+    } satisfies NotificationRequestedEvent);
 
     return updated;
   }

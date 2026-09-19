@@ -5,6 +5,12 @@ import { VoterRegistrationStatus } from '@prisma/client';
 import { VoterRegistrationRepository } from '../repository/voter-registration.repository';
 import { VoterRegistrationStatusValidator } from '../validators/voter-registration-status.validator';
 import { AuditService } from '../../audit/audit.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NotificationType } from '@prisma/client';
+import {
+  NOTIFICATION_REQUESTED,
+  type NotificationRequestedEvent,
+} from '../../notification/notification.events';
 
 /** Admits a verified voter to the roll. */
 @Injectable()
@@ -15,6 +21,8 @@ export class ApproveVoterService {
     private readonly statusValidator: VoterRegistrationStatusValidator,
 
     private readonly auditService: AuditService,
+
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(registrationId: string, approvedById: string) {
@@ -47,6 +55,16 @@ export class ApproveVoterService {
         electionId: registration.electionId,
       },
     });
+
+    this.eventEmitter.emit(NOTIFICATION_REQUESTED, {
+      userId: registration.userId,
+      title: 'Voter registration approved',
+      message: `Your registration for ${registration.election.title} has been approved. You are now on the voter roll.`,
+      type: NotificationType.SUCCESS,
+      entityType: 'VoterRegistration',
+      entityId: registrationId,
+      sendEmail: true,
+    } satisfies NotificationRequestedEvent);
 
     return updated;
   }

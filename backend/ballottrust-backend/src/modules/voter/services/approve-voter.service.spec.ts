@@ -14,6 +14,8 @@ describe('ApproveVoterService', () => {
 
   const mockAudit = { log: jest.fn() };
 
+  const mockEventEmitter = { emit: jest.fn() };
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockRepository.update.mockResolvedValue({ id: 'reg-1' });
@@ -22,6 +24,7 @@ describe('ApproveVoterService', () => {
       mockRepository as any,
       new VoterRegistrationStatusValidator(),
       mockAudit as any,
+      mockEventEmitter as any,
     );
   });
 
@@ -30,6 +33,8 @@ describe('ApproveVoterService', () => {
       id: 'reg-1',
       status: VoterRegistrationStatus.VERIFIED,
       electionId: 'election-1',
+      userId: 'voter-1',
+      election: { title: 'Student Council 2026' },
     });
 
     await service.execute('reg-1', 'officer-1');
@@ -44,6 +49,41 @@ describe('ApproveVoterService', () => {
     expect(mockAudit.log).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'VOTER_APPROVED' }),
     );
+  });
+
+  it('notifies the voter that they are on the roll', async () => {
+    mockRepository.findById.mockResolvedValue({
+      id: 'reg-1',
+      status: VoterRegistrationStatus.VERIFIED,
+      electionId: 'election-1',
+      userId: 'voter-1',
+      election: { title: 'Student Council 2026' },
+    });
+
+    await service.execute('reg-1', 'officer-1');
+
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+      'notification.requested',
+      expect.objectContaining({
+        userId: 'voter-1',
+        entityType: 'VoterRegistration',
+        entityId: 'reg-1',
+        sendEmail: true,
+      }),
+    );
+  });
+
+  it('does not notify when the transition is refused', async () => {
+    mockRepository.findById.mockResolvedValue({
+      id: 'reg-1',
+      status: VoterRegistrationStatus.PENDING,
+      electionId: 'election-1',
+      userId: 'voter-1',
+      election: { title: 'Student Council 2026' },
+    });
+
+    await expect(service.execute('reg-1', 'officer-1')).rejects.toThrow();
+    expect(mockEventEmitter.emit).not.toHaveBeenCalled();
   });
 
   it('refuses to approve a registration that was never verified', async () => {

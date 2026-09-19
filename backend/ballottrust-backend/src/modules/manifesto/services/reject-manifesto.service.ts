@@ -5,6 +5,12 @@ import { ManifestoStatus } from '@prisma/client';
 import { ManifestoRepository } from '../repository/manifesto.repository';
 import { ManifestoStatusValidator } from '../validators/manifesto-status.validator';
 import { AuditService } from '../../audit/audit.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NotificationType } from '@prisma/client';
+import {
+  NOTIFICATION_REQUESTED,
+  type NotificationRequestedEvent,
+} from '../../notification/notification.events';
 import { RejectManifestoDto } from '../dto';
 
 @Injectable()
@@ -15,6 +21,8 @@ export class RejectManifestoService {
     private readonly statusValidator: ManifestoStatusValidator,
 
     private readonly auditService: AuditService,
+
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(id: string, rejectedById: string, dto: RejectManifestoDto) {
@@ -49,6 +57,16 @@ export class RejectManifestoService {
         reason: dto.reason,
       },
     });
+
+    this.eventEmitter.emit(NOTIFICATION_REQUESTED, {
+      userId: manifesto.candidate.userId,
+      title: 'Manifesto rejected',
+      message: `Your manifesto was rejected: ${dto.reason}`,
+      type: NotificationType.WARNING,
+      entityType: 'CandidateManifesto',
+      entityId: id,
+      sendEmail: true,
+    } satisfies NotificationRequestedEvent);
 
     return updated;
   }

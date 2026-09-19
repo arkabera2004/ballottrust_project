@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
@@ -22,6 +23,7 @@ import { CandidateModule } from './modules/candidate/candidate.module';
 import { VoteModule } from './modules/vote/vote.module';
 import { VoterModule } from './modules/voter/voter.module';
 import { ManifestoModule } from './modules/manifesto/manifesto.module';
+import { NotificationModule } from './modules/notification/notification.module';
 import { ResultModule } from './modules/result/result.module';
 
 import { BlockchainModule } from './modules/blockchain/blockchain.module';
@@ -43,6 +45,10 @@ import { JobsModule } from './modules/jobs/jobs.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+
+    // Lets modules raise notifications without importing the
+    // NotificationModule — see notification.events.ts.
+    EventEmitterModule.forRoot(),
 
     // =====================================
     // Static File Hosting
@@ -73,6 +79,7 @@ import { JobsModule } from './modules/jobs/jobs.module';
     VoteModule,
     VoterModule,
     ManifestoModule,
+    NotificationModule,
     ResultModule,
 
     BlockchainModule,

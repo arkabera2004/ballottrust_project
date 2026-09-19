@@ -571,7 +571,7 @@ model Session {
 }
 
 model Notification {
-  id          String           @id @default(uuid())
+  id          String                      @id @default(uuid())
   /// ///////////////////////////////////////////////////
   /// ///////////////////////////////////////////////////
   userId      String
@@ -579,13 +579,13 @@ model Notification {
   message     String
   /// ///////////////////////////////////////////////////
   /// ///////////////////////////////////////////////////
-  isRead      Boolean          @default(false)
-  createdAt   DateTime         @default(now())
+  isRead      Boolean                     @default(false)
+  createdAt   DateTime                    @default(now())
   actionLabel String?
   /// ///////////////////////////////////////////////////
   /// ///////////////////////////////////////////////////
   deletedAt   DateTime?
-  isArchived  Boolean          @default(false)
+  isArchived  Boolean                     @default(false)
   /// ///////////////////////////////////////////////////
   /// ///////////////////////////////////////////////////
   link        String?
@@ -594,8 +594,18 @@ model Notification {
   readAt      DateTime?
   /// ///////////////////////////////////////////////////
   /// ///////////////////////////////////////////////////
-  type        NotificationType @default(INFO)
-  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        NotificationType            @default(INFO)
+  /// ///////////////////////////////////////////////////
+  /// Email delivery tracking (docs/07 §13: "Delivery status
+  /// is tracked"). Null emailStatus means in-app only.
+  /// ///////////////////////////////////////////////////
+  emailStatus NotificationDeliveryStatus?
+  emailSentAt DateTime?
+  emailError  String?
+  /// Correlates the notification back to the thing it is about.
+  entityType  String?
+  entityId    String?
+  user        User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([type])
@@ -973,4 +983,12 @@ model CandidateManifesto {
   @@unique([candidateId, version])
   @@index([candidateId, status])
   @@index([status])
+}
+
+/// Outcome of the email leg of a notification. In-app delivery is
+/// synchronous and always succeeds, so only email needs a status.
+enum NotificationDeliveryStatus {
+  PENDING
+  SENT
+  FAILED
 }

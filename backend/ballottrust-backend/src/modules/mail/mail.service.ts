@@ -253,4 +253,83 @@ export class MailService {
     `,
     });
   }
+
+  /**
+   * Generic notification email used by the Notification Center.
+   *
+   * Values are HTML-escaped before interpolation: notification text can
+   * carry data that originated with a user (a candidate name, a rejection
+   * reason), and this template is the one place that data reaches an
+   * HTML document.
+   */
+  async sendNotificationEmail(params: {
+    email: string;
+    title: string;
+    message: string;
+    link?: string;
+    actionLabel?: string;
+  }) {
+    const title = escapeHtml(params.title);
+    const message = escapeHtml(params.message);
+
+    const action =
+      params.link && isSafeHttpUrl(params.link)
+        ? `
+        <p style="margin:24px 0;">
+          <a
+            href="${escapeHtml(params.link)}"
+            style="
+              background:#2563eb;
+              color:#ffffff;
+              padding:10px 18px;
+              border-radius:6px;
+              text-decoration:none;
+              display:inline-block;
+            "
+          >
+            ${escapeHtml(params.actionLabel ?? 'View in BallotTrust')}
+          </a>
+        </p>
+      `
+        : '';
+
+    await this.mailerService.sendMail({
+      to: params.email,
+      subject: params.title,
+
+      html: `
+      <div style="font-family:Arial,sans-serif;padding:30px">
+
+        <h2 style="color:#2563eb;">BallotTrust</h2>
+
+        <h3 style="color:#0f172a;">${title}</h3>
+
+        <p style="color:#334155;">${message}</p>
+
+        ${action}
+
+        <hr style="margin:30px 0;" />
+
+        <small style="color:#64748b;">
+          BallotTrust Enterprise Election Platform
+        </small>
+
+      </div>
+      `,
+    });
+  }
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/** Only absolute http(s) links become a clickable button. */
+function isSafeHttpUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value.trim());
 }
