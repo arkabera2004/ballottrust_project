@@ -10,10 +10,7 @@ import {
   MinLength,
 } from 'class-validator';
 
-import {
-  ElectionType,
-  ResultVisibility,
-} from '@prisma/client';
+import { ElectionType, ResultVisibility } from '@prisma/client';
 
 export class UpdateElectionDto {
   @IsOptional()

@@ -61,30 +61,28 @@ describe('VoteService', () => {
       ruleSetVersion: 0,
     });
 
-    const module: TestingModule =
-      await Test.createTestingModule({
-        providers: [
-          VoteService,
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        VoteService,
 
-          {
-            provide: PrismaService,
-            useValue: mockPrismaService,
-          },
+        {
+          provide: PrismaService,
+          useValue: mockPrismaService,
+        },
 
-          {
-            provide: AuditService,
-            useValue: mockAuditService,
-          },
+        {
+          provide: AuditService,
+          useValue: mockAuditService,
+        },
 
-          {
-            provide: CheckVoterEligibilityService,
-            useValue: mockCheckVoterEligibilityService,
-          },
-        ],
-      }).compile();
+        {
+          provide: CheckVoterEligibilityService,
+          useValue: mockCheckVoterEligibilityService,
+        },
+      ],
+    }).compile();
 
-    service =
-      module.get<VoteService>(VoteService);
+    service = module.get<VoteService>(VoteService);
   });
 
   // ============================================================
@@ -100,12 +98,8 @@ describe('VoteService', () => {
   // ============================================================
 
   it('should cast a vote successfully without storing voter identity', async () => {
-    mockPrismaService.candidate.findUnique.mockResolvedValue(
-      approvedCandidate,
-    );
-    mockPrismaService.election.findUnique.mockResolvedValue(
-      activeElection,
-    );
+    mockPrismaService.candidate.findUnique.mockResolvedValue(approvedCandidate);
+    mockPrismaService.election.findUnique.mockResolvedValue(activeElection);
 
     mockTx.voterCredential.upsert.mockResolvedValue({
       id: 'credential-1',
@@ -251,9 +245,7 @@ describe('VoteService', () => {
   // ============================================================
 
   it('should reject when election does not exist', async () => {
-    mockPrismaService.candidate.findUnique.mockResolvedValue(
-      approvedCandidate,
-    );
+    mockPrismaService.candidate.findUnique.mockResolvedValue(approvedCandidate);
     mockPrismaService.election.findUnique.mockResolvedValue(null);
 
     await expect(
@@ -267,9 +259,7 @@ describe('VoteService', () => {
   });
 
   it('should reject voting in an inactive election', async () => {
-    mockPrismaService.candidate.findUnique.mockResolvedValue(
-      approvedCandidate,
-    );
+    mockPrismaService.candidate.findUnique.mockResolvedValue(approvedCandidate);
     mockPrismaService.election.findUnique.mockResolvedValue({
       id: 'election-1',
       status: 'PUBLISHED',
@@ -290,12 +280,8 @@ describe('VoteService', () => {
   // ============================================================
 
   it('should reject a voter the eligibility engine marks ineligible, without touching the ledger', async () => {
-    mockPrismaService.candidate.findUnique.mockResolvedValue(
-      approvedCandidate,
-    );
-    mockPrismaService.election.findUnique.mockResolvedValue(
-      activeElection,
-    );
+    mockPrismaService.candidate.findUnique.mockResolvedValue(approvedCandidate);
+    mockPrismaService.election.findUnique.mockResolvedValue(activeElection);
 
     mockCheckVoterEligibilityService.execute.mockResolvedValue({
       eligible: false,
@@ -333,12 +319,8 @@ describe('VoteService', () => {
   // ============================================================
 
   it('should reject when the credential shows the voter already voted', async () => {
-    mockPrismaService.candidate.findUnique.mockResolvedValue(
-      approvedCandidate,
-    );
-    mockPrismaService.election.findUnique.mockResolvedValue(
-      activeElection,
-    );
+    mockPrismaService.candidate.findUnique.mockResolvedValue(approvedCandidate);
+    mockPrismaService.election.findUnique.mockResolvedValue(activeElection);
 
     mockTx.voterCredential.upsert.mockResolvedValue({
       id: 'credential-1',
@@ -366,12 +348,8 @@ describe('VoteService', () => {
   });
 
   it('should reject a concurrent duplicate that loses the conditional update race', async () => {
-    mockPrismaService.candidate.findUnique.mockResolvedValue(
-      approvedCandidate,
-    );
-    mockPrismaService.election.findUnique.mockResolvedValue(
-      activeElection,
-    );
+    mockPrismaService.candidate.findUnique.mockResolvedValue(approvedCandidate);
+    mockPrismaService.election.findUnique.mockResolvedValue(activeElection);
 
     mockTx.voterCredential.upsert.mockResolvedValue({
       id: 'credential-1',
@@ -404,9 +382,7 @@ describe('VoteService', () => {
       electionId: 'election-1',
       status: 'APPROVED',
     });
-    mockPrismaService.election.findUnique.mockResolvedValue(
-      activeElection,
-    );
+    mockPrismaService.election.findUnique.mockResolvedValue(activeElection);
 
     mockTx.voterCredential.upsert.mockResolvedValue({
       id: 'credential-2',

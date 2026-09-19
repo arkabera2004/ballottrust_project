@@ -13,22 +13,18 @@ describe('VoteController', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const module: TestingModule =
-      await Test.createTestingModule({
-        controllers: [VoteController],
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [VoteController],
 
-        providers: [
-          {
-            provide: VoteService,
-            useValue: mockVoteService,
-          },
-        ],
-      }).compile();
+      providers: [
+        {
+          provide: VoteService,
+          useValue: mockVoteService,
+        },
+      ],
+    }).compile();
 
-    controller =
-      module.get<VoteController>(
-        VoteController,
-      );
+    controller = module.get<VoteController>(VoteController);
   });
 
   it('should be defined', () => {
@@ -54,25 +50,12 @@ describe('VoteController', () => {
       electionId: 'election-1',
     };
 
-    mockVoteService.castVote.mockResolvedValue(
-      expectedResult,
-    );
+    mockVoteService.castVote.mockResolvedValue(expectedResult);
 
-    const result =
-      await controller.castVote(
-        request,
-        voteData,
-      );
+    const result = await controller.castVote(request, voteData);
 
-    expect(result).toEqual(
-      expectedResult,
-    );
+    expect(result).toEqual(expectedResult);
 
-    expect(
-      mockVoteService.castVote,
-    ).toHaveBeenCalledWith(
-      'user-1',
-      voteData,
-    );
+    expect(mockVoteService.castVote).toHaveBeenCalledWith('user-1', voteData);
   });
 });

@@ -1,11 +1,7 @@
-import {
-  BadRequestException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class CampaignWindowValidator {
-
   // ==========================================
   // Validate Campaign Window
   // ==========================================
@@ -15,15 +11,11 @@ export class CampaignWindowValidator {
     campaignEnd: Date | null,
     currentDate: Date = new Date(),
   ): void {
-
     // ========================================
     // 1. Campaign Schedule Must Exist
     // ========================================
 
-    if (
-      !campaignStart ||
-      !campaignEnd
-    ) {
+    if (!campaignStart || !campaignEnd) {
       throw new BadRequestException(
         'Campaign period has not been configured for this election.',
       );
@@ -33,39 +25,24 @@ export class CampaignWindowValidator {
     // 2. Validate Campaign Configuration
     // ========================================
 
-    if (
-      campaignStart.getTime() >=
-      campaignEnd.getTime()
-    ) {
-      throw new BadRequestException(
-        'The election campaign period is invalid.',
-      );
+    if (campaignStart.getTime() >= campaignEnd.getTime()) {
+      throw new BadRequestException('The election campaign period is invalid.');
     }
 
     // ========================================
     // 3. Campaign Has Not Started
     // ========================================
 
-    if (
-      currentDate.getTime() <
-      campaignStart.getTime()
-    ) {
-      throw new BadRequestException(
-        'The campaign period has not started yet.',
-      );
+    if (currentDate.getTime() < campaignStart.getTime()) {
+      throw new BadRequestException('The campaign period has not started yet.');
     }
 
     // ========================================
     // 4. Campaign Has Ended
     // ========================================
 
-    if (
-      currentDate.getTime() >
-      campaignEnd.getTime()
-    ) {
-      throw new BadRequestException(
-        'The campaign period has ended.',
-      );
+    if (currentDate.getTime() > campaignEnd.getTime()) {
+      throw new BadRequestException('The campaign period has ended.');
     }
   }
 
@@ -78,63 +55,41 @@ export class CampaignWindowValidator {
     campaignEnd: Date | null,
     currentDate: Date = new Date(),
   ): boolean {
-    if (
-      !campaignStart ||
-      !campaignEnd
-    ) {
+    if (!campaignStart || !campaignEnd) {
       return false;
     }
 
-    if (
-      campaignStart.getTime() >=
-      campaignEnd.getTime()
-    ) {
+    if (campaignStart.getTime() >= campaignEnd.getTime()) {
       return false;
     }
 
     return (
-      currentDate.getTime() >=
-        campaignStart.getTime() &&
-      currentDate.getTime() <=
-        campaignEnd.getTime()
+      currentDate.getTime() >= campaignStart.getTime() &&
+      currentDate.getTime() <= campaignEnd.getTime()
     );
   }
 
   // ==========================================
-// Get Campaign Status
-// ==========================================
+  // Get Campaign Status
+  // ==========================================
 
-getStatus(
-  campaignStart: Date | null,
-  campaignEnd: Date | null,
-  currentDate: Date = new Date(),
-):
-  | 'NOT_CONFIGURED'
-  | 'NOT_STARTED'
-  | 'ACTIVE'
-  | 'ENDED' {
+  getStatus(
+    campaignStart: Date | null,
+    campaignEnd: Date | null,
+    currentDate: Date = new Date(),
+  ): 'NOT_CONFIGURED' | 'NOT_STARTED' | 'ACTIVE' | 'ENDED' {
+    if (!campaignStart || !campaignEnd) {
+      return 'NOT_CONFIGURED';
+    }
 
-  if (
-    !campaignStart ||
-    !campaignEnd
-  ) {
-    return 'NOT_CONFIGURED';
+    if (currentDate.getTime() < campaignStart.getTime()) {
+      return 'NOT_STARTED';
+    }
+
+    if (currentDate.getTime() > campaignEnd.getTime()) {
+      return 'ENDED';
+    }
+
+    return 'ACTIVE';
   }
-
-  if (
-    currentDate.getTime() <
-    campaignStart.getTime()
-  ) {
-    return 'NOT_STARTED';
-  }
-
-  if (
-    currentDate.getTime() >
-    campaignEnd.getTime()
-  ) {
-    return 'ENDED';
-  }
-
-  return 'ACTIVE';
-}
 }

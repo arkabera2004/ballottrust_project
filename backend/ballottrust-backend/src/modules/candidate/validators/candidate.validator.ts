@@ -5,11 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import {
-  CandidateType,
-  ElectionStatus,
-  PartyStatus,
-} from '@prisma/client';
+import { CandidateType, ElectionStatus, PartyStatus } from '@prisma/client';
 
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CandidateRepository } from '../repository/candidate.repository';
@@ -25,21 +21,16 @@ export class CandidateValidator {
   // Election Exists
   // ======================================================
 
-  async validateElectionExists(
-    electionId: string,
-  ) {
-    const election =
-      await this.prisma.election.findFirst({
-        where: {
-          id: electionId,
-          deletedAt: null,
-        },
-      });
+  async validateElectionExists(electionId: string) {
+    const election = await this.prisma.election.findFirst({
+      where: {
+        id: electionId,
+        deletedAt: null,
+      },
+    });
 
     if (!election) {
-      throw new NotFoundException(
-        'Election not found.',
-      );
+      throw new NotFoundException('Election not found.');
     }
 
     return election;
@@ -49,72 +40,52 @@ export class CandidateValidator {
   // Election Accepts Nominations
   // ======================================================
 
-  validateNominationWindow(
-    election: {
-      status: ElectionStatus;
-      nominationStart: Date | null;
-      nominationEnd: Date | null;
-    },
-  ) {
+  validateNominationWindow(election: {
+    status: ElectionStatus;
+    nominationStart: Date | null;
+    nominationEnd: Date | null;
+  }) {
     const now = new Date();
 
-    if (
-      election.status !==
-      ElectionStatus.PUBLISHED
-    ) {
+    if (election.status !== ElectionStatus.PUBLISHED) {
       throw new BadRequestException(
         'Nominations are not available for this election.',
       );
     }
 
-    if (
-      !election.nominationStart ||
-      !election.nominationEnd
-    ) {
+    if (!election.nominationStart || !election.nominationEnd) {
       throw new BadRequestException(
         'Nomination period has not been configured for this election.',
       );
     }
 
     if (now < election.nominationStart) {
-      throw new BadRequestException(
-        'Nomination period has not started yet.',
-      );
+      throw new BadRequestException('Nomination period has not started yet.');
     }
 
     if (now > election.nominationEnd) {
-      throw new BadRequestException(
-        'Nomination period has ended.',
-      );
+      throw new BadRequestException('Nomination period has ended.');
     }
   }
 
   // ======================================================
-// Duplicate Nomination / Previous Record
-// ======================================================
+  // Duplicate Nomination / Previous Record
+  // ======================================================
 
-async validateNoDuplicateNomination(
-  userId: string,
-  electionId: string,
-) {
-  const existing =
-    await this.candidateRepository
-      .findByUserAndElection(
-        userId,
-        electionId,
-      );
-
-  if (
-    existing &&
-    !existing.deletedAt
-  ) {
-    throw new ConflictException(
-      'You have already submitted a nomination for this election.',
+  async validateNoDuplicateNomination(userId: string, electionId: string) {
+    const existing = await this.candidateRepository.findByUserAndElection(
+      userId,
+      electionId,
     );
-  }
 
-  return existing;
-}
+    if (existing && !existing.deletedAt) {
+      throw new ConflictException(
+        'You have already submitted a nomination for this election.',
+      );
+    }
+
+    return existing;
+  }
 
   // ======================================================
   // Candidate Limit
@@ -124,29 +95,19 @@ async validateNoDuplicateNomination(
     electionId: string,
     candidateLimit: number | null,
   ) {
-    if (
-      !candidateLimit ||
-      candidateLimit <= 0
-    ) {
+    if (!candidateLimit || candidateLimit <= 0) {
       return;
     }
 
-    const candidateCount =
-      await this.candidateRepository.count({
-        electionId,
+    const candidateCount = await this.candidateRepository.count({
+      electionId,
 
-        status: {
-          in: [
-            'PENDING',
-            'VERIFIED',
-            'APPROVED',
-          ],
-        },
-      });
+      status: {
+        in: ['PENDING', 'VERIFIED', 'APPROVED'],
+      },
+    });
 
-    if (
-      candidateCount >= candidateLimit
-    ) {
+    if (candidateCount >= candidateLimit) {
       throw new BadRequestException(
         'Candidate limit for this election has been reached.',
       );
@@ -157,14 +118,8 @@ async validateNoDuplicateNomination(
   // Candidate Type / Party Validation
   // ======================================================
 
-  async validateCandidateType(
-    candidateType: CandidateType,
-    partyId?: string,
-  ) {
-    if (
-      candidateType ===
-      CandidateType.INDEPENDENT
-    ) {
+  async validateCandidateType(candidateType: CandidateType, partyId?: string) {
+    if (candidateType === CandidateType.INDEPENDENT) {
       if (partyId) {
         throw new BadRequestException(
           'Independent candidates cannot be associated with a party.',
@@ -174,29 +129,21 @@ async validateNoDuplicateNomination(
       return;
     }
 
-    if (
-      candidateType ===
-      CandidateType.PARTY
-    ) {
+    if (candidateType === CandidateType.PARTY) {
       if (!partyId) {
-        throw new BadRequestException(
-          'Party candidates must provide a party.',
-        );
+        throw new BadRequestException('Party candidates must provide a party.');
       }
 
-      const party =
-        await this.prisma.party.findFirst({
-          where: {
-            id: partyId,
-            status: PartyStatus.ACTIVE,
-            deletedAt: null,
-          },
-        });
+      const party = await this.prisma.party.findFirst({
+        where: {
+          id: partyId,
+          status: PartyStatus.ACTIVE,
+          deletedAt: null,
+        },
+      });
 
       if (!party) {
-        throw new NotFoundException(
-          'Active party not found.',
-        );
+        throw new NotFoundException('Active party not found.');
       }
     }
   }
@@ -205,22 +152,15 @@ async validateNoDuplicateNomination(
   // Candidate Number
   // ======================================================
 
-  async validateCandidateNumber(
-    electionId: string,
-    candidateNumber?: number,
-  ) {
-    if (
-      candidateNumber === undefined
-    ) {
+  async validateCandidateNumber(electionId: string, candidateNumber?: number) {
+    if (candidateNumber === undefined) {
       return;
     }
 
-    const exists =
-      await this.candidateRepository
-        .candidateNumberExists(
-          electionId,
-          candidateNumber,
-        );
+    const exists = await this.candidateRepository.candidateNumberExists(
+      electionId,
+      candidateNumber,
+    );
 
     if (exists) {
       throw new ConflictException(

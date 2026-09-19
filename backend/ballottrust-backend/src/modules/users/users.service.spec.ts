@@ -18,22 +18,18 @@ describe('UsersService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const module: TestingModule =
-      await Test.createTestingModule({
-        providers: [
-          UsersService,
-
-          {
-            provide: PrismaService,
-            useValue: mockPrismaService,
-          },
-        ],
-      }).compile();
-
-    service =
-      module.get<UsersService>(
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
         UsersService,
-      );
+
+        {
+          provide: PrismaService,
+          useValue: mockPrismaService,
+        },
+      ],
+    }).compile();
+
+    service = module.get<UsersService>(UsersService);
   });
 
   // ============================================================
@@ -64,20 +60,13 @@ describe('UsersService', () => {
       },
     ];
 
-    mockPrismaService.user.findMany.mockResolvedValue(
-      pendingUsers,
-    );
+    mockPrismaService.user.findMany.mockResolvedValue(pendingUsers);
 
-    const result =
-      await service.getPendingUsers();
+    const result = await service.getPendingUsers();
 
-    expect(result).toEqual(
-      pendingUsers,
-    );
+    expect(result).toEqual(pendingUsers);
 
-    expect(
-      mockPrismaService.user.findMany,
-    ).toHaveBeenCalledWith({
+    expect(mockPrismaService.user.findMany).toHaveBeenCalledWith({
       where: {
         status: 'PENDING',
       },
@@ -96,22 +85,13 @@ describe('UsersService', () => {
       status: 'APPROVED',
     };
 
-    mockPrismaService.user.update.mockResolvedValue(
-      approvedUser,
-    );
+    mockPrismaService.user.update.mockResolvedValue(approvedUser);
 
-    const result =
-      await service.approveUser(
-        'user-1',
-      );
+    const result = await service.approveUser('user-1');
 
-    expect(result).toEqual(
-      approvedUser,
-    );
+    expect(result).toEqual(approvedUser);
 
-    expect(
-      mockPrismaService.user.update,
-    ).toHaveBeenCalledWith({
+    expect(mockPrismaService.user.update).toHaveBeenCalledWith({
       where: {
         id: 'user-1',
       },
@@ -133,22 +113,13 @@ describe('UsersService', () => {
       status: 'REJECTED',
     };
 
-    mockPrismaService.user.update.mockResolvedValue(
-      rejectedUser,
-    );
+    mockPrismaService.user.update.mockResolvedValue(rejectedUser);
 
-    const result =
-      await service.rejectUser(
-        'user-1',
-      );
+    const result = await service.rejectUser('user-1');
 
-    expect(result).toEqual(
-      rejectedUser,
-    );
+    expect(result).toEqual(rejectedUser);
 
-    expect(
-      mockPrismaService.user.update,
-    ).toHaveBeenCalledWith({
+    expect(mockPrismaService.user.update).toHaveBeenCalledWith({
       where: {
         id: 'user-1',
       },
@@ -163,9 +134,7 @@ describe('UsersService', () => {
   // ============================================================
 
   it('should create a staff user', async () => {
-    mockPrismaService.user.findUnique.mockResolvedValue(
-      null,
-    );
+    mockPrismaService.user.findUnique.mockResolvedValue(null);
 
     const createdStaff = {
       id: 'staff-1',
@@ -175,9 +144,7 @@ describe('UsersService', () => {
       status: 'APPROVED',
     };
 
-    mockPrismaService.user.create.mockResolvedValue(
-      createdStaff,
-    );
+    mockPrismaService.user.create.mockResolvedValue(createdStaff);
 
     const data = {
       fullName: 'Staff Member',
@@ -186,29 +153,19 @@ describe('UsersService', () => {
       role: 'ELECTION_COMMISSIONER',
     };
 
-    const result =
-      await service.createStaff(
-        data as any,
-      );
+    const result = await service.createStaff(data as any);
 
-    expect(result).toEqual(
-      createdStaff,
-    );
+    expect(result).toEqual(createdStaff);
 
-    expect(
-      mockPrismaService.user.findUnique,
-    ).toHaveBeenCalledWith({
+    expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
       where: {
         email: 'staff@example.com',
       },
     });
 
-    expect(
-      mockPrismaService.user.create,
-    ).toHaveBeenCalled();
+    expect(mockPrismaService.user.create).toHaveBeenCalled();
 
-    const createCall =
-      mockPrismaService.user.create.mock.calls[0][0];
+    const createCall = mockPrismaService.user.create.mock.calls[0][0];
 
     expect(createCall.data).toEqual(
       expect.objectContaining({
@@ -219,17 +176,9 @@ describe('UsersService', () => {
       }),
     );
 
-    expect(
-      createCall.data.password,
-    ).toEqual(
-      expect.any(String),
-    );
+    expect(createCall.data.password).toEqual(expect.any(String));
 
-    expect(
-      createCall.data.password,
-    ).not.toBe(
-      'StrongPassword123!',
-    );
+    expect(createCall.data.password).not.toBe('StrongPassword123!');
   });
 
   // ============================================================
@@ -237,12 +186,10 @@ describe('UsersService', () => {
   // ============================================================
 
   it('should reject staff creation when email already exists', async () => {
-    mockPrismaService.user.findUnique.mockResolvedValue(
-      {
-        id: 'existing-user',
-        email: 'existing@example.com',
-      },
-    );
+    mockPrismaService.user.findUnique.mockResolvedValue({
+      id: 'existing-user',
+      email: 'existing@example.com',
+    });
 
     const data = {
       fullName: 'New Staff',
@@ -251,16 +198,10 @@ describe('UsersService', () => {
       role: 'ELECTION_COMMISSIONER',
     };
 
-    await expect(
-      service.createStaff(
-        data as any,
-      ),
-    ).rejects.toThrow(
+    await expect(service.createStaff(data as any)).rejects.toThrow(
       'Email already exists',
     );
 
-    expect(
-      mockPrismaService.user.create,
-    ).not.toHaveBeenCalled();
+    expect(mockPrismaService.user.create).not.toHaveBeenCalled();
   });
 });

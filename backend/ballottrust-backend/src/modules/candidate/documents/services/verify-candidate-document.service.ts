@@ -4,63 +4,42 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import {
-  CandidateDocumentStatus,
-} from '@prisma/client';
+import { CandidateDocumentStatus } from '@prisma/client';
 
-import {
-  CandidateDocumentRepository,
-} from '../candidate-document.repository';
+import { CandidateDocumentRepository } from '../candidate-document.repository';
 
-import {
-  CandidateDocumentStatusValidator,
-} from '../validators/candidate-document-status.validator';
+import { CandidateDocumentStatusValidator } from '../validators/candidate-document-status.validator';
 
 import { AuditService } from '../../../audit/audit.service';
 
 @Injectable()
 export class VerifyCandidateDocumentService {
   constructor(
-    private readonly candidateDocumentRepository:
-      CandidateDocumentRepository,
+    private readonly candidateDocumentRepository: CandidateDocumentRepository,
 
-    private readonly candidateDocumentStatusValidator:
-      CandidateDocumentStatusValidator,
+    private readonly candidateDocumentStatusValidator: CandidateDocumentStatusValidator,
 
     private readonly auditService: AuditService,
   ) {}
 
-  async execute(
-    candidateId: string,
-    documentId: string,
-    reviewerId: string,
-  ) {
+  async execute(candidateId: string, documentId: string, reviewerId: string) {
     // ==========================================
     // 1. Find Document
     // ==========================================
 
     const document =
-      await this.candidateDocumentRepository.findById(
-        documentId,
-      );
+      await this.candidateDocumentRepository.findById(documentId);
 
     if (!document) {
-      throw new NotFoundException(
-        'Candidate document not found.',
-      );
+      throw new NotFoundException('Candidate document not found.');
     }
 
     // ==========================================
     // 2. Validate Candidate Relationship
     // ==========================================
 
-    if (
-      document.candidateId !==
-      candidateId
-    ) {
-      throw new NotFoundException(
-        'Candidate document not found.',
-      );
+    if (document.candidateId !== candidateId) {
+      throw new NotFoundException('Candidate document not found.');
     }
 
     // ==========================================
@@ -87,21 +66,19 @@ export class VerifyCandidateDocumentService {
     // 5. Validate Status Transition
     // ==========================================
 
-    this.candidateDocumentStatusValidator
-      .validateTransition(
-        document.status,
-        CandidateDocumentStatus.VERIFIED,
-      );
+    this.candidateDocumentStatusValidator.validateTransition(
+      document.status,
+      CandidateDocumentStatus.VERIFIED,
+    );
 
     // ==========================================
     // 6. Verify Document
     // ==========================================
 
-    const verified = await this.candidateDocumentRepository
-      .verifyDocument(
-        document.id,
-        reviewerId,
-      );
+    const verified = await this.candidateDocumentRepository.verifyDocument(
+      document.id,
+      reviewerId,
+    );
 
     await this.auditService.log({
       userId: reviewerId,

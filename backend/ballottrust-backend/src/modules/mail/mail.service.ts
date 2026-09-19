@@ -3,9 +3,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class MailService {
-  constructor(
-    private readonly mailerService: MailerService,
-  ) {}
+  constructor(private readonly mailerService: MailerService) {}
 
   async sendTestMail(email: string) {
     await this.mailerService.sendMail({
@@ -35,10 +33,7 @@ export class MailService {
     });
   }
 
-  async sendOtpEmail(
-    email: string,
-    otp: string,
-  ) {
+  async sendOtpEmail(email: string, otp: string) {
     await this.mailerService.sendMail({
       to: email,
       subject: 'BallotTrust Verification Code',
@@ -75,10 +70,7 @@ export class MailService {
     });
   }
 
-  async sendResetPasswordEmail(
-    email: string,
-    resetLink: string,
-  ) {
+  async sendResetPasswordEmail(email: string, resetLink: string) {
     await this.mailerService.sendMail({
       to: email,
       subject: 'Reset Your BallotTrust Password',
@@ -122,16 +114,13 @@ export class MailService {
     });
   }
 
-  async sendVerificationOtp(
-  email: string,
-  otp: string,
-) {
-  await this.mailerService.sendMail({
-    to: email,
+  async sendVerificationOtp(email: string, otp: string) {
+    await this.mailerService.sendMail({
+      to: email,
 
-    subject: 'Verify your BallotTrust Account',
+      subject: 'Verify your BallotTrust Account',
 
-    html: `
+      html: `
       <div style="font-family:Arial;padding:30px">
 
         <h2 style="color:#2563eb;">
@@ -164,21 +153,16 @@ export class MailService {
 
       </div>
     `,
-  });
-}
+    });
+  }
 
-async sendPasswordResetEmail(
-  email: string,
-  resetLink: string,
-) {
+  async sendPasswordResetEmail(email: string, resetLink: string) {
+    await this.mailerService.sendMail({
+      to: email,
 
-  await this.mailerService.sendMail({
+      subject: 'Reset Your BallotTrust Password',
 
-    to: email,
-
-    subject: 'Reset Your BallotTrust Password',
-
-    html: `
+      html: `
 
       <div
         style="
@@ -267,8 +251,6 @@ async sendPasswordResetEmail(
       </div>
 
     `,
-
-  });
-
-}
+    });
+  }
 }

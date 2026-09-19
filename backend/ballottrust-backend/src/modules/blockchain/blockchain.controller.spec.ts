@@ -13,24 +13,18 @@ describe('BlockchainController', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const module: TestingModule =
-      await Test.createTestingModule({
-        controllers: [
-          BlockchainController,
-        ],
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [BlockchainController],
 
-        providers: [
-          {
-            provide: BlockchainService,
-            useValue: mockBlockchainService,
-          },
-        ],
-      }).compile();
+      providers: [
+        {
+          provide: BlockchainService,
+          useValue: mockBlockchainService,
+        },
+      ],
+    }).compile();
 
-    controller =
-      module.get<BlockchainController>(
-        BlockchainController,
-      );
+    controller = module.get<BlockchainController>(BlockchainController);
   });
 
   // ============================================================
@@ -51,17 +45,13 @@ describe('BlockchainController', () => {
       elections: [],
     };
 
-    mockBlockchainService.verifyChain.mockResolvedValue(
-      verificationResult,
-    );
+    mockBlockchainService.verifyChain.mockResolvedValue(verificationResult);
 
     const result = await controller.verify(undefined);
 
     expect(result).toEqual(verificationResult);
 
-    expect(mockBlockchainService.verifyChain).toHaveBeenCalledWith(
-      undefined,
-    );
+    expect(mockBlockchainService.verifyChain).toHaveBeenCalledWith(undefined);
   });
 
   // ============================================================
@@ -76,9 +66,7 @@ describe('BlockchainController', () => {
       totalVotes: 5,
     };
 
-    mockBlockchainService.verifyChain.mockResolvedValue(
-      verificationResult,
-    );
+    mockBlockchainService.verifyChain.mockResolvedValue(verificationResult);
 
     const result = await controller.verify('election-1');
 
@@ -100,9 +88,7 @@ describe('BlockchainController', () => {
       message: 'Hash mismatch at vote vote-1',
     };
 
-    mockBlockchainService.verifyChain.mockResolvedValue(
-      verificationResult,
-    );
+    mockBlockchainService.verifyChain.mockResolvedValue(verificationResult);
 
     const result = await controller.verify('election-1');
 

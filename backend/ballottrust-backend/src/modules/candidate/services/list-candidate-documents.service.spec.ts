@@ -30,11 +30,12 @@ describe('ListCandidateDocumentsService', () => {
     );
 
     expect(result).toEqual(documents);
-    expect(documentRepository.findByCandidateId)
-      .toHaveBeenCalledWith('candidate-1');
+    expect(documentRepository.findByCandidateId).toHaveBeenCalledWith(
+      'candidate-1',
+    );
   });
 
-    it('should reject an unauthorized user from listing candidate documents', async () => {
+  it('should reject an unauthorized user from listing candidate documents', async () => {
     const candidateRepository = {
       findById: jest.fn().mockResolvedValue({
         id: 'candidate-1',
@@ -52,18 +53,12 @@ describe('ListCandidateDocumentsService', () => {
     );
 
     await expect(
-      service.execute(
-        'candidate-1',
-        'different-user',
-        Role.CANDIDATE,
-      ),
+      service.execute('candidate-1', 'different-user', Role.CANDIDATE),
     ).rejects.toThrow(
       'You are not authorized to view these candidate documents.',
     );
 
-    expect(
-      documentRepository.findByCandidateId,
-    ).not.toHaveBeenCalled();
+    expect(documentRepository.findByCandidateId).not.toHaveBeenCalled();
   });
 
   it('should allow SUPER_ADMIN to list candidate documents', async () => {
@@ -93,9 +88,9 @@ describe('ListCandidateDocumentsService', () => {
 
     expect(result).toEqual(documents);
 
-    expect(
-      documentRepository.findByCandidateId,
-    ).toHaveBeenCalledWith('candidate-1');
+    expect(documentRepository.findByCandidateId).toHaveBeenCalledWith(
+      'candidate-1',
+    );
   });
 
   it('should allow ELECTION_COMMISSIONER to list candidate documents', async () => {
@@ -125,8 +120,8 @@ describe('ListCandidateDocumentsService', () => {
 
     expect(result).toEqual(documents);
 
-    expect(
-      documentRepository.findByCandidateId,
-    ).toHaveBeenCalledWith('candidate-1');
+    expect(documentRepository.findByCandidateId).toHaveBeenCalledWith(
+      'candidate-1',
+    );
   });
 });

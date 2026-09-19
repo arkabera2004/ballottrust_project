@@ -16,24 +16,18 @@ describe('DashboardController', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const module: TestingModule =
-      await Test.createTestingModule({
-        controllers: [
-          DashboardController,
-        ],
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [DashboardController],
 
-        providers: [
-          {
-            provide: DashboardService,
-            useValue: mockDashboardService,
-          },
-        ],
-      }).compile();
+      providers: [
+        {
+          provide: DashboardService,
+          useValue: mockDashboardService,
+        },
+      ],
+    }).compile();
 
-    controller =
-      module.get<DashboardController>(
-        DashboardController,
-      );
+    controller = module.get<DashboardController>(DashboardController);
   });
 
   // ============================================================
@@ -62,17 +56,13 @@ describe('DashboardController', () => {
       recentElections: [],
     };
 
-    mockDashboardService.getStats
-      .mockResolvedValue(stats);
+    mockDashboardService.getStats.mockResolvedValue(stats);
 
-    const result =
-      await controller.getStats();
+    const result = await controller.getStats();
 
     expect(result).toEqual(stats);
 
-    expect(
-      mockDashboardService.getStats,
-    ).toHaveBeenCalledTimes(1);
+    expect(mockDashboardService.getStats).toHaveBeenCalledTimes(1);
   });
 
   // ============================================================
@@ -91,17 +81,13 @@ describe('DashboardController', () => {
       },
     };
 
-    mockDashboardService.getWinnerSummary
-      .mockResolvedValue(summary);
+    mockDashboardService.getWinnerSummary.mockResolvedValue(summary);
 
-    const result =
-      await controller.getWinnerSummary();
+    const result = await controller.getWinnerSummary();
 
     expect(result).toEqual(summary);
 
-    expect(
-      mockDashboardService.getWinnerSummary,
-    ).toHaveBeenCalledTimes(1);
+    expect(mockDashboardService.getWinnerSummary).toHaveBeenCalledTimes(1);
   });
 
   // ============================================================
@@ -118,19 +104,13 @@ describe('DashboardController', () => {
       },
     ];
 
-    mockDashboardService.getResultsChart
-      .mockResolvedValue(chart);
+    mockDashboardService.getResultsChart.mockResolvedValue(chart);
 
-    const result =
-      await controller.getResultsChart(
-        'election-1',
-      );
+    const result = await controller.getResultsChart('election-1');
 
     expect(result).toEqual(chart);
 
-    expect(
-      mockDashboardService.getResultsChart,
-    ).toHaveBeenCalledWith(
+    expect(mockDashboardService.getResultsChart).toHaveBeenCalledWith(
       'election-1',
     );
   });
@@ -149,16 +129,12 @@ describe('DashboardController', () => {
       votes: 20,
     };
 
-    mockDashboardService.getCurrentElection
-      .mockResolvedValue(election);
+    mockDashboardService.getCurrentElection.mockResolvedValue(election);
 
-    const result =
-      await controller.getCurrentElection();
+    const result = await controller.getCurrentElection();
 
     expect(result).toEqual(election);
 
-    expect(
-      mockDashboardService.getCurrentElection,
-    ).toHaveBeenCalledTimes(1);
+    expect(mockDashboardService.getCurrentElection).toHaveBeenCalledTimes(1);
   });
 });

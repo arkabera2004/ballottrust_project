@@ -16,11 +16,7 @@ export class AuditController {
 
   @Get('verify')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(
-    Role.SUPER_ADMIN,
-    Role.ELECTION_COMMISSIONER,
-    Role.AUDITOR,
-  )
+  @Roles(Role.SUPER_ADMIN, Role.ELECTION_COMMISSIONER, Role.AUDITOR)
   verify() {
     return this.auditService.verifyChain();
   }

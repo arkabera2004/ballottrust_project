@@ -5,20 +5,16 @@ import { ElectionLifecycleService } from './election-lifecycle.service';
 
 @Injectable()
 export class ElectionLifecycleJob {
-  constructor(
-    private readonly lifecycleService: ElectionLifecycleService,
-  ) {}
+  constructor(private readonly lifecycleService: ElectionLifecycleService) {}
 
   @Cron('*/1 * * * *')
-async processElectionLifecycle() {
+  async processElectionLifecycle() {
+    await this.lifecycleService.activatePublishedElections();
 
-  await this.lifecycleService.activatePublishedElections();
+    await this.lifecycleService.closeActiveElections();
 
-  await this.lifecycleService.closeActiveElections();
+    await this.lifecycleService.publishElectionResults();
 
-  await this.lifecycleService.publishElectionResults();
-
-  await this.lifecycleService.archiveElections();
-}
-
+    await this.lifecycleService.archiveElections();
+  }
 }

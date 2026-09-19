@@ -55,7 +55,9 @@ describe('EligibilityRuleValidator', () => {
     };
 
     expect(() => validator.validate(rule)).toThrow(BadRequestException);
-    expect(() => validator.validate(rule)).toThrow(/disallowed eligibility field/);
+    expect(() => validator.validate(rule)).toThrow(
+      /disallowed eligibility field/,
+    );
   });
 
   it('rejects an unknown operator', () => {
@@ -79,9 +81,7 @@ describe('EligibilityRuleValidator', () => {
       condition: { field: 'year', operator: 'gte', value: 'two' },
     };
 
-    expect(() => validator.validate(rule)).toThrow(
-      /requires a numeric value/,
-    );
+    expect(() => validator.validate(rule)).toThrow(/requires a numeric value/);
   });
 
   it('rejects a list operator with a non-array value', () => {
@@ -90,17 +90,13 @@ describe('EligibilityRuleValidator', () => {
       condition: { field: 'department', operator: 'in', value: 'CSE' },
     };
 
-    expect(() => validator.validate(rule)).toThrow(
-      /requires an array value/,
-    );
+    expect(() => validator.validate(rule)).toThrow(/requires an array value/);
   });
 
   it('rejects an empty AND/OR rules array', () => {
     const rule = { type: 'AND', rules: [] };
 
-    expect(() => validator.validate(rule)).toThrow(
-      /non-empty "rules" array/,
-    );
+    expect(() => validator.validate(rule)).toThrow(/non-empty "rules" array/);
   });
 
   it('rejects a rule tree deeper than the maximum nesting depth', () => {
@@ -113,9 +109,7 @@ describe('EligibilityRuleValidator', () => {
       rule = { type: 'NOT', rule };
     }
 
-    expect(() => validator.validate(rule)).toThrow(
-      /maximum nesting depth/,
-    );
+    expect(() => validator.validate(rule)).toThrow(/maximum nesting depth/);
   });
 
   it('rejects an AND/OR node with more branches than the maximum', () => {
@@ -126,15 +120,11 @@ describe('EligibilityRuleValidator', () => {
 
     const rule = { type: 'OR', rules };
 
-    expect(() => validator.validate(rule)).toThrow(
-      /maximum branch count/,
-    );
+    expect(() => validator.validate(rule)).toThrow(/maximum branch count/);
   });
 
   it('rejects a non-object node', () => {
-    expect(() => validator.validate('not-a-rule')).toThrow(
-      BadRequestException,
-    );
+    expect(() => validator.validate('not-a-rule')).toThrow(BadRequestException);
     expect(() => validator.validate(null)).toThrow(BadRequestException);
   });
 });

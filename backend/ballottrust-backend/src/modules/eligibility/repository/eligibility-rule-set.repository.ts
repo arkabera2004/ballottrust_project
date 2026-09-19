@@ -20,9 +20,7 @@ export class EligibilityRuleSetRepository {
     });
   }
 
-  async findLatestVersionNumber(
-    electionId: string,
-  ): Promise<number> {
+  async findLatestVersionNumber(electionId: string): Promise<number> {
     const latest = await this.prisma.eligibilityRuleSet.findFirst({
       where: { electionId },
       orderBy: { version: 'desc' },

@@ -90,12 +90,12 @@ describe('BulkCheckEligibilityService', () => {
     expect(result.totalVoters).toBe(2);
     expect(result.eligibleCount).toBe(1);
     expect(result.ineligibleCount).toBe(1);
-    expect(
-      result.results.find((r) => r.userId === 'user-1')?.eligible,
-    ).toBe(true);
-    expect(
-      result.results.find((r) => r.userId === 'user-2')?.eligible,
-    ).toBe(false);
+    expect(result.results.find((r) => r.userId === 'user-1')?.eligible).toBe(
+      true,
+    );
+    expect(result.results.find((r) => r.userId === 'user-2')?.eligible).toBe(
+      false,
+    );
 
     expect(mockPrisma.voterEligibilitySnapshot.createMany).toHaveBeenCalledWith(
       {

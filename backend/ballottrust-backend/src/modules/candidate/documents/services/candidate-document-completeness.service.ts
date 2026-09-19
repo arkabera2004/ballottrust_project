@@ -1,19 +1,10 @@
-import {
-  Injectable,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
-import {
-  CandidateDocumentStatus,
-  CandidateDocumentType,
-} from '@prisma/client';
+import { CandidateDocumentStatus, CandidateDocumentType } from '@prisma/client';
 
-import {
-  CandidateDocumentRepository,
-} from '../candidate-document.repository';
+import { CandidateDocumentRepository } from '../candidate-document.repository';
 
-import {
-  REQUIRED_CANDIDATE_DOCUMENTS,
-} from '../candidate-document.policy';
+import { REQUIRED_CANDIDATE_DOCUMENTS } from '../candidate-document.policy';
 
 // ==========================================
 // Document State
@@ -26,9 +17,7 @@ export interface CandidateRequiredDocumentState {
 
   verified: boolean;
 
-  status:
-    CandidateDocumentStatus |
-    'MISSING';
+  status: CandidateDocumentStatus | 'MISSING';
 
   documentId: string | null;
 }
@@ -52,145 +41,101 @@ export interface CandidateDocumentCompletenessResult {
 
   verifiedDocuments: number;
 
-  missingDocuments:
-    CandidateDocumentType[];
+  missingDocuments: CandidateDocumentType[];
 
-  pendingDocuments:
-    CandidateDocumentType[];
+  pendingDocuments: CandidateDocumentType[];
 
-  rejectedDocuments:
-    CandidateDocumentType[];
+  rejectedDocuments: CandidateDocumentType[];
 
-  documents:
-    CandidateRequiredDocumentState[];
+  documents: CandidateRequiredDocumentState[];
 }
 
 @Injectable()
 export class CandidateDocumentCompletenessService {
   constructor(
-    private readonly candidateDocumentRepository:
-      CandidateDocumentRepository,
+    private readonly candidateDocumentRepository: CandidateDocumentRepository,
   ) {}
 
   async calculate(
     candidateId: string,
   ): Promise<CandidateDocumentCompletenessResult> {
-
     // ========================================
     // 1. Load Active Documents
     // ========================================
 
     const activeDocuments =
-      await this.candidateDocumentRepository
-        .findActiveByCandidateId(
-          candidateId,
-        );
+      await this.candidateDocumentRepository.findActiveByCandidateId(
+        candidateId,
+      );
 
     // ========================================
     // 2. Build Required Document State
     // ========================================
 
-    const documents:
-      CandidateRequiredDocumentState[] =
-      REQUIRED_CANDIDATE_DOCUMENTS.map(
-        (documentType) => {
+    const documents: CandidateRequiredDocumentState[] =
+      REQUIRED_CANDIDATE_DOCUMENTS.map((documentType) => {
+        const document = activeDocuments.find(
+          (item) => item.documentType === documentType,
+        );
 
-          const document =
-            activeDocuments.find(
-              (item) =>
-                item.documentType ===
-                documentType,
-            );
-
-          if (!document) {
-            return {
-              documentType,
-
-              uploaded: false,
-
-              verified: false,
-
-              status: 'MISSING',
-
-              documentId: null,
-            };
-          }
-
+        if (!document) {
           return {
             documentType,
 
-            uploaded: true,
+            uploaded: false,
 
-            verified:
-              document.status ===
-              CandidateDocumentStatus.VERIFIED,
+            verified: false,
 
-            status:
-              document.status,
+            status: 'MISSING',
 
-            documentId:
-              document.id,
+            documentId: null,
           };
-        },
-      );
+        }
+
+        return {
+          documentType,
+
+          uploaded: true,
+
+          verified: document.status === CandidateDocumentStatus.VERIFIED,
+
+          status: document.status,
+
+          documentId: document.id,
+        };
+      });
 
     // ========================================
     // 3. Calculate Counts
     // ========================================
 
-    const requiredDocuments =
-      REQUIRED_CANDIDATE_DOCUMENTS.length;
+    const requiredDocuments = REQUIRED_CANDIDATE_DOCUMENTS.length;
 
-    const uploadedDocuments =
-      documents.filter(
-        (document) =>
-          document.uploaded,
-      ).length;
+    const uploadedDocuments = documents.filter(
+      (document) => document.uploaded,
+    ).length;
 
-    const verifiedDocuments =
-      documents.filter(
-        (document) =>
-          document.verified,
-      ).length;
+    const verifiedDocuments = documents.filter(
+      (document) => document.verified,
+    ).length;
 
     // ========================================
     // 4. Categorize Missing / Review States
     // ========================================
 
-    const missingDocuments =
-      documents
-        .filter(
-          (document) =>
-            !document.uploaded,
-        )
-        .map(
-          (document) =>
-            document.documentType,
-        );
+    const missingDocuments = documents
+      .filter((document) => !document.uploaded)
+      .map((document) => document.documentType);
 
-    const pendingDocuments =
-      documents
-        .filter(
-          (document) =>
-            document.status ===
-            CandidateDocumentStatus.PENDING,
-        )
-        .map(
-          (document) =>
-            document.documentType,
-        );
+    const pendingDocuments = documents
+      .filter((document) => document.status === CandidateDocumentStatus.PENDING)
+      .map((document) => document.documentType);
 
-    const rejectedDocuments =
-      documents
-        .filter(
-          (document) =>
-            document.status ===
-            CandidateDocumentStatus.REJECTED,
-        )
-        .map(
-          (document) =>
-            document.documentType,
-        );
+    const rejectedDocuments = documents
+      .filter(
+        (document) => document.status === CandidateDocumentStatus.REJECTED,
+      )
+      .map((document) => document.documentType);
 
     // ========================================
     // 5. Calculate Percentages
@@ -199,34 +144,20 @@ export class CandidateDocumentCompletenessService {
     const uploadCompletionPercentage =
       requiredDocuments === 0
         ? 100
-        : Math.round(
-            (
-              uploadedDocuments /
-              requiredDocuments
-            ) * 100,
-          );
+        : Math.round((uploadedDocuments / requiredDocuments) * 100);
 
     const verificationCompletionPercentage =
       requiredDocuments === 0
         ? 100
-        : Math.round(
-            (
-              verifiedDocuments /
-              requiredDocuments
-            ) * 100,
-          );
+        : Math.round((verifiedDocuments / requiredDocuments) * 100);
 
     // ========================================
     // 6. Determine Readiness
     // ========================================
 
-    const complete =
-      uploadedDocuments ===
-      requiredDocuments;
+    const complete = uploadedDocuments === requiredDocuments;
 
-    const documentationReady =
-      verifiedDocuments ===
-      requiredDocuments;
+    const documentationReady = verifiedDocuments === requiredDocuments;
 
     // ========================================
     // 7. Return Result

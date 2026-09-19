@@ -6,30 +6,21 @@ import { AuditService } from '../../audit/audit.service';
 
 @Injectable()
 export class PublishElectionService {
-
   constructor(
     private readonly repository: ElectionRepository,
     private readonly workflowValidator: ElectionWorkflowValidator,
     private readonly auditService: AuditService,
   ) {}
 
-  async execute(
-    id: string,
-    publishedById: string,
-  ) {
+  async execute(id: string, publishedById: string) {
+    const election = await this.repository.findByIdOrThrow(id);
 
-    const election =
-      await this.repository.findByIdOrThrow(id);
+    this.workflowValidator.ensureCanPublish(election.status);
 
-    this.workflowValidator.ensureCanPublish(
-      election.status,
+    const publishedElection = await this.repository.publishElection(
+      id,
+      publishedById,
     );
-
-    const publishedElection =
-      await this.repository.publishElection(
-        id,
-        publishedById,
-      );
 
     await this.auditService.log({
       userId: publishedById,
@@ -45,7 +36,5 @@ export class PublishElectionService {
       message: 'Election published successfully.',
       data: publishedElection,
     };
-
   }
-
 }

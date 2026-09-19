@@ -52,17 +52,11 @@ describe('Candidate Ownership Authorization', () => {
         status: CandidateStatus.PENDING,
       };
 
-      candidateRepository.findByIdWithDetails.mockResolvedValue(
-        candidate,
-      );
+      candidateRepository.findByIdWithDetails.mockResolvedValue(candidate);
 
-      candidateProfileCompletenessService.calculate.mockReturnValue(
-        80,
-      );
+      candidateProfileCompletenessService.calculate.mockReturnValue(80);
 
-      candidateDocumentCompletenessService.calculate.mockResolvedValue(
-        60,
-      );
+      candidateDocumentCompletenessService.calculate.mockResolvedValue(60);
 
       const result = await service.execute(
         'candidate-1',
@@ -88,17 +82,11 @@ describe('Candidate Ownership Authorization', () => {
         status: CandidateStatus.PENDING,
       };
 
-      candidateRepository.findByIdWithDetails.mockResolvedValue(
-        candidate,
-      );
+      candidateRepository.findByIdWithDetails.mockResolvedValue(candidate);
 
-      candidateProfileCompletenessService.calculate.mockReturnValue(
-        90,
-      );
+      candidateProfileCompletenessService.calculate.mockReturnValue(90);
 
-      candidateDocumentCompletenessService.calculate.mockResolvedValue(
-        100,
-      );
+      candidateDocumentCompletenessService.calculate.mockResolvedValue(100);
 
       const result = await service.execute(
         'candidate-1',
@@ -124,17 +112,11 @@ describe('Candidate Ownership Authorization', () => {
         status: CandidateStatus.VERIFIED,
       };
 
-      candidateRepository.findByIdWithDetails.mockResolvedValue(
-        candidate,
-      );
+      candidateRepository.findByIdWithDetails.mockResolvedValue(candidate);
 
-      candidateProfileCompletenessService.calculate.mockReturnValue(
-        75,
-      );
+      candidateProfileCompletenessService.calculate.mockReturnValue(75);
 
-      candidateDocumentCompletenessService.calculate.mockResolvedValue(
-        80,
-      );
+      candidateDocumentCompletenessService.calculate.mockResolvedValue(80);
 
       const result = await service.execute(
         'candidate-1',
@@ -160,16 +142,10 @@ describe('Candidate Ownership Authorization', () => {
         status: CandidateStatus.PENDING,
       };
 
-      candidateRepository.findByIdWithDetails.mockResolvedValue(
-        candidate,
-      );
+      candidateRepository.findByIdWithDetails.mockResolvedValue(candidate);
 
       await expect(
-        service.execute(
-          'candidate-1',
-          'different-user',
-          Role.CANDIDATE,
-        ),
+        service.execute('candidate-1', 'different-user', Role.CANDIDATE),
       ).rejects.toThrow(
         'You are not authorized to view this candidate record.',
       );
@@ -194,19 +170,11 @@ describe('Candidate Ownership Authorization', () => {
         status: CandidateStatus.APPROVED,
       };
 
-      candidateRepository.findByIdWithDetails.mockResolvedValue(
-        candidate,
-      );
+      candidateRepository.findByIdWithDetails.mockResolvedValue(candidate);
 
       await expect(
-        service.execute(
-          'candidate-1',
-          'voter-1',
-          Role.VOTER,
-        ),
-      ).rejects.toThrow(
-        ForbiddenException,
-      );
+        service.execute('candidate-1', 'voter-1', Role.VOTER),
+      ).rejects.toThrow(ForbiddenException);
 
       expect(
         candidateProfileCompletenessService.calculate,
@@ -222,19 +190,11 @@ describe('Candidate Ownership Authorization', () => {
     // ============================================================
 
     it('should reject when the candidate does not exist', async () => {
-      candidateRepository.findByIdWithDetails.mockResolvedValue(
-        null,
-      );
+      candidateRepository.findByIdWithDetails.mockResolvedValue(null);
 
       await expect(
-        service.execute(
-          'candidate-1',
-          'user-1',
-          Role.CANDIDATE,
-        ),
-      ).rejects.toThrow(
-        NotFoundException,
-      );
+        service.execute('candidate-1', 'user-1', Role.CANDIDATE),
+      ).rejects.toThrow(NotFoundException);
 
       expect(
         candidateProfileCompletenessService.calculate,
@@ -256,23 +216,13 @@ describe('Candidate Ownership Authorization', () => {
         status: CandidateStatus.PENDING,
       };
 
-      candidateRepository.findByIdWithDetails.mockResolvedValue(
-        candidate,
-      );
+      candidateRepository.findByIdWithDetails.mockResolvedValue(candidate);
 
-      candidateProfileCompletenessService.calculate.mockReturnValue(
-        50,
-      );
+      candidateProfileCompletenessService.calculate.mockReturnValue(50);
 
-      candidateDocumentCompletenessService.calculate.mockResolvedValue(
-        50,
-      );
+      candidateDocumentCompletenessService.calculate.mockResolvedValue(50);
 
-      await service.execute(
-        'candidate-1',
-        'owner-user',
-        Role.CANDIDATE,
-      );
+      await service.execute('candidate-1', 'owner-user', Role.CANDIDATE);
 
       expect(
         candidateProfileCompletenessService.calculate,
@@ -330,13 +280,9 @@ describe('Candidate Ownership Authorization', () => {
         status: CandidateStatus.WITHDRAWN,
       };
 
-      candidateRepository.findById.mockResolvedValue(
-        candidate,
-      );
+      candidateRepository.findById.mockResolvedValue(candidate);
 
-      candidateRepository.update.mockResolvedValue(
-        updatedCandidate,
-      );
+      candidateRepository.update.mockResolvedValue(updatedCandidate);
 
       const result = await service.execute(
         'candidate-1',
@@ -344,20 +290,14 @@ describe('Candidate Ownership Authorization', () => {
         'Personal reasons',
       );
 
-      expect(result).toEqual(
-        updatedCandidate,
-      );
+      expect(result).toEqual(updatedCandidate);
 
-      expect(
-        candidateStatusValidator.validateTransition,
-      ).toHaveBeenCalledWith(
+      expect(candidateStatusValidator.validateTransition).toHaveBeenCalledWith(
         CandidateStatus.APPROVED,
         CandidateStatus.WITHDRAWN,
       );
 
-      expect(
-        candidateRepository.update,
-      ).toHaveBeenCalledWith(
+      expect(candidateRepository.update).toHaveBeenCalledWith(
         'candidate-1',
         expect.objectContaining({
           status: CandidateStatus.WITHDRAWN,
@@ -377,9 +317,7 @@ describe('Candidate Ownership Authorization', () => {
         status: CandidateStatus.APPROVED,
       };
 
-      candidateRepository.findById.mockResolvedValue(
-        candidate,
-      );
+      candidateRepository.findById.mockResolvedValue(candidate);
 
       await expect(
         service.execute(
@@ -387,17 +325,13 @@ describe('Candidate Ownership Authorization', () => {
           'different-user',
           'Unauthorized attempt',
         ),
-      ).rejects.toThrow(
-        'You can only withdraw your own candidacy.',
-      );
+      ).rejects.toThrow('You can only withdraw your own candidacy.');
 
       expect(
         candidateStatusValidator.validateTransition,
       ).not.toHaveBeenCalled();
 
-      expect(
-        candidateRepository.update,
-      ).not.toHaveBeenCalled();
+      expect(candidateRepository.update).not.toHaveBeenCalled();
     });
 
     // ============================================================
@@ -411,9 +345,7 @@ describe('Candidate Ownership Authorization', () => {
         status: CandidateStatus.APPROVED,
       };
 
-      candidateRepository.findById.mockResolvedValue(
-        candidate,
-      );
+      candidateRepository.findById.mockResolvedValue(candidate);
 
       await expect(
         service.execute(
@@ -421,17 +353,13 @@ describe('Candidate Ownership Authorization', () => {
           'admin-user',
           'Administrative withdrawal',
         ),
-      ).rejects.toThrow(
-        ForbiddenException,
-      );
+      ).rejects.toThrow(ForbiddenException);
 
       expect(
         candidateStatusValidator.validateTransition,
       ).not.toHaveBeenCalled();
 
-      expect(
-        candidateRepository.update,
-      ).not.toHaveBeenCalled();
+      expect(candidateRepository.update).not.toHaveBeenCalled();
     });
 
     // ============================================================
@@ -439,27 +367,17 @@ describe('Candidate Ownership Authorization', () => {
     // ============================================================
 
     it('should reject withdrawal when the candidate does not exist', async () => {
-      candidateRepository.findById.mockResolvedValue(
-        null,
-      );
+      candidateRepository.findById.mockResolvedValue(null);
 
       await expect(
-        service.execute(
-          'candidate-1',
-          'user-1',
-          'Personal reasons',
-        ),
-      ).rejects.toThrow(
-        NotFoundException,
-      );
+        service.execute('candidate-1', 'user-1', 'Personal reasons'),
+      ).rejects.toThrow(NotFoundException);
 
       expect(
         candidateStatusValidator.validateTransition,
       ).not.toHaveBeenCalled();
 
-      expect(
-        candidateRepository.update,
-      ).not.toHaveBeenCalled();
+      expect(candidateRepository.update).not.toHaveBeenCalled();
     });
 
     // ============================================================
@@ -473,9 +391,7 @@ describe('Candidate Ownership Authorization', () => {
         status: CandidateStatus.PENDING,
       };
 
-      candidateRepository.findById.mockResolvedValue(
-        candidate,
-      );
+      candidateRepository.findById.mockResolvedValue(candidate);
 
       await expect(
         service.execute(
@@ -483,9 +399,7 @@ describe('Candidate Ownership Authorization', () => {
           'different-user',
           'Unauthorized attempt',
         ),
-      ).rejects.toThrow(
-        ForbiddenException,
-      );
+      ).rejects.toThrow(ForbiddenException);
 
       expect(
         candidateStatusValidator.validateTransition,

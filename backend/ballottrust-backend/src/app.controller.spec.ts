@@ -13,24 +13,18 @@ describe('AppController', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const module: TestingModule =
-      await Test.createTestingModule({
-        controllers: [
-          AppController,
-        ],
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [AppController],
 
-        providers: [
-          {
-            provide: AppService,
-            useValue: mockAppService,
-          },
-        ],
-      }).compile();
+      providers: [
+        {
+          provide: AppService,
+          useValue: mockAppService,
+        },
+      ],
+    }).compile();
 
-    controller =
-      module.get<AppController>(
-        AppController,
-      );
+    controller = module.get<AppController>(AppController);
   });
 
   it('should be defined', () => {
@@ -38,19 +32,12 @@ describe('AppController', () => {
   });
 
   it('should return the response from AppService', () => {
-    mockAppService.getHello.mockReturnValue(
-      'Hello World!',
-    );
+    mockAppService.getHello.mockReturnValue('Hello World!');
 
-    const result =
-      controller.getHello();
+    const result = controller.getHello();
 
-    expect(result).toBe(
-      'Hello World!',
-    );
+    expect(result).toBe('Hello World!');
 
-    expect(
-      mockAppService.getHello,
-    ).toHaveBeenCalledTimes(1);
+    expect(mockAppService.getHello).toHaveBeenCalledTimes(1);
   });
 });

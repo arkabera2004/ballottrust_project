@@ -17,10 +17,7 @@ import {
  */
 @Injectable()
 export class EligibilityEvaluatorService {
-  evaluate(
-    rule: RuleNode,
-    voter: VoterAttributes,
-  ): EvaluationResult {
+  evaluate(rule: RuleNode, voter: VoterAttributes): EvaluationResult {
     const explanation = this.evaluateNode(rule, voter);
     return {
       eligible: explanation.passed,
@@ -35,10 +32,7 @@ export class EligibilityEvaluatorService {
     switch (node.type) {
       case 'CONDITION': {
         const actualValue = voter[node.condition.field];
-        const passed = this.evaluateCondition(
-          node.condition,
-          actualValue,
-        );
+        const passed = this.evaluateCondition(node.condition, actualValue);
 
         return {
           type: 'CONDITION',
@@ -134,10 +128,7 @@ export class EligibilityEvaluatorService {
     // the field is null, or a rule was authored against the wrong field
     // type) never coerces into a surprising truthy/falsy comparison; it
     // simply fails the condition.
-    if (
-      typeof actualValue !== 'number' ||
-      typeof target !== 'number'
-    ) {
+    if (typeof actualValue !== 'number' || typeof target !== 'number') {
       return false;
     }
 

@@ -16,24 +16,18 @@ describe('UsersController', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const module: TestingModule =
-      await Test.createTestingModule({
-        controllers: [
-          UsersController,
-        ],
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [UsersController],
 
-        providers: [
-          {
-            provide: UsersService,
-            useValue: mockUsersService,
-          },
-        ],
-      }).compile();
+      providers: [
+        {
+          provide: UsersService,
+          useValue: mockUsersService,
+        },
+      ],
+    }).compile();
 
-    controller =
-      module.get<UsersController>(
-        UsersController,
-      );
+    controller = module.get<UsersController>(UsersController);
   });
 
   // ============================================================
@@ -57,18 +51,13 @@ describe('UsersController', () => {
       },
     ];
 
-    mockUsersService.getPendingUsers.mockResolvedValue(
-      users,
-    );
+    mockUsersService.getPendingUsers.mockResolvedValue(users);
 
-    const result =
-      await controller.getPendingUsers();
+    const result = await controller.getPendingUsers();
 
     expect(result).toEqual(users);
 
-    expect(
-      mockUsersService.getPendingUsers,
-    ).toHaveBeenCalledTimes(1);
+    expect(mockUsersService.getPendingUsers).toHaveBeenCalledTimes(1);
   });
 
   // ============================================================
@@ -81,24 +70,13 @@ describe('UsersController', () => {
       status: 'APPROVED',
     };
 
-    mockUsersService.approveUser.mockResolvedValue(
-      approvedUser,
-    );
+    mockUsersService.approveUser.mockResolvedValue(approvedUser);
 
-    const result =
-      await controller.approveUser(
-        'user-1',
-      );
+    const result = await controller.approveUser('user-1');
 
-    expect(result).toEqual(
-      approvedUser,
-    );
+    expect(result).toEqual(approvedUser);
 
-    expect(
-      mockUsersService.approveUser,
-    ).toHaveBeenCalledWith(
-      'user-1',
-    );
+    expect(mockUsersService.approveUser).toHaveBeenCalledWith('user-1');
   });
 
   // ============================================================
@@ -111,24 +89,13 @@ describe('UsersController', () => {
       status: 'REJECTED',
     };
 
-    mockUsersService.rejectUser.mockResolvedValue(
-      rejectedUser,
-    );
+    mockUsersService.rejectUser.mockResolvedValue(rejectedUser);
 
-    const result =
-      await controller.rejectUser(
-        'user-1',
-      );
+    const result = await controller.rejectUser('user-1');
 
-    expect(result).toEqual(
-      rejectedUser,
-    );
+    expect(result).toEqual(rejectedUser);
 
-    expect(
-      mockUsersService.rejectUser,
-    ).toHaveBeenCalledWith(
-      'user-1',
-    );
+    expect(mockUsersService.rejectUser).toHaveBeenCalledWith('user-1');
   });
 
   // ============================================================
@@ -150,23 +117,12 @@ describe('UsersController', () => {
       status: 'APPROVED',
     };
 
-    mockUsersService.createStaff.mockResolvedValue(
-      createdStaff,
-    );
+    mockUsersService.createStaff.mockResolvedValue(createdStaff);
 
-    const result =
-      await controller.createStaff(
-        data as any,
-      );
+    const result = await controller.createStaff(data as any);
 
-    expect(result).toEqual(
-      createdStaff,
-    );
+    expect(result).toEqual(createdStaff);
 
-    expect(
-      mockUsersService.createStaff,
-    ).toHaveBeenCalledWith(
-      data,
-    );
+    expect(mockUsersService.createStaff).toHaveBeenCalledWith(data);
   });
 });

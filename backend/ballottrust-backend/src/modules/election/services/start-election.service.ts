@@ -13,39 +13,27 @@ export class StartElectionService {
   ) {}
 
   async execute(id: string, actorId?: string) {
-    const election =
-      await this.repository.findByIdOrThrow(id);
+    const election = await this.repository.findByIdOrThrow(id);
 
-    this.workflowValidator.ensureCanStart(
-      election.status,
-    );
+    this.workflowValidator.ensureCanStart(election.status);
 
     // ===========================================
-// Validate Ballot Readiness
-// ===========================================
+    // Validate Ballot Readiness
+    // ===========================================
 
-const ballotReadiness =
-  await this.repository
-    .getBallotReadiness(
-      id,
+    const ballotReadiness = await this.repository.getBallotReadiness(id);
+
+    this.workflowValidator.ensureBallotReady(
+      election.ballotOrderMethod,
+
+      election.ballotFinalizedAt,
+
+      ballotReadiness.totalApprovedCandidates,
+
+      ballotReadiness.readyCandidates,
     );
 
-this.workflowValidator
-  .ensureBallotReady(
-    election.ballotOrderMethod,
-
-    election.ballotFinalizedAt,
-
-    ballotReadiness
-      .totalApprovedCandidates,
-
-    ballotReadiness
-      .readyCandidates,
-  );
-
-    const data = await this.repository.activateElection(
-      id,
-    );
+    const data = await this.repository.activateElection(id);
 
     // actorId is undefined for cron-triggered auto-activation
     // (election-lifecycle.job.ts) — logged as a system action.

@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { CandidateStatus } from '@prisma/client';
 
@@ -12,60 +9,42 @@ import { AuditService } from '../../audit/audit.service';
 @Injectable()
 export class RejectCandidateService {
   constructor(
-    private readonly candidateRepository:
-      CandidateRepository,
+    private readonly candidateRepository: CandidateRepository,
 
-    private readonly candidateStatusValidator:
-      CandidateStatusValidator,
+    private readonly candidateStatusValidator: CandidateStatusValidator,
 
     private readonly auditService: AuditService,
   ) {}
 
-  async execute(
-  candidateId: string,
-  rejectedById: string,
-  reason: string,
-) {
-    const candidate =
-      await this.candidateRepository.findById(
-        candidateId,
-      );
+  async execute(candidateId: string, rejectedById: string, reason: string) {
+    const candidate = await this.candidateRepository.findById(candidateId);
 
     if (!candidate) {
-      throw new NotFoundException(
-        'Candidate not found.',
-      );
+      throw new NotFoundException('Candidate not found.');
     }
 
     // ======================================================
     // Validate Lifecycle Transition
     // ======================================================
 
-    this.candidateStatusValidator
-      .validateTransition(
-        candidate.status,
-        CandidateStatus.REJECTED,
-      );
-
-    const updated = await this.candidateRepository.update(
-  candidateId,
-  {
-    status:
+    this.candidateStatusValidator.validateTransition(
+      candidate.status,
       CandidateStatus.REJECTED,
+    );
 
-    rejectedBy: {
-      connect: {
-        id: rejectedById,
+    const updated = await this.candidateRepository.update(candidateId, {
+      status: CandidateStatus.REJECTED,
+
+      rejectedBy: {
+        connect: {
+          id: rejectedById,
+        },
       },
-    },
 
-    rejectionReason:
-      reason.trim(),
+      rejectionReason: reason.trim(),
 
-    rejectedAt:
-      new Date(),
-  },
-);
+      rejectedAt: new Date(),
+    });
 
     await this.auditService.log({
       userId: rejectedById,

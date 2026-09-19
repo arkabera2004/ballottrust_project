@@ -8,9 +8,7 @@ import {
   MaxLength,
 } from 'class-validator';
 
-import {
-  CandidateType,
-} from '@prisma/client';
+import { CandidateType } from '@prisma/client';
 
 export class UpdateCandidateDto {
   // ======================================================
@@ -67,16 +65,16 @@ export class UpdateCandidateDto {
   // ======================================================
 
   @IsOptional()
-@IsUrl({
-  protocols: ['http', 'https'],
-  require_protocol: true,
-})
-photoUrl?: string;
+  @IsUrl({
+    protocols: ['http', 'https'],
+    require_protocol: true,
+  })
+  photoUrl?: string;
 
-@IsOptional()
-@IsUrl({
-  protocols: ['http', 'https'],
-  require_protocol: true,
-})
-documentUrl?: string;
+  @IsOptional()
+  @IsUrl({
+    protocols: ['http', 'https'],
+    require_protocol: true,
+  })
+  documentUrl?: string;
 }

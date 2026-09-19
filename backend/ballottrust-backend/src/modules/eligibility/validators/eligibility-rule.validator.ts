@@ -1,7 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
 import {
   ELIGIBILITY_FIELDS,
@@ -41,17 +38,13 @@ export class EligibilityRuleValidator {
       );
     }
 
-    if (
-      typeof node !== 'object' ||
-      node === null ||
-      !('type' in node)
-    ) {
+    if (typeof node !== 'object' || node === null || !('type' in node)) {
       throw new BadRequestException(
         'Each rule node must be an object with a "type" field.',
       );
     }
 
-    const { type } = node as { type: unknown };
+    const { type } = node;
 
     switch (type) {
       case 'CONDITION':
@@ -59,11 +52,7 @@ export class EligibilityRuleValidator {
 
       case 'AND':
       case 'OR':
-        return this.validateCombinator(
-          type,
-          node,
-          depth,
-        );
+        return this.validateCombinator(type, node, depth);
 
       case 'NOT':
         return this.validateNot(node, depth);
@@ -96,19 +85,13 @@ export class EligibilityRuleValidator {
       );
     }
 
-    if (
-      typeof operator !== 'string' ||
-      !OPERATOR_SET.has(operator)
-    ) {
+    if (typeof operator !== 'string' || !OPERATOR_SET.has(operator)) {
       throw new BadRequestException(
         `Unknown eligibility operator: "${String(operator)}". Allowed operators: ${ELIGIBILITY_OPERATORS.join(', ')}.`,
       );
     }
 
-    if (
-      NUMERIC_OPERATORS.has(operator) &&
-      typeof value !== 'number'
-    ) {
+    if (NUMERIC_OPERATORS.has(operator) && typeof value !== 'number') {
       throw new BadRequestException(
         `Operator "${operator}" on field "${field}" requires a numeric value.`,
       );
@@ -162,19 +145,15 @@ export class EligibilityRuleValidator {
 
     return {
       type,
-      rules: rules.map((child) =>
-        this.validateNode(child, depth + 1),
-      ),
-    } as RuleNode;
+      rules: rules.map((child) => this.validateNode(child, depth + 1)),
+    };
   }
 
   private validateNot(node: object, depth: number): RuleNode {
     const inner = (node as { rule?: unknown }).rule;
 
     if (typeof inner !== 'object' || inner === null) {
-      throw new BadRequestException(
-        'NOT node requires a "rule" object.',
-      );
+      throw new BadRequestException('NOT node requires a "rule" object.');
     }
 
     return {

@@ -1,9 +1,6 @@
 import 'reflect-metadata';
 
-import {
-  ROLES_KEY,
-  Roles,
-} from './roles.decorator';
+import { ROLES_KEY, Roles } from './roles.decorator';
 
 describe('Roles Decorator', () => {
   class TestController {
@@ -22,10 +19,7 @@ describe('Roles Decorator', () => {
     Roles('SUPER_ADMIN')(
       TestController.prototype,
       'adminOnly',
-      Object.getOwnPropertyDescriptor(
-        TestController.prototype,
-        'adminOnly',
-      )!,
+      Object.getOwnPropertyDescriptor(TestController.prototype, 'adminOnly')!,
     );
 
     const roles = Reflect.getMetadata(
@@ -33,9 +27,7 @@ describe('Roles Decorator', () => {
       TestController.prototype.adminOnly,
     );
 
-    expect(roles).toEqual([
-      'SUPER_ADMIN',
-    ]);
+    expect(roles).toEqual(['SUPER_ADMIN']);
   });
 
   // ============================================================
@@ -43,10 +35,7 @@ describe('Roles Decorator', () => {
   // ============================================================
 
   it('should assign multiple roles to metadata', () => {
-    Roles(
-      'SUPER_ADMIN',
-      'ELECTION_COMMISSIONER',
-    )(
+    Roles('SUPER_ADMIN', 'ELECTION_COMMISSIONER')(
       TestController.prototype,
       'administratorAccess',
       Object.getOwnPropertyDescriptor(
@@ -60,10 +49,7 @@ describe('Roles Decorator', () => {
       TestController.prototype.administratorAccess,
     );
 
-    expect(roles).toEqual([
-      'SUPER_ADMIN',
-      'ELECTION_COMMISSIONER',
-    ]);
+    expect(roles).toEqual(['SUPER_ADMIN', 'ELECTION_COMMISSIONER']);
   });
 
   // ============================================================

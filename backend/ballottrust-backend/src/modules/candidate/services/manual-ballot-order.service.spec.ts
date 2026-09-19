@@ -1,7 +1,4 @@
-import {
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 import {
   BallotOrderMethod,
@@ -64,25 +61,21 @@ describe('ManualBallotOrderService', () => {
   beforeEach(() => {
     jest.resetAllMocks();
 
-    candidateRepository.findElectionBallotState
-      .mockResolvedValue({
-        status: ElectionStatus.PUBLISHED,
-        ballotFinalizedAt: null,
-      });
+    candidateRepository.findElectionBallotState.mockResolvedValue({
+      status: ElectionStatus.PUBLISHED,
+      ballotFinalizedAt: null,
+    });
 
-    candidateRepository.findEligibleForBallot
-      .mockResolvedValue(
-        eligibleCandidates,
-      );
+    candidateRepository.findEligibleForBallot.mockResolvedValue(
+      eligibleCandidates,
+    );
 
-    candidateRepository.replaceBallotOrders
-      .mockResolvedValue(undefined);
+    candidateRepository.replaceBallotOrders.mockResolvedValue(undefined);
 
-    service =
-      new ManualBallotOrderService(
-        candidateRepository as unknown as CandidateRepository,
-        ballotLifecycleValidator as unknown as BallotLifecycleValidator,
-      );
+    service = new ManualBallotOrderService(
+      candidateRepository as unknown as CandidateRepository,
+      ballotLifecycleValidator as unknown as BallotLifecycleValidator,
+    );
   });
 
   // ======================================================
@@ -90,11 +83,7 @@ describe('ManualBallotOrderService', () => {
   // ======================================================
 
   it('should persist the submitted ballot order', async () => {
-    const result =
-      await service.execute(
-        'election-1',
-        ['c3', 'c1', 'c2'],
-      );
+    const result = await service.execute('election-1', ['c3', 'c1', 'c2']);
 
     expect(result[0].id).toBe('c3');
     expect(result[0].ballotOrder).toBe(1);
@@ -105,9 +94,7 @@ describe('ManualBallotOrderService', () => {
     expect(result[2].id).toBe('c2');
     expect(result[2].ballotOrder).toBe(3);
 
-    expect(
-      candidateRepository.replaceBallotOrders,
-    ).toHaveBeenCalledWith(
+    expect(candidateRepository.replaceBallotOrders).toHaveBeenCalledWith(
       'election-1',
       BallotOrderMethod.MANUAL,
       [
@@ -132,25 +119,15 @@ describe('ManualBallotOrderService', () => {
   // ======================================================
 
   it('should reject when the election does not exist', async () => {
-    candidateRepository.findElectionBallotState
-      .mockResolvedValue(null);
+    candidateRepository.findElectionBallotState.mockResolvedValue(null);
 
     await expect(
-      service.execute(
-        'election-1',
-        ['c1', 'c2', 'c3'],
-      ),
-    ).rejects.toThrow(
-      NotFoundException,
-    );
+      service.execute('election-1', ['c1', 'c2', 'c3']),
+    ).rejects.toThrow(NotFoundException);
 
-    expect(
-      candidateRepository.findEligibleForBallot,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.findEligibleForBallot).not.toHaveBeenCalled();
 
-    expect(
-      candidateRepository.replaceBallotOrders,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.replaceBallotOrders).not.toHaveBeenCalled();
   });
 
   // ======================================================
@@ -158,36 +135,26 @@ describe('ManualBallotOrderService', () => {
   // ======================================================
 
   it('should reject manual ordering after ballot finalization', async () => {
-    candidateRepository.findElectionBallotState
-      .mockResolvedValue({
-        status: ElectionStatus.PUBLISHED,
-        ballotFinalizedAt: new Date(),
-      });
+    candidateRepository.findElectionBallotState.mockResolvedValue({
+      status: ElectionStatus.PUBLISHED,
+      ballotFinalizedAt: new Date(),
+    });
 
-    ballotLifecycleValidator
-      .validateModification
-      .mockImplementation(() => {
-        throw new BadRequestException(
-          'The ballot has been finalized and can no longer be modified.',
-        );
-      });
+    ballotLifecycleValidator.validateModification.mockImplementation(() => {
+      throw new BadRequestException(
+        'The ballot has been finalized and can no longer be modified.',
+      );
+    });
 
     await expect(
-      service.execute(
-        'election-1',
-        ['c1', 'c2', 'c3'],
-      ),
+      service.execute('election-1', ['c1', 'c2', 'c3']),
     ).rejects.toThrow(
       'The ballot has been finalized and can no longer be modified.',
     );
 
-    expect(
-      candidateRepository.findEligibleForBallot,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.findEligibleForBallot).not.toHaveBeenCalled();
 
-    expect(
-      candidateRepository.replaceBallotOrders,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.replaceBallotOrders).not.toHaveBeenCalled();
   });
 
   // ======================================================
@@ -195,21 +162,13 @@ describe('ManualBallotOrderService', () => {
   // ======================================================
 
   it('should reject when no eligible candidates exist', async () => {
-    candidateRepository.findEligibleForBallot
-      .mockResolvedValue([]);
+    candidateRepository.findEligibleForBallot.mockResolvedValue([]);
 
-    await expect(
-      service.execute(
-        'election-1',
-        [],
-      ),
-    ).rejects.toThrow(
+    await expect(service.execute('election-1', [])).rejects.toThrow(
       'No eligible candidates are available for ballot ordering.',
     );
 
-    expect(
-      candidateRepository.replaceBallotOrders,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.replaceBallotOrders).not.toHaveBeenCalled();
   });
 
   // ======================================================
@@ -217,18 +176,11 @@ describe('ManualBallotOrderService', () => {
   // ======================================================
 
   it('should reject when the submitted order does not contain every eligible candidate', async () => {
-    await expect(
-      service.execute(
-        'election-1',
-        ['c1', 'c2'],
-      ),
-    ).rejects.toThrow(
+    await expect(service.execute('election-1', ['c1', 'c2'])).rejects.toThrow(
       'Manual ballot order must include every eligible candidate exactly once.',
     );
 
-    expect(
-      candidateRepository.replaceBallotOrders,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.replaceBallotOrders).not.toHaveBeenCalled();
   });
 
   // ======================================================
@@ -237,17 +189,12 @@ describe('ManualBallotOrderService', () => {
 
   it('should reject a candidate who is not eligible for the election', async () => {
     await expect(
-      service.execute(
-        'election-1',
-        ['c1', 'c2', 'unknown-candidate'],
-      ),
+      service.execute('election-1', ['c1', 'c2', 'unknown-candidate']),
     ).rejects.toThrow(
       'Manual ballot order contains a candidate who is not eligible for this election.',
     );
 
-    expect(
-      candidateRepository.replaceBallotOrders,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.replaceBallotOrders).not.toHaveBeenCalled();
   });
 
   // ======================================================
@@ -256,17 +203,12 @@ describe('ManualBallotOrderService', () => {
 
   it('should reject duplicate candidate IDs', async () => {
     await expect(
-      service.execute(
-        'election-1',
-        ['c1', 'c2', 'c2'],
-      ),
+      service.execute('election-1', ['c1', 'c2', 'c2']),
     ).rejects.toThrow(
       'Manual ballot order cannot contain duplicate candidates.',
     );
 
-    expect(
-      candidateRepository.replaceBallotOrders,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.replaceBallotOrders).not.toHaveBeenCalled();
   });
 
   // ======================================================
@@ -274,25 +216,13 @@ describe('ManualBallotOrderService', () => {
   // ======================================================
 
   it('should propagate an error when ballot order persistence fails', async () => {
-    const databaseError =
-      new Error(
-        'Failed to persist ballot order.',
-      );
+    const databaseError = new Error('Failed to persist ballot order.');
 
-    candidateRepository
-      .replaceBallotOrders
-      .mockRejectedValue(
-        databaseError,
-      );
+    candidateRepository.replaceBallotOrders.mockRejectedValue(databaseError);
 
     await expect(
-      service.execute(
-        'election-1',
-        ['c1', 'c2', 'c3'],
-      ),
-    ).rejects.toThrow(
-      'Failed to persist ballot order.',
-    );
+      service.execute('election-1', ['c1', 'c2', 'c3']),
+    ).rejects.toThrow('Failed to persist ballot order.');
   });
 
   // ======================================================
@@ -300,15 +230,9 @@ describe('ManualBallotOrderService', () => {
   // ======================================================
 
   it('should validate the ballot lifecycle before modifying the order', async () => {
-    await service.execute(
-      'election-1',
-      ['c1', 'c2', 'c3'],
-    );
+    await service.execute('election-1', ['c1', 'c2', 'c3']);
 
-    expect(
-      ballotLifecycleValidator
-        .validateModification,
-    ).toHaveBeenCalledWith(
+    expect(ballotLifecycleValidator.validateModification).toHaveBeenCalledWith(
       ElectionStatus.PUBLISHED,
       null,
     );

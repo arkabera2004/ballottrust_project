@@ -32,9 +32,9 @@ describe('CheckVoterEligibilityService', () => {
   it('throws NotFoundException when the voter does not exist', async () => {
     mockPrisma.user.findUnique.mockResolvedValue(null);
 
-    await expect(
-      service.execute('user-1', 'election-1'),
-    ).rejects.toThrow(NotFoundException);
+    await expect(service.execute('user-1', 'election-1')).rejects.toThrow(
+      NotFoundException,
+    );
 
     expect(mockRepository.saveSnapshot).not.toHaveBeenCalled();
   });

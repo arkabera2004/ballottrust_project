@@ -19,21 +19,17 @@ describe('ResultService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const module: TestingModule =
-      await Test.createTestingModule({
-        providers: [
-          ResultService,
-          {
-            provide: PrismaService,
-            useValue: mockPrismaService,
-          },
-        ],
-      }).compile();
-
-    service =
-      module.get<ResultService>(
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
         ResultService,
-      );
+        {
+          provide: PrismaService,
+          useValue: mockPrismaService,
+        },
+      ],
+    }).compile();
+
+    service = module.get<ResultService>(ResultService);
   });
 
   // ============================================================
@@ -49,27 +45,20 @@ describe('ResultService', () => {
   // ============================================================
 
   it('should throw NotFoundException when election does not exist', async () => {
-    mockPrismaService.election.findFirst
-      .mockResolvedValue(null);
+    mockPrismaService.election.findFirst.mockResolvedValue(null);
 
-    await expect(
-      service.getResults('election-1'),
-    ).rejects.toThrow(
+    await expect(service.getResults('election-1')).rejects.toThrow(
       'Election not found.',
     );
 
-    expect(
-      mockPrismaService.election.findFirst,
-    ).toHaveBeenCalledWith({
+    expect(mockPrismaService.election.findFirst).toHaveBeenCalledWith({
       where: {
         id: 'election-1',
         deletedAt: null,
       },
     });
 
-    expect(
-      mockPrismaService.candidate.findMany,
-    ).not.toHaveBeenCalled();
+    expect(mockPrismaService.candidate.findMany).not.toHaveBeenCalled();
   });
 
   // ============================================================
@@ -84,16 +73,11 @@ describe('ResultService', () => {
       deletedAt: null,
     };
 
-    mockPrismaService.election.findFirst
-      .mockResolvedValue(election);
+    mockPrismaService.election.findFirst.mockResolvedValue(election);
 
-    mockPrismaService.candidate.findMany
-      .mockResolvedValue([]);
+    mockPrismaService.candidate.findMany.mockResolvedValue([]);
 
-    const result =
-      await service.getResults(
-        'election-1',
-      );
+    const result = await service.getResults('election-1');
 
     expect(result).toEqual({
       election,
@@ -107,9 +91,7 @@ describe('ResultService', () => {
       winner: null,
     });
 
-    expect(
-      mockPrismaService.candidate.findMany,
-    ).toHaveBeenCalledWith({
+    expect(mockPrismaService.candidate.findMany).toHaveBeenCalledWith({
       where: {
         electionId: 'election-1',
         status: 'APPROVED',
@@ -150,69 +132,52 @@ describe('ResultService', () => {
       deletedAt: null,
     };
 
-    mockPrismaService.election.findFirst
-      .mockResolvedValue(election);
+    mockPrismaService.election.findFirst.mockResolvedValue(election);
 
-    mockPrismaService.candidate.findMany
-      .mockResolvedValue([
-        {
-          id: 'candidate-1',
-          candidateNumber: 1,
-          candidateType: 'INDEPENDENT',
+    mockPrismaService.candidate.findMany.mockResolvedValue([
+      {
+        id: 'candidate-1',
+        candidateNumber: 1,
+        candidateType: 'INDEPENDENT',
 
-          user: {
-            id: 'user-1',
-            fullName: 'Candidate One',
-          },
-
-          party: null,
-
-          votes: [
-            { id: 'vote-1' },
-            { id: 'vote-2' },
-            { id: 'vote-3' },
-          ],
+        user: {
+          id: 'user-1',
+          fullName: 'Candidate One',
         },
 
-        {
-          id: 'candidate-2',
-          candidateNumber: 2,
-          candidateType: 'PARTY',
+        party: null,
 
-          user: {
-            id: 'user-2',
-            fullName: 'Candidate Two',
-          },
+        votes: [{ id: 'vote-1' }, { id: 'vote-2' }, { id: 'vote-3' }],
+      },
 
-          party: {
-            id: 'party-1',
-            name: 'Student Unity Party',
-            abbreviation: 'SUP',
-            symbol: '🌟',
-          },
+      {
+        id: 'candidate-2',
+        candidateNumber: 2,
+        candidateType: 'PARTY',
 
-          votes: [
-            { id: 'vote-4' },
-          ],
+        user: {
+          id: 'user-2',
+          fullName: 'Candidate Two',
         },
-      ]);
 
-    const result =
-      await service.getResults(
-        'election-1',
-      );
+        party: {
+          id: 'party-1',
+          name: 'Student Unity Party',
+          abbreviation: 'SUP',
+          symbol: '🌟',
+        },
 
-    expect(result.election).toEqual(
-      election,
-    );
+        votes: [{ id: 'vote-4' }],
+      },
+    ]);
 
-    expect(
-      result.totalCandidates,
-    ).toBe(2);
+    const result = await service.getResults('election-1');
 
-    expect(
-      result.totalVotes,
-    ).toBe(4);
+    expect(result.election).toEqual(election);
+
+    expect(result.totalCandidates).toBe(2);
+
+    expect(result.totalVotes).toBe(4);
 
     expect(result.results).toEqual([
       {
@@ -257,60 +222,43 @@ describe('ResultService', () => {
   // ============================================================
 
   it('should sort candidates by descending vote count', async () => {
-    mockPrismaService.election.findFirst
-      .mockResolvedValue({
-        id: 'election-1',
-        title: 'Election',
-      });
+    mockPrismaService.election.findFirst.mockResolvedValue({
+      id: 'election-1',
+      title: 'Election',
+    });
 
-    mockPrismaService.candidate.findMany
-      .mockResolvedValue([
-        {
-          id: 'candidate-1',
-          candidateNumber: 1,
-          candidateType: 'INDEPENDENT',
-          user: {
-            id: 'user-1',
-            fullName: 'Candidate One',
-          },
-          party: null,
-          votes: [
-            { id: 'vote-1' },
-          ],
+    mockPrismaService.candidate.findMany.mockResolvedValue([
+      {
+        id: 'candidate-1',
+        candidateNumber: 1,
+        candidateType: 'INDEPENDENT',
+        user: {
+          id: 'user-1',
+          fullName: 'Candidate One',
         },
+        party: null,
+        votes: [{ id: 'vote-1' }],
+      },
 
-        {
-          id: 'candidate-2',
-          candidateNumber: 2,
-          candidateType: 'INDEPENDENT',
-          user: {
-            id: 'user-2',
-            fullName: 'Candidate Two',
-          },
-          party: null,
-          votes: [
-            { id: 'vote-2' },
-            { id: 'vote-3' },
-            { id: 'vote-4' },
-          ],
+      {
+        id: 'candidate-2',
+        candidateNumber: 2,
+        candidateType: 'INDEPENDENT',
+        user: {
+          id: 'user-2',
+          fullName: 'Candidate Two',
         },
-      ]);
+        party: null,
+        votes: [{ id: 'vote-2' }, { id: 'vote-3' }, { id: 'vote-4' }],
+      },
+    ]);
 
-    const result =
-      await service.getResults(
-        'election-1',
-      );
+    const result = await service.getResults('election-1');
 
-    expect(
-      result.results[0].candidateId,
-    ).toBe('candidate-2');
+    expect(result.results[0].candidateId).toBe('candidate-2');
 
-    expect(
-      result.results[0].votes,
-    ).toBe(3);
+    expect(result.results[0].votes).toBe(3);
 
-    expect(
-      result.winner?.candidateId,
-    ).toBe('candidate-2');
+    expect(result.winner?.candidateId).toBe('candidate-2');
   });
 });

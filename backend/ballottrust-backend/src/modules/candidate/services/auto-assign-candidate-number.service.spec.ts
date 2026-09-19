@@ -1,4 +1,8 @@
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { CandidateStatus, ElectionStatus, Prisma } from '@prisma/client';
 
@@ -23,14 +27,13 @@ describe('AutoAssignCandidateNumberService', () => {
   };
 
   beforeEach(() => {
-  jest.resetAllMocks();
+    jest.resetAllMocks();
 
-  service =
-    new AutoAssignCandidateNumberService(
+    service = new AutoAssignCandidateNumberService(
       candidateRepository as unknown as CandidateRepository,
       ballotLifecycleValidator as unknown as BallotLifecycleValidator,
     );
-});
+  });
 
   // ======================================================
   // 1. Successful Automatic Assignment
@@ -49,66 +52,39 @@ describe('AutoAssignCandidateNumberService', () => {
       candidateNumber: 5,
     };
 
-    candidateRepository.findById.mockResolvedValue(
-      candidate,
-    );
+    candidateRepository.findById.mockResolvedValue(candidate);
 
-    candidateRepository.findElectionBallotState
-      .mockResolvedValue({
-        status: ElectionStatus.PUBLISHED,
-        ballotFinalizedAt: null,
-      });
+    candidateRepository.findElectionBallotState.mockResolvedValue({
+      status: ElectionStatus.PUBLISHED,
+      ballotFinalizedAt: null,
+    });
 
-    candidateRepository.getHighestCandidateNumber
-      .mockResolvedValue(4);
+    candidateRepository.getHighestCandidateNumber.mockResolvedValue(4);
 
-    candidateRepository.update
-      .mockResolvedValue(updatedCandidate);
+    candidateRepository.update.mockResolvedValue(updatedCandidate);
 
-    const result =
-      await service.execute(
-        'candidate-1',
-      );
+    const result = await service.execute('candidate-1');
 
-    expect(result).toEqual(
-      updatedCandidate,
-    );
+    expect(result).toEqual(updatedCandidate);
 
-    expect(
-      candidateRepository.findById,
-    ).toHaveBeenCalledWith(
-      'candidate-1',
-    );
+    expect(candidateRepository.findById).toHaveBeenCalledWith('candidate-1');
 
-    expect(
-      candidateRepository.findElectionBallotState,
-    ).toHaveBeenCalledWith(
+    expect(candidateRepository.findElectionBallotState).toHaveBeenCalledWith(
       'election-1',
     );
 
-    expect(
-      ballotLifecycleValidator
-        .validateModification,
-    ).toHaveBeenCalledWith(
+    expect(ballotLifecycleValidator.validateModification).toHaveBeenCalledWith(
       ElectionStatus.PUBLISHED,
       null,
     );
 
-    expect(
-      candidateRepository
-        .getHighestCandidateNumber,
-    ).toHaveBeenCalledWith(
+    expect(candidateRepository.getHighestCandidateNumber).toHaveBeenCalledWith(
       'election-1',
     );
 
-    expect(
-      candidateRepository.update,
-    ).toHaveBeenCalledWith(
-      'candidate-1',
-      {
-        candidateNumber: 5,
-      },
-    );
+    expect(candidateRepository.update).toHaveBeenCalledWith('candidate-1', {
+      candidateNumber: 5,
+    });
   });
 
   // ======================================================
@@ -116,30 +92,19 @@ describe('AutoAssignCandidateNumberService', () => {
   // ======================================================
 
   it('should reject when the candidate does not exist', async () => {
-    candidateRepository.findById
-      .mockResolvedValue(null);
+    candidateRepository.findById.mockResolvedValue(null);
 
-    await expect(
-      service.execute(
-        'candidate-1',
-      ),
-    ).rejects.toThrow(
+    await expect(service.execute('candidate-1')).rejects.toThrow(
       NotFoundException,
     );
 
-    expect(
-      candidateRepository
-        .findElectionBallotState,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.findElectionBallotState).not.toHaveBeenCalled();
 
     expect(
-      candidateRepository
-        .getHighestCandidateNumber,
+      candidateRepository.getHighestCandidateNumber,
     ).not.toHaveBeenCalled();
 
-    expect(
-      candidateRepository.update,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.update).not.toHaveBeenCalled();
   });
 
   // ======================================================
@@ -147,35 +112,24 @@ describe('AutoAssignCandidateNumberService', () => {
   // ======================================================
 
   it('should reject an unapproved candidate', async () => {
-    candidateRepository.findById
-      .mockResolvedValue({
-        id: 'candidate-1',
-        electionId: 'election-1',
-        status: CandidateStatus.PENDING,
-        candidateNumber: null,
-      });
+    candidateRepository.findById.mockResolvedValue({
+      id: 'candidate-1',
+      electionId: 'election-1',
+      status: CandidateStatus.PENDING,
+      candidateNumber: null,
+    });
 
-    await expect(
-      service.execute(
-        'candidate-1',
-      ),
-    ).rejects.toThrow(
+    await expect(service.execute('candidate-1')).rejects.toThrow(
       'Candidate number can only be assigned to an approved candidate.',
     );
 
-    expect(
-      candidateRepository
-        .findElectionBallotState,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.findElectionBallotState).not.toHaveBeenCalled();
 
     expect(
-      candidateRepository
-        .getHighestCandidateNumber,
+      candidateRepository.getHighestCandidateNumber,
     ).not.toHaveBeenCalled();
 
-    expect(
-      candidateRepository.update,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.update).not.toHaveBeenCalled();
   });
 
   // ======================================================
@@ -183,35 +137,24 @@ describe('AutoAssignCandidateNumberService', () => {
   // ======================================================
 
   it('should reject a candidate who already has a number', async () => {
-    candidateRepository.findById
-      .mockResolvedValue({
-        id: 'candidate-1',
-        electionId: 'election-1',
-        status: CandidateStatus.APPROVED,
-        candidateNumber: 3,
-      });
+    candidateRepository.findById.mockResolvedValue({
+      id: 'candidate-1',
+      electionId: 'election-1',
+      status: CandidateStatus.APPROVED,
+      candidateNumber: 3,
+    });
 
-    await expect(
-      service.execute(
-        'candidate-1',
-      ),
-    ).rejects.toThrow(
+    await expect(service.execute('candidate-1')).rejects.toThrow(
       'Candidate number has already been assigned.',
     );
 
-    expect(
-      candidateRepository
-        .findElectionBallotState,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.findElectionBallotState).not.toHaveBeenCalled();
 
     expect(
-      candidateRepository
-        .getHighestCandidateNumber,
+      candidateRepository.getHighestCandidateNumber,
     ).not.toHaveBeenCalled();
 
-    expect(
-      candidateRepository.update,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.update).not.toHaveBeenCalled();
   });
 
   // ======================================================
@@ -219,38 +162,28 @@ describe('AutoAssignCandidateNumberService', () => {
   // ======================================================
 
   it('should reject when the election does not exist', async () => {
-    candidateRepository.findById
-      .mockResolvedValue({
-        id: 'candidate-1',
-        electionId: 'election-1',
-        status: CandidateStatus.APPROVED,
-        candidateNumber: null,
-      });
+    candidateRepository.findById.mockResolvedValue({
+      id: 'candidate-1',
+      electionId: 'election-1',
+      status: CandidateStatus.APPROVED,
+      candidateNumber: null,
+    });
 
-    candidateRepository.findElectionBallotState
-      .mockResolvedValue(null);
+    candidateRepository.findElectionBallotState.mockResolvedValue(null);
 
-    await expect(
-      service.execute(
-        'candidate-1',
-      ),
-    ).rejects.toThrow(
+    await expect(service.execute('candidate-1')).rejects.toThrow(
       'Election not found.',
     );
 
     expect(
-      ballotLifecycleValidator
-        .validateModification,
+      ballotLifecycleValidator.validateModification,
     ).not.toHaveBeenCalled();
 
     expect(
-      candidateRepository
-        .getHighestCandidateNumber,
+      candidateRepository.getHighestCandidateNumber,
     ).not.toHaveBeenCalled();
 
-    expect(
-      candidateRepository.update,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.update).not.toHaveBeenCalled();
   });
 
   // ======================================================
@@ -258,44 +191,33 @@ describe('AutoAssignCandidateNumberService', () => {
   // ======================================================
 
   it('should reject automatic assignment after ballot finalization', async () => {
-    candidateRepository.findById
-      .mockResolvedValue({
-        id: 'candidate-1',
-        electionId: 'election-1',
-        status: CandidateStatus.APPROVED,
-        candidateNumber: null,
-      });
+    candidateRepository.findById.mockResolvedValue({
+      id: 'candidate-1',
+      electionId: 'election-1',
+      status: CandidateStatus.APPROVED,
+      candidateNumber: null,
+    });
 
-    candidateRepository.findElectionBallotState
-      .mockResolvedValue({
-        status: ElectionStatus.PUBLISHED,
-        ballotFinalizedAt: new Date(),
-      });
+    candidateRepository.findElectionBallotState.mockResolvedValue({
+      status: ElectionStatus.PUBLISHED,
+      ballotFinalizedAt: new Date(),
+    });
 
-    ballotLifecycleValidator
-      .validateModification
-      .mockImplementation(() => {
-        throw new BadRequestException(
-          'The ballot has been finalized and can no longer be modified.',
-        );
-      });
+    ballotLifecycleValidator.validateModification.mockImplementation(() => {
+      throw new BadRequestException(
+        'The ballot has been finalized and can no longer be modified.',
+      );
+    });
 
-    await expect(
-      service.execute(
-        'candidate-1',
-      ),
-    ).rejects.toThrow(
+    await expect(service.execute('candidate-1')).rejects.toThrow(
       'The ballot has been finalized and can no longer be modified.',
     );
 
     expect(
-      candidateRepository
-        .getHighestCandidateNumber,
+      candidateRepository.getHighestCandidateNumber,
     ).not.toHaveBeenCalled();
 
-    expect(
-      candidateRepository.update,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.update).not.toHaveBeenCalled();
   });
 
   // ======================================================
@@ -303,44 +225,33 @@ describe('AutoAssignCandidateNumberService', () => {
   // ======================================================
 
   it('should reject automatic assignment when the election is ACTIVE', async () => {
-    candidateRepository.findById
-      .mockResolvedValue({
-        id: 'candidate-1',
-        electionId: 'election-1',
-        status: CandidateStatus.APPROVED,
-        candidateNumber: null,
-      });
+    candidateRepository.findById.mockResolvedValue({
+      id: 'candidate-1',
+      electionId: 'election-1',
+      status: CandidateStatus.APPROVED,
+      candidateNumber: null,
+    });
 
-    candidateRepository.findElectionBallotState
-      .mockResolvedValue({
-        status: ElectionStatus.ACTIVE,
-        ballotFinalizedAt: null,
-      });
+    candidateRepository.findElectionBallotState.mockResolvedValue({
+      status: ElectionStatus.ACTIVE,
+      ballotFinalizedAt: null,
+    });
 
-    ballotLifecycleValidator
-      .validateModification
-      .mockImplementation(() => {
-        throw new BadRequestException(
-          'Ballot ordering cannot be modified while the election is in ACTIVE status.',
-        );
-      });
+    ballotLifecycleValidator.validateModification.mockImplementation(() => {
+      throw new BadRequestException(
+        'Ballot ordering cannot be modified while the election is in ACTIVE status.',
+      );
+    });
 
-    await expect(
-      service.execute(
-        'candidate-1',
-      ),
-    ).rejects.toThrow(
+    await expect(service.execute('candidate-1')).rejects.toThrow(
       'Ballot ordering cannot be modified while the election is in ACTIVE status.',
     );
 
     expect(
-      candidateRepository
-        .getHighestCandidateNumber,
+      candidateRepository.getHighestCandidateNumber,
     ).not.toHaveBeenCalled();
 
-    expect(
-      candidateRepository.update,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.update).not.toHaveBeenCalled();
   });
 
   // ======================================================
@@ -355,45 +266,31 @@ describe('AutoAssignCandidateNumberService', () => {
       candidateNumber: null,
     };
 
-    candidateRepository.findById
-      .mockResolvedValue(candidate);
+    candidateRepository.findById.mockResolvedValue(candidate);
 
-    candidateRepository.findElectionBallotState
-      .mockResolvedValue({
-        status: ElectionStatus.PUBLISHED,
-        ballotFinalizedAt: null,
-      });
+    candidateRepository.findElectionBallotState.mockResolvedValue({
+      status: ElectionStatus.PUBLISHED,
+      ballotFinalizedAt: null,
+    });
 
-    candidateRepository.getHighestCandidateNumber
-      .mockResolvedValue(4);
+    candidateRepository.getHighestCandidateNumber.mockResolvedValue(4);
 
-    const prismaError =
-      new Prisma.PrismaClientKnownRequestError(
-        'Unique constraint failed',
-        {
-          code: 'P2002',
-          clientVersion: 'test',
-        },
-      );
+    const prismaError = new Prisma.PrismaClientKnownRequestError(
+      'Unique constraint failed',
+      {
+        code: 'P2002',
+        clientVersion: 'test',
+      },
+    );
 
-    candidateRepository.update
-      .mockRejectedValue(prismaError);
+    candidateRepository.update.mockRejectedValue(prismaError);
 
-    await expect(
-      service.execute(
-        'candidate-1',
-      ),
-    ).rejects.toThrow(
+    await expect(service.execute('candidate-1')).rejects.toThrow(
       ConflictException,
     );
 
-    expect(
-      candidateRepository.update,
-    ).toHaveBeenCalledWith(
-      'candidate-1',
-      {
-        candidateNumber: 5,
-      },
-    );
+    expect(candidateRepository.update).toHaveBeenCalledWith('candidate-1', {
+      candidateNumber: 5,
+    });
   });
 });

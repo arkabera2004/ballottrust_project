@@ -29,9 +29,7 @@ describe('RolesGuard', () => {
       switchToHttp: jest.fn(),
     };
 
-    guard = new RolesGuard(
-      reflector as unknown as Reflector,
-    );
+    guard = new RolesGuard(reflector as unknown as Reflector);
   });
 
   // ============================================================
@@ -39,19 +37,13 @@ describe('RolesGuard', () => {
   // ============================================================
 
   it('should allow access when no roles are required', () => {
-    reflector.getAllAndOverride.mockReturnValue(
-      undefined,
-    );
+    reflector.getAllAndOverride.mockReturnValue(undefined);
 
-    const result = guard.canActivate(
-      context as unknown as ExecutionContext,
-    );
+    const result = guard.canActivate(context as unknown as ExecutionContext);
 
     expect(result).toBe(true);
 
-    expect(
-      reflector.getAllAndOverride,
-    ).toHaveBeenCalled();
+    expect(reflector.getAllAndOverride).toHaveBeenCalled();
   });
 
   // ============================================================
@@ -59,9 +51,7 @@ describe('RolesGuard', () => {
   // ============================================================
 
   it('should allow SUPER_ADMIN when SUPER_ADMIN is required', () => {
-    reflector.getAllAndOverride.mockReturnValue([
-      'SUPER_ADMIN',
-    ]);
+    reflector.getAllAndOverride.mockReturnValue(['SUPER_ADMIN']);
 
     const request = {
       user: {
@@ -74,9 +64,7 @@ describe('RolesGuard', () => {
       getRequest: jest.fn().mockReturnValue(request),
     });
 
-    const result = guard.canActivate(
-      context as unknown as ExecutionContext,
-    );
+    const result = guard.canActivate(context as unknown as ExecutionContext);
 
     expect(result).toBe(true);
   });
@@ -86,9 +74,7 @@ describe('RolesGuard', () => {
   // ============================================================
 
   it('should allow ELECTION_COMMISSIONER when required', () => {
-    reflector.getAllAndOverride.mockReturnValue([
-      'ELECTION_COMMISSIONER',
-    ]);
+    reflector.getAllAndOverride.mockReturnValue(['ELECTION_COMMISSIONER']);
 
     const request = {
       user: {
@@ -101,9 +87,7 @@ describe('RolesGuard', () => {
       getRequest: jest.fn().mockReturnValue(request),
     });
 
-    const result = guard.canActivate(
-      context as unknown as ExecutionContext,
-    );
+    const result = guard.canActivate(context as unknown as ExecutionContext);
 
     expect(result).toBe(true);
   });
@@ -129,9 +113,7 @@ describe('RolesGuard', () => {
       getRequest: jest.fn().mockReturnValue(request),
     });
 
-    const result = guard.canActivate(
-      context as unknown as ExecutionContext,
-    );
+    const result = guard.canActivate(context as unknown as ExecutionContext);
 
     expect(result).toBe(true);
   });
@@ -157,9 +139,7 @@ describe('RolesGuard', () => {
       getRequest: jest.fn().mockReturnValue(request),
     });
 
-    const result = guard.canActivate(
-      context as unknown as ExecutionContext,
-    );
+    const result = guard.canActivate(context as unknown as ExecutionContext);
 
     expect(result).toBe(false);
   });
@@ -185,9 +165,7 @@ describe('RolesGuard', () => {
       getRequest: jest.fn().mockReturnValue(request),
     });
 
-    const result = guard.canActivate(
-      context as unknown as ExecutionContext,
-    );
+    const result = guard.canActivate(context as unknown as ExecutionContext);
 
     expect(result).toBe(false);
   });
@@ -213,9 +191,7 @@ describe('RolesGuard', () => {
       getRequest: jest.fn().mockReturnValue(request),
     });
 
-    const result = guard.canActivate(
-      context as unknown as ExecutionContext,
-    );
+    const result = guard.canActivate(context as unknown as ExecutionContext);
 
     expect(result).toBe(false);
   });

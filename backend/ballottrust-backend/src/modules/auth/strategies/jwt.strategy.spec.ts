@@ -4,8 +4,7 @@ describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
 
   beforeEach(() => {
-    process.env.JWT_SECRET =
-      'ballottrust-test-secret';
+    process.env.JWT_SECRET = 'ballottrust-test-secret';
 
     strategy = new JwtStrategy();
   });
@@ -29,8 +28,7 @@ describe('JwtStrategy', () => {
       role: 'VOTER',
     };
 
-    const result =
-      await strategy.validate(payload);
+    const result = await strategy.validate(payload);
 
     expect(result).toEqual({
       userId: 'user-123',
@@ -50,20 +48,13 @@ describe('JwtStrategy', () => {
       role: 'SUPER_ADMIN',
     };
 
-    const result =
-      await strategy.validate(payload);
+    const result = await strategy.validate(payload);
 
-    expect(result.userId).toBe(
-      'admin-123',
-    );
+    expect(result.userId).toBe('admin-123');
 
-    expect(result.email).toBe(
-      'admin@ballottrust.com',
-    );
+    expect(result.email).toBe('admin@ballottrust.com');
 
-    expect(result.role).toBe(
-      'SUPER_ADMIN',
-    );
+    expect(result.role).toBe('SUPER_ADMIN');
   });
 
   // ============================================================
@@ -77,8 +68,7 @@ describe('JwtStrategy', () => {
       role: 'ELECTION_COMMISSIONER',
     };
 
-    const result =
-      await strategy.validate(payload);
+    const result = await strategy.validate(payload);
 
     expect(result).toEqual({
       userId: 'commissioner-123',
@@ -98,12 +88,9 @@ describe('JwtStrategy', () => {
       role: 'CANDIDATE',
     };
 
-    const result =
-      await strategy.validate(payload);
+    const result = await strategy.validate(payload);
 
-    expect(result.role).toBe(
-      'CANDIDATE',
-    );
+    expect(result.role).toBe('CANDIDATE');
   });
 
   // ============================================================
@@ -117,11 +104,8 @@ describe('JwtStrategy', () => {
       role: 'VOTER',
     };
 
-    const result =
-      await strategy.validate(payload);
+    const result = await strategy.validate(payload);
 
-    expect(result.role).toBe(
-      'VOTER',
-    );
+    expect(result.role).toBe('VOTER');
   });
 });

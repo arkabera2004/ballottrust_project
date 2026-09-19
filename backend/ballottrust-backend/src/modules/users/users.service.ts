@@ -5,9 +5,7 @@ import { CreateStaffDto } from './dto/create-staff.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    private prisma: PrismaService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   async getPendingUsers() {
     return this.prisma.user.findMany({
@@ -35,40 +33,29 @@ export class UsersService {
     });
   }
 
-
-async createStaff(
-  data: CreateStaffDto,
-) {
-  const existingUser =
-    await this.prisma.user.findUnique({
+  async createStaff(data: CreateStaffDto) {
+    const existingUser = await this.prisma.user.findUnique({
       where: {
         email: data.email,
       },
     });
 
-  if (existingUser) {
-    throw new Error(
-      'Email already exists',
-    );
+    if (existingUser) {
+      throw new Error('Email already exists');
+    }
+
+    const hashedPassword = await argon2.hash(data.password);
+
+    return this.prisma.user.create({
+      data: {
+        fullName: data.fullName,
+        email: data.email,
+        password: hashedPassword,
+
+        role: data.role,
+
+        status: 'APPROVED',
+      },
+    });
   }
-
-  const hashedPassword =
-    await argon2.hash(
-      data.password,
-    );
-
-  return this.prisma.user.create({
-    data: {
-      fullName: data.fullName,
-      email: data.email,
-      password: hashedPassword,
-
-      role: data.role,
-
-      status: 'APPROVED',
-    },
-  });
-}
-
-
 }

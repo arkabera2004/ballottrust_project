@@ -1,10 +1,6 @@
-import {
-  IsEnum,
-} from 'class-validator';
+import { IsEnum } from 'class-validator';
 
-import {
-  CandidateDocumentType,
-} from '@prisma/client';
+import { CandidateDocumentType } from '@prisma/client';
 
 export class UploadCandidateDocumentDto {
   @IsEnum(CandidateDocumentType)

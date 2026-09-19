@@ -126,13 +126,9 @@ describe('Candidate Document Workflow - 6.4', () => {
   it('should upload a document for an owned pending candidate', async () => {
     candidateRepository.findById.mockResolvedValue(candidate);
 
-    candidateDocumentRepository.findActiveByType.mockResolvedValue(
-      null,
-    );
+    candidateDocumentRepository.findActiveByType.mockResolvedValue(null);
 
-    candidateDocumentRepository.create.mockResolvedValue(
-      document,
-    );
+    candidateDocumentRepository.create.mockResolvedValue(document);
 
     const result = await uploadService.execute(
       'candidate-1',
@@ -145,31 +141,20 @@ describe('Candidate Document Workflow - 6.4', () => {
 
     expect(result).toEqual(document);
 
-    expect(
-      candidateRepository.findById,
-    ).toHaveBeenCalledWith('candidate-1');
+    expect(candidateRepository.findById).toHaveBeenCalledWith('candidate-1');
 
-    expect(
-      candidateDocumentRepository.findActiveByType,
-    ).toHaveBeenCalledWith(
+    expect(candidateDocumentRepository.findActiveByType).toHaveBeenCalledWith(
       'candidate-1',
       'IDENTITY_PROOF',
     );
 
-    expect(
-      candidateDocumentRepository.create,
-    ).toHaveBeenCalled();
+    expect(candidateDocumentRepository.create).toHaveBeenCalled();
 
-    const createArgument =
-      candidateDocumentRepository.create.mock.calls[0][0];
+    const createArgument = candidateDocumentRepository.create.mock.calls[0][0];
 
-    expect(createArgument.documentType).toBe(
-      'IDENTITY_PROOF',
-    );
+    expect(createArgument.documentType).toBe('IDENTITY_PROOF');
 
-    expect(
-      createArgument.candidate.connect.id,
-    ).toBe('candidate-1');
+    expect(createArgument.candidate.connect.id).toBe('candidate-1');
   });
 
   // ============================================================
@@ -179,9 +164,7 @@ describe('Candidate Document Workflow - 6.4', () => {
   it('should reject uploading a duplicate active document', async () => {
     candidateRepository.findById.mockResolvedValue(candidate);
 
-    candidateDocumentRepository.findActiveByType.mockResolvedValue(
-      document,
-    );
+    candidateDocumentRepository.findActiveByType.mockResolvedValue(document);
 
     await expect(
       uploadService.execute(
@@ -196,9 +179,7 @@ describe('Candidate Document Workflow - 6.4', () => {
       'An active document of this type already exists. Use the document replacement workflow instead.',
     );
 
-    expect(
-      candidateDocumentRepository.create,
-    ).not.toHaveBeenCalled();
+    expect(candidateDocumentRepository.create).not.toHaveBeenCalled();
   });
 
   // ============================================================
@@ -206,9 +187,7 @@ describe('Candidate Document Workflow - 6.4', () => {
   // ============================================================
 
   it('should allow the candidate owner to view the document', async () => {
-    candidateDocumentRepository.findById.mockResolvedValue(
-      document,
-    );
+    candidateDocumentRepository.findById.mockResolvedValue(document);
 
     const result = await getService.execute(
       'candidate-1',
@@ -219,9 +198,9 @@ describe('Candidate Document Workflow - 6.4', () => {
 
     expect(result).toEqual(document);
 
-    expect(
-      candidateDocumentRepository.findById,
-    ).toHaveBeenCalledWith('document-1');
+    expect(candidateDocumentRepository.findById).toHaveBeenCalledWith(
+      'document-1',
+    );
   });
 
   // ============================================================
@@ -229,9 +208,7 @@ describe('Candidate Document Workflow - 6.4', () => {
   // ============================================================
 
   it('should allow an election administrator to view the document', async () => {
-    candidateDocumentRepository.findById.mockResolvedValue(
-      document,
-    );
+    candidateDocumentRepository.findById.mockResolvedValue(document);
 
     const result = await getService.execute(
       'candidate-1',
@@ -248,9 +225,7 @@ describe('Candidate Document Workflow - 6.4', () => {
   // ============================================================
 
   it('should reject an unauthorized user from viewing the document', async () => {
-    candidateDocumentRepository.findById.mockResolvedValue(
-      document,
-    );
+    candidateDocumentRepository.findById.mockResolvedValue(document);
 
     await expect(
       getService.execute(
@@ -278,13 +253,9 @@ describe('Candidate Document Workflow - 6.4', () => {
       },
     ];
 
-    candidateRepository.findById.mockResolvedValue(
-      candidate,
-    );
+    candidateRepository.findById.mockResolvedValue(candidate);
 
-    candidateDocumentRepository.findByCandidateId.mockResolvedValue(
-      documents,
-    );
+    candidateDocumentRepository.findByCandidateId.mockResolvedValue(documents);
 
     const result = await listService.execute(
       'candidate-1',
@@ -294,9 +265,9 @@ describe('Candidate Document Workflow - 6.4', () => {
 
     expect(result).toEqual(documents);
 
-    expect(
-      candidateDocumentRepository.findByCandidateId,
-    ).toHaveBeenCalledWith('candidate-1');
+    expect(candidateDocumentRepository.findByCandidateId).toHaveBeenCalledWith(
+      'candidate-1',
+    );
   });
 
   // ============================================================
@@ -304,9 +275,7 @@ describe('Candidate Document Workflow - 6.4', () => {
   // ============================================================
 
   it('should verify a pending document', async () => {
-    candidateDocumentRepository.findById.mockResolvedValue(
-      document,
-    );
+    candidateDocumentRepository.findById.mockResolvedValue(document);
 
     candidateDocumentStatusValidator.validateTransition.mockImplementation(
       () => undefined,
@@ -327,17 +296,13 @@ describe('Candidate Document Workflow - 6.4', () => {
       'reviewer-1',
     );
 
-    expect(result).toEqual(
-      verifiedDocument,
-    );
+    expect(result).toEqual(verifiedDocument);
 
     expect(
       candidateDocumentStatusValidator.validateTransition,
     ).toHaveBeenCalled();
 
-    expect(
-      candidateDocumentRepository.verifyDocument,
-    ).toHaveBeenCalledWith(
+    expect(candidateDocumentRepository.verifyDocument).toHaveBeenCalledWith(
       'document-1',
       'reviewer-1',
     );
@@ -348,67 +313,57 @@ describe('Candidate Document Workflow - 6.4', () => {
   // ============================================================
 
   it('should reject a pending document', async () => {
-  candidateDocumentRepository.findById.mockResolvedValue({
-    ...document,
-    candidateId: 'candidate-1',
-    candidate: {
-      userId: 'user-1',
-      status: CandidateStatus.PENDING,
-    },
-    status: 'PENDING',
-    replacedAt: null,
-    deletedAt: null,
-  });
+    candidateDocumentRepository.findById.mockResolvedValue({
+      ...document,
+      candidateId: 'candidate-1',
+      candidate: {
+        userId: 'user-1',
+        status: CandidateStatus.PENDING,
+      },
+      status: 'PENDING',
+      replacedAt: null,
+      deletedAt: null,
+    });
 
-  candidateDocumentStatusValidator.validateTransition.mockImplementation(
-    () => undefined,
-  );
+    candidateDocumentStatusValidator.validateTransition.mockImplementation(
+      () => undefined,
+    );
 
-  const rejectedDocument = {
-    ...document,
-    status: 'REJECTED',
-  };
+    const rejectedDocument = {
+      ...document,
+      status: 'REJECTED',
+    };
 
-  candidateDocumentRepository.rejectDocument.mockResolvedValue(
-    rejectedDocument,
-  );
+    candidateDocumentRepository.rejectDocument.mockResolvedValue(
+      rejectedDocument,
+    );
 
-  const result =
-    await rejectService.execute(
+    const result = await rejectService.execute(
       'candidate-1',
       'document-1',
       'reviewer-1',
       'Document is unreadable',
     );
 
-  expect(result).toEqual(
-    rejectedDocument,
-  );
+    expect(result).toEqual(rejectedDocument);
 
-  expect(
-    candidateDocumentStatusValidator.validateTransition,
-  ).toHaveBeenCalledWith(
-    'PENDING',
-    'REJECTED',
-  );
+    expect(
+      candidateDocumentStatusValidator.validateTransition,
+    ).toHaveBeenCalledWith('PENDING', 'REJECTED');
 
-  expect(
-    candidateDocumentRepository.rejectDocument,
-  ).toHaveBeenCalledWith(
-    'document-1',
-    'reviewer-1',
-    'Document is unreadable',
-  );
-});
+    expect(candidateDocumentRepository.rejectDocument).toHaveBeenCalledWith(
+      'document-1',
+      'reviewer-1',
+      'Document is unreadable',
+    );
+  });
 
   // ============================================================
   // 9. REPLACE
   // ============================================================
 
   it('should replace an active candidate document', async () => {
-    candidateDocumentRepository.findById.mockResolvedValue(
-      document,
-    );
+    candidateDocumentRepository.findById.mockResolvedValue(document);
 
     const replacementFile = {
       originalname: 'identity-new.pdf',
@@ -421,37 +376,28 @@ describe('Candidate Document Workflow - 6.4', () => {
     const replacedDocument = {
       ...document,
       originalFileName: 'identity-new.pdf',
-      fileUrl:
-        '/uploads/identity-new-123.pdf',
+      fileUrl: '/uploads/identity-new-123.pdf',
     };
 
     candidateDocumentRepository.replaceDocument.mockResolvedValue(
       replacedDocument,
     );
 
-    const result =
-      await replaceService.execute(
-        'candidate-1',
-        'document-1',
-        'user-1',
-        replacementFile,
-      );
-
-    expect(result).toEqual(
-      replacedDocument,
+    const result = await replaceService.execute(
+      'candidate-1',
+      'document-1',
+      'user-1',
+      replacementFile,
     );
 
-    expect(
-      candidateDocumentRepository.replaceDocument,
-    ).toHaveBeenCalledWith(
+    expect(result).toEqual(replacedDocument);
+
+    expect(candidateDocumentRepository.replaceDocument).toHaveBeenCalledWith(
       'document-1',
       expect.objectContaining({
-        documentType:
-          document.documentType,
-        originalFileName:
-          'identity-new.pdf',
-        mimeType:
-          'application/pdf',
+        documentType: document.documentType,
+        originalFileName: 'identity-new.pdf',
+        mimeType: 'application/pdf',
         fileSize: 2000,
       }),
     );
@@ -462,9 +408,7 @@ describe('Candidate Document Workflow - 6.4', () => {
   // ============================================================
 
   it('should reject replacement by another user', async () => {
-    candidateDocumentRepository.findById.mockResolvedValue(
-      document,
-    );
+    candidateDocumentRepository.findById.mockResolvedValue(document);
 
     await expect(
       replaceService.execute(
@@ -473,13 +417,9 @@ describe('Candidate Document Workflow - 6.4', () => {
         'different-user',
         file,
       ),
-    ).rejects.toThrow(
-      'You can only replace your own candidate documents.',
-    );
+    ).rejects.toThrow('You can only replace your own candidate documents.');
 
-    expect(
-      candidateDocumentRepository.replaceDocument,
-    ).not.toHaveBeenCalled();
+    expect(candidateDocumentRepository.replaceDocument).not.toHaveBeenCalled();
   });
 
   // ============================================================
@@ -496,19 +436,12 @@ describe('Candidate Document Workflow - 6.4', () => {
     });
 
     await expect(
-      replaceService.execute(
-        'candidate-1',
-        'document-1',
-        'user-1',
-        file,
-      ),
+      replaceService.execute('candidate-1', 'document-1', 'user-1', file),
     ).rejects.toThrow(
       'Candidate documents cannot be replaced in the current candidate status.',
     );
 
-    expect(
-      candidateDocumentRepository.replaceDocument,
-    ).not.toHaveBeenCalled();
+    expect(candidateDocumentRepository.replaceDocument).not.toHaveBeenCalled();
   });
 
   // ============================================================
@@ -516,52 +449,43 @@ describe('Candidate Document Workflow - 6.4', () => {
   // ============================================================
 
   it('should delete an owned pending candidate document', async () => {
-  const deletedDocument = {
-    ...document,
-    deletedAt: new Date(),
-  };
+    const deletedDocument = {
+      ...document,
+      deletedAt: new Date(),
+    };
 
-  candidateDocumentRepository.findById.mockResolvedValue({
-    ...document,
-    candidateId: 'candidate-1',
-    candidate: {
-      userId: 'user-1',
-      status: CandidateStatus.PENDING,
-    },
-    status: 'PENDING',
-    replacedAt: null,
-    deletedAt: null,
-  });
+    candidateDocumentRepository.findById.mockResolvedValue({
+      ...document,
+      candidateId: 'candidate-1',
+      candidate: {
+        userId: 'user-1',
+        status: CandidateStatus.PENDING,
+      },
+      status: 'PENDING',
+      replacedAt: null,
+      deletedAt: null,
+    });
 
-  candidateDocumentRepository.softDelete.mockResolvedValue(
-    deletedDocument,
-  );
+    candidateDocumentRepository.softDelete.mockResolvedValue(deletedDocument);
 
-  const result =
-    await deleteService.execute(
+    const result = await deleteService.execute(
       'candidate-1',
       'document-1',
       'user-1',
     );
 
-  expect(result).toEqual({
-    id: deletedDocument.id,
-    candidateId:
-      deletedDocument.candidateId,
-    documentType:
-      deletedDocument.documentType,
-    deletedAt:
-      deletedDocument.deletedAt,
-    message:
-      'Candidate document deleted successfully.',
-  });
+    expect(result).toEqual({
+      id: deletedDocument.id,
+      candidateId: deletedDocument.candidateId,
+      documentType: deletedDocument.documentType,
+      deletedAt: deletedDocument.deletedAt,
+      message: 'Candidate document deleted successfully.',
+    });
 
-  expect(
-    candidateDocumentRepository.softDelete,
-  ).toHaveBeenCalledWith(
-    'document-1',
-  );
-});
+    expect(candidateDocumentRepository.softDelete).toHaveBeenCalledWith(
+      'document-1',
+    );
+  });
 
   // ============================================================
   // 13. VERIFY CANNOT VERIFY REPLACED DOCUMENT
@@ -574,18 +498,10 @@ describe('Candidate Document Workflow - 6.4', () => {
     });
 
     await expect(
-      verifyService.execute(
-        'candidate-1',
-        'document-1',
-        'reviewer-1',
-      ),
-    ).rejects.toThrow(
-      'Replaced candidate documents cannot be verified.',
-    );
+      verifyService.execute('candidate-1', 'document-1', 'reviewer-1'),
+    ).rejects.toThrow('Replaced candidate documents cannot be verified.');
 
-    expect(
-      candidateDocumentRepository.verifyDocument,
-    ).not.toHaveBeenCalled();
+    expect(candidateDocumentRepository.verifyDocument).not.toHaveBeenCalled();
   });
 
   // ============================================================
@@ -599,17 +515,9 @@ describe('Candidate Document Workflow - 6.4', () => {
     });
 
     await expect(
-      verifyService.execute(
-        'candidate-1',
-        'document-1',
-        'reviewer-1',
-      ),
-    ).rejects.toThrow(
-      'Deleted candidate documents cannot be verified.',
-    );
+      verifyService.execute('candidate-1', 'document-1', 'reviewer-1'),
+    ).rejects.toThrow('Deleted candidate documents cannot be verified.');
 
-    expect(
-      candidateDocumentRepository.verifyDocument,
-    ).not.toHaveBeenCalled();
+    expect(candidateDocumentRepository.verifyDocument).not.toHaveBeenCalled();
   });
 });

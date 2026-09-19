@@ -38,9 +38,7 @@ export class BulkCheckEligibilityService {
       throw new NotFoundException('Election not found.');
     }
 
-    const activeRuleSet = await this.repository.findActive(
-      electionId,
-    );
+    const activeRuleSet = await this.repository.findActive(electionId);
 
     const rule: RuleNode = activeRuleSet
       ? (activeRuleSet.rule as unknown as RuleNode)

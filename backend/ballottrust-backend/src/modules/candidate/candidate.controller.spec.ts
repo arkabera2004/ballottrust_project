@@ -41,126 +41,122 @@ describe('CandidateController', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const module: TestingModule =
-      await Test.createTestingModule({
-        controllers: [CandidateController],
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [CandidateController],
 
-        providers: [
-          {
-            provide: SubmitNominationService,
-            useValue: mockService,
-          },
-          {
-            provide: VerifyCandidateService,
-            useValue: mockService,
-          },
-          {
-            provide: ApproveCandidateService,
-            useValue: mockService,
-          },
-          {
-            provide: RejectCandidateService,
-            useValue: mockService,
-          },
-          {
-            provide: WithdrawCandidateService,
-            useValue: mockService,
-          },
-          {
-            provide: DisqualifyCandidateService,
-            useValue: mockService,
-          },
-          {
-            provide: GetCandidateService,
-            useValue: mockService,
-          },
-          {
-            provide: ListCandidatesService,
-            useValue: mockService,
-          },
-          {
-            provide: MyCandidatesService,
-            useValue: mockService,
-          },
-          {
-            provide: AssignCandidateNumberService,
-            useValue: mockService,
-          },
-          {
-            provide: AutoAssignCandidateNumberService,
-            useValue: mockService,
-          },
-          {
-            provide: GenerateBallotOrderService,
-            useValue: mockService,
-          },
-          {
-            provide: ManualBallotOrderService,
-            useValue: mockService,
-          },
-          {
-            provide: GetBallotService,
-            useValue: mockService,
-          },
-          {
-            provide: FinalizeBallotService,
-            useValue: mockService,
-          },
-          {
-            provide: UpdateCandidateService,
-            useValue: mockService,
-          },
-          {
-            provide: CancelNominationService,
-            useValue: mockService,
-          },
-          {
-            provide: UpdateCandidateProfileService,
-            useValue: mockService,
-          },
-          {
-            provide: GetPublicCandidateProfileService,
-            useValue: mockService,
-          },
-          {
-            provide: UploadCandidateDocumentService,
-            useValue: mockService,
-          },
-          {
-            provide: ListCandidateDocumentsService,
-            useValue: mockService,
-          },
-          {
-            provide: GetCandidateDocumentService,
-            useValue: mockService,
-          },
-          {
-            provide: ReplaceCandidateDocumentService,
-            useValue: mockService,
-          },
-          {
-            provide: VerifyCandidateDocumentService,
-            useValue: mockService,
-          },
-          {
-            provide: RejectCandidateDocumentService,
-            useValue: mockService,
-          },
-          {
-            provide: DeleteCandidateDocumentService,
-            useValue: mockService,
-          },
-          {
-            provide: UpdateCandidateCampaignService,
-            useValue: mockService,
-          },
-        ],
-      }).compile();
+      providers: [
+        {
+          provide: SubmitNominationService,
+          useValue: mockService,
+        },
+        {
+          provide: VerifyCandidateService,
+          useValue: mockService,
+        },
+        {
+          provide: ApproveCandidateService,
+          useValue: mockService,
+        },
+        {
+          provide: RejectCandidateService,
+          useValue: mockService,
+        },
+        {
+          provide: WithdrawCandidateService,
+          useValue: mockService,
+        },
+        {
+          provide: DisqualifyCandidateService,
+          useValue: mockService,
+        },
+        {
+          provide: GetCandidateService,
+          useValue: mockService,
+        },
+        {
+          provide: ListCandidatesService,
+          useValue: mockService,
+        },
+        {
+          provide: MyCandidatesService,
+          useValue: mockService,
+        },
+        {
+          provide: AssignCandidateNumberService,
+          useValue: mockService,
+        },
+        {
+          provide: AutoAssignCandidateNumberService,
+          useValue: mockService,
+        },
+        {
+          provide: GenerateBallotOrderService,
+          useValue: mockService,
+        },
+        {
+          provide: ManualBallotOrderService,
+          useValue: mockService,
+        },
+        {
+          provide: GetBallotService,
+          useValue: mockService,
+        },
+        {
+          provide: FinalizeBallotService,
+          useValue: mockService,
+        },
+        {
+          provide: UpdateCandidateService,
+          useValue: mockService,
+        },
+        {
+          provide: CancelNominationService,
+          useValue: mockService,
+        },
+        {
+          provide: UpdateCandidateProfileService,
+          useValue: mockService,
+        },
+        {
+          provide: GetPublicCandidateProfileService,
+          useValue: mockService,
+        },
+        {
+          provide: UploadCandidateDocumentService,
+          useValue: mockService,
+        },
+        {
+          provide: ListCandidateDocumentsService,
+          useValue: mockService,
+        },
+        {
+          provide: GetCandidateDocumentService,
+          useValue: mockService,
+        },
+        {
+          provide: ReplaceCandidateDocumentService,
+          useValue: mockService,
+        },
+        {
+          provide: VerifyCandidateDocumentService,
+          useValue: mockService,
+        },
+        {
+          provide: RejectCandidateDocumentService,
+          useValue: mockService,
+        },
+        {
+          provide: DeleteCandidateDocumentService,
+          useValue: mockService,
+        },
+        {
+          provide: UpdateCandidateCampaignService,
+          useValue: mockService,
+        },
+      ],
+    }).compile();
 
-    controller =
-      module.get<CandidateController>(
-        CandidateController,
-      );
+    controller = module.get<CandidateController>(CandidateController);
   });
 
   // ============================================================
@@ -189,17 +185,9 @@ describe('CandidateController', () => {
       id: 'candidate-1',
     });
 
-    const result = await controller.nominate(
-      dto as any,
-      user as any,
-    );
+    const result = await controller.nominate(dto as any, user as any);
 
-    expect(
-      mockService.execute,
-    ).toHaveBeenCalledWith(
-      dto,
-      'user-1',
-    );
+    expect(mockService.execute).toHaveBeenCalledWith(dto, 'user-1');
 
     expect(result).toEqual({
       id: 'candidate-1',
@@ -215,16 +203,9 @@ describe('CandidateController', () => {
       id: 'candidate-1',
     });
 
-    const result =
-      await controller.getPublicCandidateProfile(
-        'candidate-1',
-      );
+    const result = await controller.getPublicCandidateProfile('candidate-1');
 
-    expect(
-      mockService.execute,
-    ).toHaveBeenCalledWith(
-      'candidate-1',
-    );
+    expect(mockService.execute).toHaveBeenCalledWith('candidate-1');
 
     expect(result).toEqual({
       id: 'candidate-1',
@@ -245,15 +226,9 @@ describe('CandidateController', () => {
       role: 'CANDIDATE',
     };
 
-    const result =
-      await controller.findOne(
-        'candidate-1',
-        user as any,
-      );
+    const result = await controller.findOne('candidate-1', user as any);
 
-    expect(
-      mockService.execute,
-    ).toHaveBeenCalledWith(
+    expect(mockService.execute).toHaveBeenCalledWith(
       'candidate-1',
       'user-1',
       'CANDIDATE',
@@ -275,16 +250,9 @@ describe('CandidateController', () => {
 
     mockService.execute.mockResolvedValue([]);
 
-    const result =
-      await controller.findAll(
-        query as any,
-      );
+    const result = await controller.findAll(query as any);
 
-    expect(
-      mockService.execute,
-    ).toHaveBeenCalledWith(
-      query,
-    );
+    expect(mockService.execute).toHaveBeenCalledWith(query);
 
     expect(result).toEqual([]);
   });
@@ -301,16 +269,9 @@ describe('CandidateController', () => {
 
     mockService.execute.mockResolvedValue([]);
 
-    const result =
-      await controller.getMyCandidates(
-        user as any,
-      );
+    const result = await controller.getMyCandidates(user as any);
 
-    expect(
-      mockService.execute,
-    ).toHaveBeenCalledWith(
-      'user-1',
-    );
+    expect(mockService.execute).toHaveBeenCalledWith('user-1');
 
     expect(result).toEqual([]);
   });
@@ -333,16 +294,9 @@ describe('CandidateController', () => {
       status: 'WITHDRAWN',
     });
 
-    const result =
-      await controller.withdraw(
-        'candidate-1',
-        dto as any,
-        user as any,
-      );
+    const result = await controller.withdraw('candidate-1', dto, user as any);
 
-    expect(
-      mockService.execute,
-    ).toHaveBeenCalledWith(
+    expect(mockService.execute).toHaveBeenCalledWith(
       'candidate-1',
       'user-1',
       'Personal reasons',
@@ -371,15 +325,9 @@ describe('CandidateController', () => {
       id: 'candidate-1',
     });
 
-    await controller.updateCandidate(
-      'candidate-1',
-      dto as any,
-      user as any,
-    );
+    await controller.updateCandidate('candidate-1', dto as any, user as any);
 
-    expect(
-      mockService.execute,
-    ).toHaveBeenCalledWith(
+    expect(mockService.execute).toHaveBeenCalledWith(
       'candidate-1',
       'user-1',
       dto,
@@ -404,15 +352,9 @@ describe('CandidateController', () => {
       id: 'candidate-1',
     });
 
-    await controller.updateCandidateProfile(
-      'candidate-1',
-      dto as any,
-      user as any,
-    );
+    await controller.updateCandidateProfile('candidate-1', dto, user as any);
 
-    expect(
-      mockService.execute,
-    ).toHaveBeenCalledWith(
+    expect(mockService.execute).toHaveBeenCalledWith(
       'candidate-1',
       'user-1',
       dto,
@@ -437,15 +379,9 @@ describe('CandidateController', () => {
       id: 'candidate-1',
     });
 
-    await controller.updateCampaign(
-      'candidate-1',
-      dto as any,
-      user as any,
-    );
+    await controller.updateCampaign('candidate-1', dto, user as any);
 
-    expect(
-      mockService.execute,
-    ).toHaveBeenCalledWith(
+    expect(mockService.execute).toHaveBeenCalledWith(
       'candidate-1',
       'user-1',
       dto,
@@ -463,21 +399,12 @@ describe('CandidateController', () => {
     };
 
     mockService.execute.mockResolvedValue({
-      message:
-        'Nomination cancelled successfully.',
+      message: 'Nomination cancelled successfully.',
     });
 
-    await controller.cancelNomination(
-      'candidate-1',
-      user as any,
-    );
+    await controller.cancelNomination('candidate-1', user as any);
 
-    expect(
-      mockService.execute,
-    ).toHaveBeenCalledWith(
-      'candidate-1',
-      'user-1',
-    );
+    expect(mockService.execute).toHaveBeenCalledWith('candidate-1', 'user-1');
   });
 
   // ============================================================
@@ -492,14 +419,9 @@ describe('CandidateController', () => {
 
     mockService.execute.mockResolvedValue([]);
 
-    await controller.listCandidateDocuments(
-      'candidate-1',
-      user as any,
-    );
+    await controller.listCandidateDocuments('candidate-1', user as any);
 
-    expect(
-      mockService.execute,
-    ).toHaveBeenCalledWith(
+    expect(mockService.execute).toHaveBeenCalledWith(
       'candidate-1',
       'user-1',
       'CANDIDATE',
@@ -521,20 +443,15 @@ describe('CandidateController', () => {
       candidateId: 'candidate-1',
     };
 
-    mockService.execute.mockResolvedValue(
-      document,
+    mockService.execute.mockResolvedValue(document);
+
+    const result = await controller.getCandidateDocument(
+      'candidate-1',
+      'document-1',
+      user as any,
     );
 
-    const result =
-      await controller.getCandidateDocument(
-        'candidate-1',
-        'document-1',
-        user as any,
-      );
-
-    expect(
-      mockService.execute,
-    ).toHaveBeenCalledWith(
+    expect(mockService.execute).toHaveBeenCalledWith(
       'candidate-1',
       'document-1',
       'user-1',
@@ -555,8 +472,7 @@ describe('CandidateController', () => {
     };
 
     mockService.execute.mockResolvedValue({
-      message:
-        'Candidate document deleted successfully.',
+      message: 'Candidate document deleted successfully.',
     });
 
     await controller.deleteCandidateDocument(
@@ -565,9 +481,7 @@ describe('CandidateController', () => {
       user as any,
     );
 
-    expect(
-      mockService.execute,
-    ).toHaveBeenCalledWith(
+    expect(mockService.execute).toHaveBeenCalledWith(
       'candidate-1',
       'document-1',
       'user-1',
@@ -588,14 +502,9 @@ describe('CandidateController', () => {
       status: 'VERIFIED',
     });
 
-    await controller.verify(
-      'candidate-1',
-      user as any,
-    );
+    await controller.verify('candidate-1', user as any);
 
-    expect(
-      mockService.execute,
-    ).toHaveBeenCalledWith(
+    expect(mockService.execute).toHaveBeenCalledWith(
       'candidate-1',
       'commissioner-1',
     );
@@ -615,14 +524,9 @@ describe('CandidateController', () => {
       status: 'APPROVED',
     });
 
-    await controller.approve(
-      'candidate-1',
-      user as any,
-    );
+    await controller.approve('candidate-1', user as any);
 
-    expect(
-      mockService.execute,
-    ).toHaveBeenCalledWith(
+    expect(mockService.execute).toHaveBeenCalledWith(
       'candidate-1',
       'commissioner-1',
     );
@@ -646,15 +550,9 @@ describe('CandidateController', () => {
       status: 'REJECTED',
     });
 
-    await controller.reject(
-      'candidate-1',
-      dto as any,
-      user as any,
-    );
+    await controller.reject('candidate-1', dto, user as any);
 
-    expect(
-      mockService.execute,
-    ).toHaveBeenCalledWith(
+    expect(mockService.execute).toHaveBeenCalledWith(
       'candidate-1',
       'commissioner-1',
       'Invalid documentation',
@@ -679,15 +577,9 @@ describe('CandidateController', () => {
       status: 'DISQUALIFIED',
     });
 
-    await controller.disqualify(
-      'candidate-1',
-      dto as any,
-      user as any,
-    );
+    await controller.disqualify('candidate-1', dto, user as any);
 
-    expect(
-      mockService.execute,
-    ).toHaveBeenCalledWith(
+    expect(mockService.execute).toHaveBeenCalledWith(
       'candidate-1',
       'commissioner-1',
       'Rule violation',
@@ -710,9 +602,7 @@ describe('CandidateController', () => {
       user as any,
     );
 
-    expect(
-      mockService.execute,
-    ).toHaveBeenCalledWith(
+    expect(mockService.execute).toHaveBeenCalledWith(
       'candidate-1',
       'document-1',
       'commissioner-1',
@@ -732,13 +622,11 @@ describe('CandidateController', () => {
     await controller.rejectCandidateDocument(
       'candidate-1',
       'document-1',
-      dto as any,
+      dto,
       user as any,
     );
 
-    expect(
-      mockService.execute,
-    ).toHaveBeenCalledWith(
+    expect(mockService.execute).toHaveBeenCalledWith(
       'candidate-1',
       'document-1',
       'commissioner-1',

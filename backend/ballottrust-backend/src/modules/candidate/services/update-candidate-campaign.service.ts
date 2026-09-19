@@ -4,33 +4,22 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import {
-  CandidateRepository,
-} from '../repository/candidate.repository';
+import { CandidateRepository } from '../repository/candidate.repository';
 
-import {
-  UpdateCandidateCampaignDto,
-} from '../dto/update-candidate-campaign.dto';
+import { UpdateCandidateCampaignDto } from '../dto/update-candidate-campaign.dto';
 
-import {
-  CandidateStatusValidator,
-} from '../validators/candidate-status.validator';
+import { CandidateStatusValidator } from '../validators/candidate-status.validator';
 
-import {
-  CampaignWindowValidator,
-} from '../validators/campaign-window.validator';
+import { CampaignWindowValidator } from '../validators/campaign-window.validator';
 
 @Injectable()
 export class UpdateCandidateCampaignService {
   constructor(
-    private readonly candidateRepository:
-      CandidateRepository,
+    private readonly candidateRepository: CandidateRepository,
 
-    private readonly candidateStatusValidator:
-      CandidateStatusValidator,
+    private readonly candidateStatusValidator: CandidateStatusValidator,
 
-    private readonly campaignWindowValidator:
-      CampaignWindowValidator,
+    private readonly campaignWindowValidator: CampaignWindowValidator,
   ) {}
 
   async execute(
@@ -42,24 +31,17 @@ export class UpdateCandidateCampaignService {
     // 1. Find Candidate
     // ======================================================
 
-    const candidate =
-      await this.candidateRepository.findById(
-        candidateId,
-      );
+    const candidate = await this.candidateRepository.findById(candidateId);
 
     if (!candidate) {
-      throw new NotFoundException(
-        'Candidate not found.',
-      );
+      throw new NotFoundException('Candidate not found.');
     }
 
     // ======================================================
     // 2. Validate Ownership
     // ======================================================
 
-    if (
-      candidate.userId !== userId
-    ) {
+    if (candidate.userId !== userId) {
       throw new ForbiddenException(
         'You can only update your own campaign information.',
       );
@@ -69,25 +51,18 @@ export class UpdateCandidateCampaignService {
     // 3. Validate Candidate Lifecycle
     // ======================================================
 
-    this.candidateStatusValidator
-      .validateCampaignEditable(
-        candidate.status,
-      );
+    this.candidateStatusValidator.validateCampaignEditable(candidate.status);
 
     // ======================================================
     // 4. Find Election Campaign State
     // ======================================================
 
-    const election =
-      await this.candidateRepository
-        .findElectionCampaignState(
-          candidate.electionId,
-        );
+    const election = await this.candidateRepository.findElectionCampaignState(
+      candidate.electionId,
+    );
 
     if (!election) {
-      throw new NotFoundException(
-        'Election not found.',
-      );
+      throw new NotFoundException('Election not found.');
     }
 
     // ======================================================
@@ -113,21 +88,14 @@ export class UpdateCandidateCampaignService {
     // 7. Update Campaign Information
     // ======================================================
 
-    return this.candidateRepository.update(
-      candidateId,
-      {
-        ...(dto.campaignSlogan !==
-          undefined && {
-          campaignSlogan:
-            dto.campaignSlogan.trim(),
-        }),
+    return this.candidateRepository.update(candidateId, {
+      ...(dto.campaignSlogan !== undefined && {
+        campaignSlogan: dto.campaignSlogan.trim(),
+      }),
 
-        ...(dto.campaignWebsite !==
-          undefined && {
-          campaignWebsite:
-            dto.campaignWebsite.trim(),
-        }),
-      },
-    );
+      ...(dto.campaignWebsite !== undefined && {
+        campaignWebsite: dto.campaignWebsite.trim(),
+      }),
+    });
   }
 }

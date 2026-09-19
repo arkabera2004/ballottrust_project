@@ -26,18 +26,13 @@ describe('FinalizeBallotService', () => {
       repository as unknown as CandidateRepository,
     );
 
-    const result = await service.execute(
+    const result = await service.execute('election-1', 'admin-1');
+
+    expect(result.message).toBe('Ballot finalized successfully.');
+
+    expect(repository.finalizeBallot).toHaveBeenCalledWith(
       'election-1',
       'admin-1',
     );
-
-    expect(result.message)
-      .toBe('Ballot finalized successfully.');
-
-    expect(repository.finalizeBallot)
-      .toHaveBeenCalledWith(
-        'election-1',
-        'admin-1',
-      );
   });
 });

@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 
 import { Role } from '@prisma/client';
 
@@ -57,17 +50,9 @@ export class EligibilityController {
 
   @Get('rules')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(
-    Role.SUPER_ADMIN,
-    Role.ELECTION_COMMISSIONER,
-    Role.AUDITOR,
-  )
-  async getActiveRules(
-    @Param('electionId') electionId: string,
-  ) {
-    return this.getActiveEligibilityRulesService.execute(
-      electionId,
-    );
+  @Roles(Role.SUPER_ADMIN, Role.ELECTION_COMMISSIONER, Role.AUDITOR)
+  async getActiveRules(@Param('electionId') electionId: string) {
+    return this.getActiveEligibilityRulesService.execute(electionId);
   }
 
   // ======================================================
@@ -76,17 +61,9 @@ export class EligibilityController {
 
   @Get('rules/versions')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(
-    Role.SUPER_ADMIN,
-    Role.ELECTION_COMMISSIONER,
-    Role.AUDITOR,
-  )
-  async listVersions(
-    @Param('electionId') electionId: string,
-  ) {
-    return this.listEligibilityRuleVersionsService.execute(
-      electionId,
-    );
+  @Roles(Role.SUPER_ADMIN, Role.ELECTION_COMMISSIONER, Role.AUDITOR)
+  async listVersions(@Param('electionId') electionId: string) {
+    return this.listEligibilityRuleVersionsService.execute(electionId);
   }
 
   // ======================================================
@@ -99,10 +76,7 @@ export class EligibilityController {
     @Param('electionId') electionId: string,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.checkVoterEligibilityService.execute(
-      user.userId,
-      electionId,
-    );
+    return this.checkVoterEligibilityService.execute(user.userId, electionId);
   }
 
   // ======================================================
@@ -111,19 +85,12 @@ export class EligibilityController {
 
   @Get('check/:userId')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(
-    Role.SUPER_ADMIN,
-    Role.ELECTION_COMMISSIONER,
-    Role.AUDITOR,
-  )
+  @Roles(Role.SUPER_ADMIN, Role.ELECTION_COMMISSIONER, Role.AUDITOR)
   async checkOne(
     @Param('electionId') electionId: string,
     @Param('userId') userId: string,
   ) {
-    return this.checkVoterEligibilityService.execute(
-      userId,
-      electionId,
-    );
+    return this.checkVoterEligibilityService.execute(userId, electionId);
   }
 
   // ======================================================
@@ -133,11 +100,7 @@ export class EligibilityController {
   @Get('bulk')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ELECTION_COMMISSIONER)
-  async checkBulk(
-    @Param('electionId') electionId: string,
-  ) {
-    return this.bulkCheckEligibilityService.execute(
-      electionId,
-    );
+  async checkBulk(@Param('electionId') electionId: string) {
+    return this.bulkCheckEligibilityService.execute(electionId);
   }
 }

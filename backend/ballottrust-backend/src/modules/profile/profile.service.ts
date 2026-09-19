@@ -7,65 +7,51 @@ import { userProfileSelect } from './constants/profile-select';
 
 @Injectable()
 export class ProfileService {
-  constructor(
-    private prisma: PrismaService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   async getMyProfile(userId: string) {
-    const user =
-      await this.prisma.user.findUnique({
-        where: {
-          id: userId,
-        },
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
 
-        select: userProfileSelect,
-      });
+      select: userProfileSelect,
+    });
 
     if (!user) {
-      throw new NotFoundException(
-        'Profile not found',
-      );
+      throw new NotFoundException('Profile not found');
     }
 
     return user;
   }
 
-  async updateMyProfile(
-    userId: string,
-    dto: UpdateProfileDto,
-  ) {
-
-    const existingUser =
-      await this.prisma.user.findUnique({
-        where: {
-          id: userId,
-        },
-      });
+  async updateMyProfile(userId: string, dto: UpdateProfileDto) {
+    const existingUser = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
 
     if (!existingUser) {
-      throw new NotFoundException(
-        'Profile not found',
-      );
+      throw new NotFoundException('Profile not found');
     }
 
-    const updatedUser =
-      await this.prisma.user.update({
-        where: {
-          id: userId,
-        },
+    const updatedUser = await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
 
-        data: {
-          ...dto,
+      data: {
+        ...dto,
 
-          profileCompleted: true,
-        },
+        profileCompleted: true,
+      },
 
-        select: userProfileSelect,
-      });
+      select: userProfileSelect,
+    });
 
     return {
-      message:
-        'Profile updated successfully',
+      message: 'Profile updated successfully',
 
       profile: updatedUser,
     };

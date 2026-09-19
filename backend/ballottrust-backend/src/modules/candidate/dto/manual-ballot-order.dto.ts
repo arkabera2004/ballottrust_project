@@ -1,9 +1,4 @@
-import {
-  ArrayMinSize,
-  ArrayUnique,
-  IsArray,
-  IsUUID,
-} from 'class-validator';
+import { ArrayMinSize, ArrayUnique, IsArray, IsUUID } from 'class-validator';
 
 export class ManualBallotOrderDto {
   @IsArray()

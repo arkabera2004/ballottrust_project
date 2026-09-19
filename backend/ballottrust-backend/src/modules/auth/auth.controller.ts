@@ -28,9 +28,7 @@ import type { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   // ==========================
   // Register
@@ -145,52 +143,33 @@ export class AuthController {
     @Body()
     dto: ChangePasswordDto,
   ) {
-    return this.authService.changePassword(
-      req.user.userId,
-      dto,
-    );
+    return this.authService.changePassword(req.user.userId, dto);
   }
   @Post('forgot-password')
-forgotPassword(
-  @Body()
-  dto: ForgotPasswordDto,
-) {
+  forgotPassword(
+    @Body()
+    dto: ForgotPasswordDto,
+  ) {
+    return this.authService.forgotPassword(dto);
+  }
 
-  return this.authService.forgotPassword(
-    dto,
-  );
+  @Post('reset-password')
+  resetPassword(
+    @Body()
+    dto: ResetPasswordDto,
+  ) {
+    return this.authService.resetPassword(dto);
+  }
 
-}
+  @Get('google')
+  @UseGuards(GoogleAuthGuard)
+  googleLogin() {
+    // Redirects user to Google
+  }
 
-@Post('reset-password')
-resetPassword(
-  @Body()
-  dto: ResetPasswordDto,
-) {
-
-  return this.authService.resetPassword(
-    dto,
-  );
-
-}
-
-@Get('google')
-@UseGuards(GoogleAuthGuard)
-googleLogin() {
-  // Redirects user to Google
-}
-
-@Get('google/callback')
-@UseGuards(GoogleAuthGuard)
-async googleCallback(
-  @Req() req: any,
-  @Res() res: Response,
-) {
-
-  return this.authService.googleLogin(
-    req.user,
-    res,
-  );
-
-}
+  @Get('google/callback')
+  @UseGuards(GoogleAuthGuard)
+  async googleCallback(@Req() req: any, @Res() res: Response) {
+    return this.authService.googleLogin(req.user, res);
+  }
 }

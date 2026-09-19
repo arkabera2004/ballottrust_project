@@ -61,39 +61,38 @@ export class CreateCandidateDto {
   // ======================================================
 
   @IsOptional()
-@IsUrl({
-  protocols: ['http', 'https'],
-  require_protocol: true,
-})
-photoUrl?: string;
+  @IsUrl({
+    protocols: ['http', 'https'],
+    require_protocol: true,
+  })
+  photoUrl?: string;
 
-@IsOptional()
-@IsUrl({
-  protocols: ['http', 'https'],
-  require_protocol: true,
-})
-documentUrl?: string;
+  @IsOptional()
+  @IsUrl({
+    protocols: ['http', 'https'],
+    require_protocol: true,
+  })
+  documentUrl?: string;
 
+  // ======================================================
+  // Candidate Profile
+  // ======================================================
 
-// ======================================================
-// Candidate Profile
-// ======================================================
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  biography?: string;
 
-@IsOptional()
-@IsString()
-@MaxLength(2000)
-biography?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  campaignSlogan?: string;
 
-@IsOptional()
-@IsString()
-@MaxLength(200)
-campaignSlogan?: string;
-
-@IsOptional()
-@IsUrl({
-  protocols: ['http', 'https'],
-  require_protocol: true,
-})
-@MaxLength(500)
-campaignWebsite?: string;
+  @IsOptional()
+  @IsUrl({
+    protocols: ['http', 'https'],
+    require_protocol: true,
+  })
+  @MaxLength(500)
+  campaignWebsite?: string;
 }

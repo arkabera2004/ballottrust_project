@@ -30,8 +30,6 @@ import { BulkCheckEligibilityService } from './services/bulk-check-eligibility.s
     BulkCheckEligibilityService,
   ],
 
-  exports: [
-    CheckVoterEligibilityService,
-  ],
+  exports: [CheckVoterEligibilityService],
 })
 export class EligibilityModule {}

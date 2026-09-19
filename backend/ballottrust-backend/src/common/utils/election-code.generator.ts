@@ -12,9 +12,7 @@ export class ElectionCodeGenerator {
 
     const type = this.getElectionPrefix(electionType);
 
-    const serial = sequence
-      .toString()
-      .padStart(6, '0');
+    const serial = sequence.toString().padStart(6, '0');
 
     return `BT-${year}-${type}-${serial}`;
   }

@@ -13,11 +13,9 @@ import { CandidateStatusValidator } from '../validators/candidate-status.validat
 @Injectable()
 export class UpdateCandidateProfileService {
   constructor(
-    private readonly candidateRepository:
-      CandidateRepository,
+    private readonly candidateRepository: CandidateRepository,
 
-    private readonly candidateStatusValidator:
-      CandidateStatusValidator,
+    private readonly candidateStatusValidator: CandidateStatusValidator,
   ) {}
 
   async execute(
@@ -29,24 +27,17 @@ export class UpdateCandidateProfileService {
     // 1. Find Candidate
     // ======================================================
 
-    const candidate =
-      await this.candidateRepository.findById(
-        candidateId,
-      );
+    const candidate = await this.candidateRepository.findById(candidateId);
 
     if (!candidate) {
-      throw new NotFoundException(
-        'Candidate not found.',
-      );
+      throw new NotFoundException('Candidate not found.');
     }
 
     // ======================================================
     // 2. Validate Ownership
     // ======================================================
 
-    if (
-      candidate.userId !== userId
-    ) {
+    if (candidate.userId !== userId) {
       throw new ForbiddenException(
         'You can only update your own candidate profile.',
       );
@@ -56,23 +47,16 @@ export class UpdateCandidateProfileService {
     // 3. Validate Candidate Edit Lifecycle
     // ======================================================
 
-    this.candidateStatusValidator
-      .validateEditable(
-        candidate.status,
-      );
+    this.candidateStatusValidator.validateEditable(candidate.status);
 
     // ======================================================
     // 4. Update Candidate Profile
     // ======================================================
 
-    return this.candidateRepository.update(
-      candidateId,
-      {
-        ...(dto.biography !== undefined && {
-          biography:
-            dto.biography.trim(),
-        }),
-      },
-    );
+    return this.candidateRepository.update(candidateId, {
+      ...(dto.biography !== undefined && {
+        biography: dto.biography.trim(),
+      }),
+    });
   }
 }

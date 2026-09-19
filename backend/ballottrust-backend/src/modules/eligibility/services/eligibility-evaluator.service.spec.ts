@@ -27,9 +27,9 @@ describe('EligibilityEvaluatorService', () => {
     };
 
     expect(service.evaluate(rule, voter()).eligible).toBe(true);
-    expect(
-      service.evaluate(rule, voter({ department: 'ECE' })).eligible,
-    ).toBe(false);
+    expect(service.evaluate(rule, voter({ department: 'ECE' })).eligible).toBe(
+      false,
+    );
   });
 
   it('evaluates the worked example from the spec: (dept = CSE OR ECE) AND year >= 2 AND status = APPROVED', () => {
@@ -61,19 +61,17 @@ describe('EligibilityEvaluatorService', () => {
     };
 
     expect(service.evaluate(rule, voter()).eligible).toBe(true);
-    expect(
-      service.evaluate(rule, voter({ department: 'MECH' })).eligible,
-    ).toBe(false);
-    expect(
-      service.evaluate(rule, voter({ year: 1 })).eligible,
-    ).toBe(false);
-    expect(
-      service.evaluate(rule, voter({ status: 'PENDING' })).eligible,
-    ).toBe(false);
+    expect(service.evaluate(rule, voter({ department: 'MECH' })).eligible).toBe(
+      false,
+    );
+    expect(service.evaluate(rule, voter({ year: 1 })).eligible).toBe(false);
+    expect(service.evaluate(rule, voter({ status: 'PENDING' })).eligible).toBe(
+      false,
+    );
     // ECE branch of the OR should also satisfy the rule.
-    expect(
-      service.evaluate(rule, voter({ department: 'ECE' })).eligible,
-    ).toBe(true);
+    expect(service.evaluate(rule, voter({ department: 'ECE' })).eligible).toBe(
+      true,
+    );
   });
 
   it('evaluates NOT', () => {
@@ -86,9 +84,9 @@ describe('EligibilityEvaluatorService', () => {
     };
 
     expect(service.evaluate(rule, voter()).eligible).toBe(false);
-    expect(
-      service.evaluate(rule, voter({ department: 'ECE' })).eligible,
-    ).toBe(true);
+    expect(service.evaluate(rule, voter({ department: 'ECE' })).eligible).toBe(
+      true,
+    );
   });
 
   it('produces an explanation tree mirroring the rule structure', () => {
@@ -134,9 +132,7 @@ describe('EligibilityEvaluatorService', () => {
       condition: { field: 'year', operator: 'gte', value: 2 },
     };
 
-    expect(
-      service.evaluate(rule, voter({ year: null })).eligible,
-    ).toBe(false);
+    expect(service.evaluate(rule, voter({ year: null })).eligible).toBe(false);
   });
 
   it('evaluates in/nin against an array of values', () => {
@@ -150,9 +146,9 @@ describe('EligibilityEvaluatorService', () => {
     };
 
     expect(service.evaluate(rule, voter()).eligible).toBe(true);
-    expect(
-      service.evaluate(rule, voter({ department: 'MECH' })).eligible,
-    ).toBe(false);
+    expect(service.evaluate(rule, voter({ department: 'MECH' })).eligible).toBe(
+      false,
+    );
   });
 
   it('evaluates exists', () => {
@@ -162,8 +158,8 @@ describe('EligibilityEvaluatorService', () => {
     };
 
     expect(service.evaluate(rule, voter()).eligible).toBe(true);
-    expect(
-      service.evaluate(rule, voter({ course: null })).eligible,
-    ).toBe(false);
+    expect(service.evaluate(rule, voter({ course: null })).eligible).toBe(
+      false,
+    );
   });
 });

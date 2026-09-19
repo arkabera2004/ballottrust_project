@@ -1,10 +1,6 @@
-import {
-  IsEnum,
-} from 'class-validator';
+import { IsEnum } from 'class-validator';
 
-import {
-  BallotOrderMethod,
-} from '@prisma/client';
+import { BallotOrderMethod } from '@prisma/client';
 
 export class GenerateBallotOrderDto {
   @IsEnum(BallotOrderMethod)

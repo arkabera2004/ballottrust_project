@@ -13,16 +13,11 @@ export class CloseElectionService {
   ) {}
 
   async execute(id: string, actorId?: string) {
-    const election =
-      await this.repository.findByIdOrThrow(id);
+    const election = await this.repository.findByIdOrThrow(id);
 
-    this.workflowValidator.ensureCanClose(
-      election.status,
-    );
+    this.workflowValidator.ensureCanClose(election.status);
 
-    const data = await this.repository.closeElection(
-      id,
-    );
+    const data = await this.repository.closeElection(id);
 
     // actorId is undefined for cron-triggered auto-close
     // (election-lifecycle.job.ts) — logged as a system action.

@@ -4,9 +4,7 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class BlockchainService {
-  constructor(
-    private prisma: PrismaService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   /**
    * Recomputes and verifies the per-election vote hash chain. Scoped per
@@ -33,15 +31,14 @@ export class BlockchainService {
     }[] = [];
 
     for (const { id } of elections) {
-      const votes =
-        await this.prisma.vote.findMany({
-          where: {
-            electionId: id,
-          },
-          orderBy: {
-            createdAt: 'asc',
-          },
-        });
+      const votes = await this.prisma.vote.findMany({
+        where: {
+          electionId: id,
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+      });
 
       if (votes.length === 0) {
         results.push({
@@ -62,9 +59,9 @@ export class BlockchainService {
           .createHash('sha256')
           .update(
             vote.anonymousToken +
-            vote.candidateId +
-            vote.electionId +
-            vote.previousHash,
+              vote.candidateId +
+              vote.electionId +
+              vote.previousHash,
           )
           .digest('hex');
 

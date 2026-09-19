@@ -4,28 +4,20 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import {
-  CandidateDocumentStatus,
-} from '@prisma/client';
+import { CandidateDocumentStatus } from '@prisma/client';
 
-import {
-  CandidateDocumentRepository,
-} from '../candidate-document.repository';
+import { CandidateDocumentRepository } from '../candidate-document.repository';
 
-import {
-  CandidateDocumentStatusValidator,
-} from '../validators/candidate-document-status.validator';
+import { CandidateDocumentStatusValidator } from '../validators/candidate-document-status.validator';
 
 import { AuditService } from '../../../audit/audit.service';
 
 @Injectable()
 export class RejectCandidateDocumentService {
   constructor(
-    private readonly candidateDocumentRepository:
-      CandidateDocumentRepository,
+    private readonly candidateDocumentRepository: CandidateDocumentRepository,
 
-    private readonly candidateDocumentStatusValidator:
-      CandidateDocumentStatusValidator,
+    private readonly candidateDocumentStatusValidator: CandidateDocumentStatusValidator,
 
     private readonly auditService: AuditService,
   ) {}
@@ -41,27 +33,18 @@ export class RejectCandidateDocumentService {
     // ==========================================
 
     const document =
-      await this.candidateDocumentRepository.findById(
-        documentId,
-      );
+      await this.candidateDocumentRepository.findById(documentId);
 
     if (!document) {
-      throw new NotFoundException(
-        'Candidate document not found.',
-      );
+      throw new NotFoundException('Candidate document not found.');
     }
 
     // ==========================================
     // 2. Validate Candidate Relationship
     // ==========================================
 
-    if (
-      document.candidateId !==
-      candidateId
-    ) {
-      throw new NotFoundException(
-        'Candidate document not found.',
-      );
+    if (document.candidateId !== candidateId) {
+      throw new NotFoundException('Candidate document not found.');
     }
 
     // ==========================================
@@ -88,35 +71,30 @@ export class RejectCandidateDocumentService {
     // 5. Validate Rejection Reason
     // ==========================================
 
-    const rejectionReason =
-      reason.trim();
+    const rejectionReason = reason.trim();
 
     if (!rejectionReason) {
-      throw new BadRequestException(
-        'Rejection reason is required.',
-      );
+      throw new BadRequestException('Rejection reason is required.');
     }
 
     // ==========================================
     // 6. Validate Status Transition
     // ==========================================
 
-    this.candidateDocumentStatusValidator
-      .validateTransition(
-        document.status,
-        CandidateDocumentStatus.REJECTED,
-      );
+    this.candidateDocumentStatusValidator.validateTransition(
+      document.status,
+      CandidateDocumentStatus.REJECTED,
+    );
 
     // ==========================================
     // 7. Reject Document
     // ==========================================
 
-    const rejected = await this.candidateDocumentRepository
-      .rejectDocument(
-        document.id,
-        reviewerId,
-        rejectionReason,
-      );
+    const rejected = await this.candidateDocumentRepository.rejectDocument(
+      document.id,
+      reviewerId,
+      rejectionReason,
+    );
 
     await this.auditService.log({
       userId: reviewerId,

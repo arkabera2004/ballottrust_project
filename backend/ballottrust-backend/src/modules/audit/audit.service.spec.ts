@@ -50,16 +50,15 @@ describe('AuditService', () => {
     jest.clearAllMocks();
     mockPrismaService.$transaction.mockImplementation((cb) => cb(mockTx));
 
-    const module: TestingModule =
-      await Test.createTestingModule({
-        providers: [
-          AuditService,
-          {
-            provide: PrismaService,
-            useValue: mockPrismaService,
-          },
-        ],
-      }).compile();
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        AuditService,
+        {
+          provide: PrismaService,
+          useValue: mockPrismaService,
+        },
+      ],
+    }).compile();
 
     service = module.get<AuditService>(AuditService);
   });

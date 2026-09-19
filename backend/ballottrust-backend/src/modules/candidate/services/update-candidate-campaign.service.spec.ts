@@ -38,64 +38,48 @@ describe('UpdateCandidateCampaignService', () => {
     );
 
     await expect(
-      service.execute(
-        'candidate-1',
-        'user-1',
-        {} as any,
-      ),
+      service.execute('candidate-1', 'user-1', {} as any),
     ).rejects.toThrow(
       'Campaign information cannot be modified after the ballot has been finalized.',
     );
   });
 
   it('should reject another user from updating the candidate campaign', async () => {
-  const repository = {
-    findById: jest.fn().mockResolvedValue({
-      id: 'candidate-1',
-      userId: 'owner-user',
-      electionId: 'election-1',
-      status: CandidateStatus.APPROVED,
-    }),
-    findElectionCampaignState: jest.fn(),
-    update: jest.fn(),
-  };
+    const repository = {
+      findById: jest.fn().mockResolvedValue({
+        id: 'candidate-1',
+        userId: 'owner-user',
+        electionId: 'election-1',
+        status: CandidateStatus.APPROVED,
+      }),
+      findElectionCampaignState: jest.fn(),
+      update: jest.fn(),
+    };
 
-  const statusValidator = {
-    validateCampaignEditable: jest.fn(),
-  };
+    const statusValidator = {
+      validateCampaignEditable: jest.fn(),
+    };
 
-  const campaignWindowValidator = {
-    validate: jest.fn(),
-  };
+    const campaignWindowValidator = {
+      validate: jest.fn(),
+    };
 
-  const service = new UpdateCandidateCampaignService(
-    repository as unknown as CandidateRepository,
-    statusValidator as unknown as CandidateStatusValidator,
-    campaignWindowValidator as unknown as CampaignWindowValidator,
-  );
+    const service = new UpdateCandidateCampaignService(
+      repository as unknown as CandidateRepository,
+      statusValidator as unknown as CandidateStatusValidator,
+      campaignWindowValidator as unknown as CampaignWindowValidator,
+    );
 
-  await expect(
-    service.execute(
-      'candidate-1',
-      'different-user',
-      {
+    await expect(
+      service.execute('candidate-1', 'different-user', {
         campaignSlogan: 'Unauthorized campaign',
-      } as any,
-    ),
-  ).rejects.toThrow(
-    'You can only update your own campaign information.',
-  );
+      } as any),
+    ).rejects.toThrow('You can only update your own campaign information.');
 
-  expect(
-    statusValidator.validateCampaignEditable,
-  ).not.toHaveBeenCalled();
+    expect(statusValidator.validateCampaignEditable).not.toHaveBeenCalled();
 
-  expect(
-    repository.findElectionCampaignState,
-  ).not.toHaveBeenCalled();
+    expect(repository.findElectionCampaignState).not.toHaveBeenCalled();
 
-  expect(
-    repository.update,
-  ).not.toHaveBeenCalled();
-});
+    expect(repository.update).not.toHaveBeenCalled();
+  });
 });

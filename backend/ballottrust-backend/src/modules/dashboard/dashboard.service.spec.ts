@@ -30,21 +30,17 @@ describe('DashboardService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const module: TestingModule =
-      await Test.createTestingModule({
-        providers: [
-          DashboardService,
-          {
-            provide: PrismaService,
-            useValue: mockPrismaService,
-          },
-        ],
-      }).compile();
-
-    service =
-      module.get<DashboardService>(
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
         DashboardService,
-      );
+        {
+          provide: PrismaService,
+          useValue: mockPrismaService,
+        },
+      ],
+    }).compile();
+
+    service = module.get<DashboardService>(DashboardService);
   });
 
   // ============================================================
@@ -66,26 +62,22 @@ describe('DashboardService', () => {
       .mockResolvedValueOnce(2) // closed elections
       .mockResolvedValueOnce(4); // draft elections
 
-    mockPrismaService.candidate.count
-      .mockResolvedValue(25);
+    mockPrismaService.candidate.count.mockResolvedValue(25);
 
-    mockPrismaService.vote.count
-      .mockResolvedValue(40);
+    mockPrismaService.vote.count.mockResolvedValue(40);
 
-    mockPrismaService.election.findMany
-      .mockResolvedValue([
-        {
-          id: 'election-1',
-          title: 'Latest Election',
-        },
-      ]);
+    mockPrismaService.election.findMany.mockResolvedValue([
+      {
+        id: 'election-1',
+        title: 'Latest Election',
+      },
+    ]);
 
     mockPrismaService.user.count
       .mockResolvedValueOnce(100) // registered voters
       .mockResolvedValueOnce(20); // pending voters
 
-    const result =
-      await service.getStats();
+    const result = await service.getStats();
 
     expect(result).toEqual({
       elections: 10,
@@ -109,40 +101,26 @@ describe('DashboardService', () => {
       ],
     });
 
-    expect(
-      mockPrismaService.election.count,
-    ).toHaveBeenNthCalledWith(
-      1,
-      {
-        where: {
-          deletedAt: null,
-        },
-      },
-    );
-
-    expect(
-      mockPrismaService.candidate.count,
-    ).toHaveBeenCalledWith({
+    expect(mockPrismaService.election.count).toHaveBeenNthCalledWith(1, {
       where: {
         deletedAt: null,
       },
     });
 
-    expect(
-      mockPrismaService.vote.count,
-    ).toHaveBeenCalledWith();
-
-    expect(
-      mockPrismaService.user.count,
-    ).toHaveBeenNthCalledWith(
-      1,
-      {
-        where: {
-          role: 'VOTER',
-          deletedAt: null,
-        },
+    expect(mockPrismaService.candidate.count).toHaveBeenCalledWith({
+      where: {
+        deletedAt: null,
       },
-    );
+    });
+
+    expect(mockPrismaService.vote.count).toHaveBeenCalledWith();
+
+    expect(mockPrismaService.user.count).toHaveBeenNthCalledWith(1, {
+      where: {
+        role: 'VOTER',
+        deletedAt: null,
+      },
+    });
   });
 
   // ============================================================
@@ -156,21 +134,17 @@ describe('DashboardService', () => {
       .mockResolvedValueOnce(0)
       .mockResolvedValueOnce(0);
 
-    mockPrismaService.candidate.count
-      .mockResolvedValue(0);
+    mockPrismaService.candidate.count.mockResolvedValue(0);
 
-    mockPrismaService.vote.count
-      .mockResolvedValue(0);
+    mockPrismaService.vote.count.mockResolvedValue(0);
 
-    mockPrismaService.election.findMany
-      .mockResolvedValue([]);
+    mockPrismaService.election.findMany.mockResolvedValue([]);
 
     mockPrismaService.user.count
       .mockResolvedValueOnce(0)
       .mockResolvedValueOnce(0);
 
-    const result =
-      await service.getStats();
+    const result = await service.getStats();
 
     expect(result.turnout).toBe(0);
   });
@@ -180,19 +154,15 @@ describe('DashboardService', () => {
   // ============================================================
 
   it('should return no elections message when no election exists', async () => {
-    mockPrismaService.election.findFirst
-      .mockResolvedValue(null);
+    mockPrismaService.election.findFirst.mockResolvedValue(null);
 
-    const result =
-      await service.getWinnerSummary();
+    const result = await service.getWinnerSummary();
 
     expect(result).toEqual({
       message: 'No elections found',
     });
 
-    expect(
-      mockPrismaService.candidate.findMany,
-    ).not.toHaveBeenCalled();
+    expect(mockPrismaService.candidate.findMany).not.toHaveBeenCalled();
   });
 
   // ============================================================
@@ -200,17 +170,14 @@ describe('DashboardService', () => {
   // ============================================================
 
   it('should return no candidates message when latest election has no candidates', async () => {
-    mockPrismaService.election.findFirst
-      .mockResolvedValue({
-        id: 'election-1',
-        title: 'Student Election',
-      });
+    mockPrismaService.election.findFirst.mockResolvedValue({
+      id: 'election-1',
+      title: 'Student Election',
+    });
 
-    mockPrismaService.candidate.findMany
-      .mockResolvedValue([]);
+    mockPrismaService.candidate.findMany.mockResolvedValue([]);
 
-    const result =
-      await service.getWinnerSummary();
+    const result = await service.getWinnerSummary();
 
     expect(result).toEqual({
       message: 'No candidates found',
@@ -222,42 +189,33 @@ describe('DashboardService', () => {
   // ============================================================
 
   it('should return the candidate with the highest vote count as winner', async () => {
-    mockPrismaService.election.findFirst
-      .mockResolvedValue({
-        id: 'election-1',
-        title: 'Student Council Election',
-      });
+    mockPrismaService.election.findFirst.mockResolvedValue({
+      id: 'election-1',
+      title: 'Student Council Election',
+    });
 
-    mockPrismaService.candidate.findMany
-      .mockResolvedValue([
-        {
-          id: 'candidate-1',
-          candidateNumber: 1,
-          user: {
-            id: 'user-1',
-            fullName: 'Candidate One',
-          },
-          votes: [
-            { id: 'vote-1' },
-            { id: 'vote-2' },
-            { id: 'vote-3' },
-          ],
+    mockPrismaService.candidate.findMany.mockResolvedValue([
+      {
+        id: 'candidate-1',
+        candidateNumber: 1,
+        user: {
+          id: 'user-1',
+          fullName: 'Candidate One',
         },
-        {
-          id: 'candidate-2',
-          candidateNumber: 2,
-          user: {
-            id: 'user-2',
-            fullName: 'Candidate Two',
-          },
-          votes: [
-            { id: 'vote-4' },
-          ],
+        votes: [{ id: 'vote-1' }, { id: 'vote-2' }, { id: 'vote-3' }],
+      },
+      {
+        id: 'candidate-2',
+        candidateNumber: 2,
+        user: {
+          id: 'user-2',
+          fullName: 'Candidate Two',
         },
-      ]);
+        votes: [{ id: 'vote-4' }],
+      },
+    ]);
 
-    const result =
-      await service.getWinnerSummary();
+    const result = await service.getWinnerSummary();
 
     expect(result).toEqual({
       electionId: 'election-1',
@@ -270,9 +228,7 @@ describe('DashboardService', () => {
       },
     });
 
-    expect(
-      mockPrismaService.candidate.findMany,
-    ).toHaveBeenCalledWith({
+    expect(mockPrismaService.candidate.findMany).toHaveBeenCalledWith({
       where: {
         electionId: 'election-1',
         deletedAt: null,
@@ -295,35 +251,26 @@ describe('DashboardService', () => {
   // ============================================================
 
   it('should return election results chart data', async () => {
-    mockPrismaService.candidate.findMany
-      .mockResolvedValue([
-        {
-          id: 'candidate-1',
-          candidateNumber: 1,
-          user: {
-            fullName: 'Candidate One',
-          },
-          votes: [
-            { id: 'vote-1' },
-            { id: 'vote-2' },
-          ],
+    mockPrismaService.candidate.findMany.mockResolvedValue([
+      {
+        id: 'candidate-1',
+        candidateNumber: 1,
+        user: {
+          fullName: 'Candidate One',
         },
-        {
-          id: 'candidate-2',
-          candidateNumber: 2,
-          user: {
-            fullName: 'Candidate Two',
-          },
-          votes: [
-            { id: 'vote-3' },
-          ],
+        votes: [{ id: 'vote-1' }, { id: 'vote-2' }],
+      },
+      {
+        id: 'candidate-2',
+        candidateNumber: 2,
+        user: {
+          fullName: 'Candidate Two',
         },
-      ]);
+        votes: [{ id: 'vote-3' }],
+      },
+    ]);
 
-    const result =
-      await service.getResultsChart(
-        'election-1',
-      );
+    const result = await service.getResultsChart('election-1');
 
     expect(result).toEqual([
       {
@@ -340,9 +287,7 @@ describe('DashboardService', () => {
       },
     ]);
 
-    expect(
-      mockPrismaService.candidate.findMany,
-    ).toHaveBeenCalledWith({
+    expect(mockPrismaService.candidate.findMany).toHaveBeenCalledWith({
       where: {
         electionId: 'election-1',
         deletedAt: null,
@@ -364,11 +309,9 @@ describe('DashboardService', () => {
   // ============================================================
 
   it('should return null when there is no active election', async () => {
-    mockPrismaService.election.findFirst
-      .mockResolvedValue(null);
+    mockPrismaService.election.findFirst.mockResolvedValue(null);
 
-    const result =
-      await service.getCurrentElection();
+    const result = await service.getCurrentElection();
 
     expect(result).toBeNull();
   });
@@ -378,37 +321,35 @@ describe('DashboardService', () => {
   // ============================================================
 
   it('should return the current active election summary', async () => {
-    mockPrismaService.election.findFirst
-      .mockResolvedValue({
-        id: 'election-1',
-        title: 'Student Council Election',
-        electionCode: 'BT-2026-SC-001',
-        status: 'ACTIVE',
+    mockPrismaService.election.findFirst.mockResolvedValue({
+      id: 'election-1',
+      title: 'Student Council Election',
+      electionCode: 'BT-2026-SC-001',
+      status: 'ACTIVE',
 
-        candidates: [
-          {
-            id: 'candidate-1',
-          },
-          {
-            id: 'candidate-2',
-          },
-        ],
+      candidates: [
+        {
+          id: 'candidate-1',
+        },
+        {
+          id: 'candidate-2',
+        },
+      ],
 
-        votes: [
-          {
-            id: 'vote-1',
-          },
-          {
-            id: 'vote-2',
-          },
-          {
-            id: 'vote-3',
-          },
-        ],
-      });
+      votes: [
+        {
+          id: 'vote-1',
+        },
+        {
+          id: 'vote-2',
+        },
+        {
+          id: 'vote-3',
+        },
+      ],
+    });
 
-    const result =
-      await service.getCurrentElection();
+    const result = await service.getCurrentElection();
 
     expect(result).toEqual({
       id: 'election-1',
@@ -419,9 +360,7 @@ describe('DashboardService', () => {
       votes: 3,
     });
 
-    expect(
-      mockPrismaService.election.findFirst,
-    ).toHaveBeenCalledWith({
+    expect(mockPrismaService.election.findFirst).toHaveBeenCalledWith({
       where: {
         status: 'ACTIVE',
         deletedAt: null,

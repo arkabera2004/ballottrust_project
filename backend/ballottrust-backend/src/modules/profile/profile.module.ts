@@ -7,25 +7,10 @@ import { ProfileService } from './profile.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 
 @Module({
+  imports: [PrismaModule],
 
-  imports: [
+  controllers: [ProfileController],
 
-    PrismaModule,
-
-  ],
-
-  controllers: [
-
-    ProfileController,
-
-  ],
-
-  providers: [
-
-    ProfileService,
-
-  ],
-
+  providers: [ProfileService],
 })
-
 export class ProfileModule {}

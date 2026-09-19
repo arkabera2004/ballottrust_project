@@ -1,8 +1,5 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import {
-  CandidateStatus,
-  CandidateType,
-} from '@prisma/client';
+import { CandidateStatus, CandidateType } from '@prisma/client';
 
 import { UpdateCandidateService } from './update-candidate.service';
 
@@ -105,25 +102,15 @@ describe('UpdateCandidateService', () => {
   it('should update an owned candidate', async () => {
     candidateRepository.findById.mockResolvedValue(candidate);
 
-    candidateStatusValidator.validateEditable.mockReturnValue(
-      undefined,
-    );
+    candidateStatusValidator.validateEditable.mockReturnValue(undefined);
 
-    candidateValidator.validateElectionExists.mockResolvedValue(
-      election,
-    );
+    candidateValidator.validateElectionExists.mockResolvedValue(election);
 
-    candidateValidator.validateNominationWindow.mockReturnValue(
-      undefined,
-    );
+    candidateValidator.validateNominationWindow.mockReturnValue(undefined);
 
-    candidateValidator.validateCandidateType.mockResolvedValue(
-      undefined,
-    );
+    candidateValidator.validateCandidateType.mockResolvedValue(undefined);
 
-    candidateRepository.update.mockResolvedValue(
-      updatedCandidate,
-    );
+    candidateRepository.update.mockResolvedValue(updatedCandidate);
 
     const dto = {
       position: 'Updated President',
@@ -135,42 +122,30 @@ describe('UpdateCandidateService', () => {
       documentUrl: 'https://example.com/new-document.pdf',
     };
 
-    const result = await service.execute(
-      'candidate-1',
-      'user-1',
-      dto,
-    );
+    const result = await service.execute('candidate-1', 'user-1', dto);
 
     expect(result).toEqual(updatedCandidate);
 
-    expect(
-      candidateRepository.findById,
-    ).toHaveBeenCalledWith('candidate-1');
+    expect(candidateRepository.findById).toHaveBeenCalledWith('candidate-1');
 
-    expect(
-      candidateStatusValidator.validateEditable,
-    ).toHaveBeenCalledWith(
+    expect(candidateStatusValidator.validateEditable).toHaveBeenCalledWith(
       CandidateStatus.PENDING,
     );
 
-    expect(
-      candidateValidator.validateElectionExists,
-    ).toHaveBeenCalledWith('election-1');
+    expect(candidateValidator.validateElectionExists).toHaveBeenCalledWith(
+      'election-1',
+    );
 
-    expect(
-      candidateValidator.validateNominationWindow,
-    ).toHaveBeenCalledWith(election);
+    expect(candidateValidator.validateNominationWindow).toHaveBeenCalledWith(
+      election,
+    );
 
-    expect(
-      candidateValidator.validateCandidateType,
-    ).toHaveBeenCalledWith(
+    expect(candidateValidator.validateCandidateType).toHaveBeenCalledWith(
       CandidateType.INDEPENDENT,
       undefined,
     );
 
-    expect(
-      candidateRepository.update,
-    ).toHaveBeenCalled();
+    expect(candidateRepository.update).toHaveBeenCalled();
   });
 
   it('should update a candidate with a party', async () => {
@@ -185,46 +160,28 @@ describe('UpdateCandidateService', () => {
       position: 'Prime Minister',
     };
 
-    candidateRepository.findById.mockResolvedValue(
-      partyCandidate,
-    );
+    candidateRepository.findById.mockResolvedValue(partyCandidate);
 
-    candidateStatusValidator.validateEditable.mockReturnValue(
-      undefined,
-    );
+    candidateStatusValidator.validateEditable.mockReturnValue(undefined);
 
-    candidateValidator.validateElectionExists.mockResolvedValue(
-      election,
-    );
+    candidateValidator.validateElectionExists.mockResolvedValue(election);
 
-    candidateValidator.validateNominationWindow.mockReturnValue(
-      undefined,
-    );
+    candidateValidator.validateNominationWindow.mockReturnValue(undefined);
 
-    candidateValidator.validateCandidateType.mockResolvedValue(
-      undefined,
-    );
+    candidateValidator.validateCandidateType.mockResolvedValue(undefined);
 
-    candidateRepository.update.mockResolvedValue(
-      updatedPartyCandidate,
-    );
+    candidateRepository.update.mockResolvedValue(updatedPartyCandidate);
 
     const dto = {
       position: 'Prime Minister',
       partyId: 'party-1',
     };
 
-    const result = await service.execute(
-      'candidate-1',
-      'user-1',
-      dto,
-    );
+    const result = await service.execute('candidate-1', 'user-1', dto);
 
     expect(result).toEqual(updatedPartyCandidate);
 
-    expect(
-      candidateValidator.validateCandidateType,
-    ).toHaveBeenCalledWith(
+    expect(candidateValidator.validateCandidateType).toHaveBeenCalledWith(
       CandidateType.PARTY,
       'party-1',
     );
@@ -235,23 +192,13 @@ describe('UpdateCandidateService', () => {
   // ============================================================
 
   it('should reject when candidate does not exist', async () => {
-    candidateRepository.findById.mockResolvedValue(
-      null,
-    );
+    candidateRepository.findById.mockResolvedValue(null);
 
-    await expect(
-      service.execute(
-        'candidate-1',
-        'user-1',
-        {},
-      ),
-    ).rejects.toThrow(
+    await expect(service.execute('candidate-1', 'user-1', {})).rejects.toThrow(
       'Candidate not found.',
     );
 
-    expect(
-      candidateRepository.findById,
-    ).toHaveBeenCalledWith('candidate-1');
+    expect(candidateRepository.findById).toHaveBeenCalledWith('candidate-1');
   });
 
   // ============================================================
@@ -259,27 +206,15 @@ describe('UpdateCandidateService', () => {
   // ============================================================
 
   it('should reject when another user tries to update the candidate', async () => {
-    candidateRepository.findById.mockResolvedValue(
-      candidate,
-    );
+    candidateRepository.findById.mockResolvedValue(candidate);
 
-    await expect(
-      service.execute(
-        'candidate-1',
-        'user-2',
-        {},
-      ),
-    ).rejects.toThrow(
+    await expect(service.execute('candidate-1', 'user-2', {})).rejects.toThrow(
       'You can only update your own nomination.',
     );
 
-    expect(
-      candidateStatusValidator.validateEditable,
-    ).not.toHaveBeenCalled();
+    expect(candidateStatusValidator.validateEditable).not.toHaveBeenCalled();
 
-    expect(
-      candidateRepository.update,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.update).not.toHaveBeenCalled();
   });
 
   // ============================================================
@@ -287,39 +222,21 @@ describe('UpdateCandidateService', () => {
   // ============================================================
 
   it('should call candidate status validator before updating', async () => {
-    candidateRepository.findById.mockResolvedValue(
-      candidate,
-    );
+    candidateRepository.findById.mockResolvedValue(candidate);
 
-    candidateStatusValidator.validateEditable.mockReturnValue(
-      undefined,
-    );
+    candidateStatusValidator.validateEditable.mockReturnValue(undefined);
 
-    candidateValidator.validateElectionExists.mockResolvedValue(
-      election,
-    );
+    candidateValidator.validateElectionExists.mockResolvedValue(election);
 
-    candidateValidator.validateNominationWindow.mockReturnValue(
-      undefined,
-    );
+    candidateValidator.validateNominationWindow.mockReturnValue(undefined);
 
-    candidateValidator.validateCandidateType.mockResolvedValue(
-      undefined,
-    );
+    candidateValidator.validateCandidateType.mockResolvedValue(undefined);
 
-    candidateRepository.update.mockResolvedValue(
-      updatedCandidate,
-    );
+    candidateRepository.update.mockResolvedValue(updatedCandidate);
 
-    await service.execute(
-      'candidate-1',
-      'user-1',
-      {},
-    );
+    await service.execute('candidate-1', 'user-1', {});
 
-    expect(
-      candidateStatusValidator.validateEditable,
-    ).toHaveBeenCalledWith(
+    expect(candidateStatusValidator.validateEditable).toHaveBeenCalledWith(
       candidate.status,
     );
   });
@@ -329,39 +246,21 @@ describe('UpdateCandidateService', () => {
   // ============================================================
 
   it('should validate that the election exists', async () => {
-    candidateRepository.findById.mockResolvedValue(
-      candidate,
-    );
+    candidateRepository.findById.mockResolvedValue(candidate);
 
-    candidateStatusValidator.validateEditable.mockReturnValue(
-      undefined,
-    );
+    candidateStatusValidator.validateEditable.mockReturnValue(undefined);
 
-    candidateValidator.validateElectionExists.mockResolvedValue(
-      election,
-    );
+    candidateValidator.validateElectionExists.mockResolvedValue(election);
 
-    candidateValidator.validateNominationWindow.mockReturnValue(
-      undefined,
-    );
+    candidateValidator.validateNominationWindow.mockReturnValue(undefined);
 
-    candidateValidator.validateCandidateType.mockResolvedValue(
-      undefined,
-    );
+    candidateValidator.validateCandidateType.mockResolvedValue(undefined);
 
-    candidateRepository.update.mockResolvedValue(
-      updatedCandidate,
-    );
+    candidateRepository.update.mockResolvedValue(updatedCandidate);
 
-    await service.execute(
-      'candidate-1',
-      'user-1',
-      {},
-    );
+    await service.execute('candidate-1', 'user-1', {});
 
-    expect(
-      candidateValidator.validateElectionExists,
-    ).toHaveBeenCalledWith(
+    expect(candidateValidator.validateElectionExists).toHaveBeenCalledWith(
       candidate.electionId,
     );
   });
@@ -371,39 +270,21 @@ describe('UpdateCandidateService', () => {
   // ============================================================
 
   it('should validate nomination window', async () => {
-    candidateRepository.findById.mockResolvedValue(
-      candidate,
-    );
+    candidateRepository.findById.mockResolvedValue(candidate);
 
-    candidateStatusValidator.validateEditable.mockReturnValue(
-      undefined,
-    );
+    candidateStatusValidator.validateEditable.mockReturnValue(undefined);
 
-    candidateValidator.validateElectionExists.mockResolvedValue(
-      election,
-    );
+    candidateValidator.validateElectionExists.mockResolvedValue(election);
 
-    candidateValidator.validateNominationWindow.mockReturnValue(
-      undefined,
-    );
+    candidateValidator.validateNominationWindow.mockReturnValue(undefined);
 
-    candidateValidator.validateCandidateType.mockResolvedValue(
-      undefined,
-    );
+    candidateValidator.validateCandidateType.mockResolvedValue(undefined);
 
-    candidateRepository.update.mockResolvedValue(
-      updatedCandidate,
-    );
+    candidateRepository.update.mockResolvedValue(updatedCandidate);
 
-    await service.execute(
-      'candidate-1',
-      'user-1',
-      {},
-    );
+    await service.execute('candidate-1', 'user-1', {});
 
-    expect(
-      candidateValidator.validateNominationWindow,
-    ).toHaveBeenCalledWith(
+    expect(candidateValidator.validateNominationWindow).toHaveBeenCalledWith(
       election,
     );
   });
@@ -419,140 +300,83 @@ describe('UpdateCandidateService', () => {
       partyId: 'party-1',
     };
 
-    candidateRepository.findById.mockResolvedValue(
-      partyCandidate,
-    );
+    candidateRepository.findById.mockResolvedValue(partyCandidate);
 
-    candidateStatusValidator.validateEditable.mockReturnValue(
-      undefined,
-    );
+    candidateStatusValidator.validateEditable.mockReturnValue(undefined);
 
-    candidateValidator.validateElectionExists.mockResolvedValue(
-      election,
-    );
+    candidateValidator.validateElectionExists.mockResolvedValue(election);
 
-    candidateValidator.validateNominationWindow.mockReturnValue(
-      undefined,
-    );
+    candidateValidator.validateNominationWindow.mockReturnValue(undefined);
 
-    candidateValidator.validateCandidateType.mockResolvedValue(
-      undefined,
-    );
+    candidateValidator.validateCandidateType.mockResolvedValue(undefined);
 
-    candidateRepository.update.mockResolvedValue(
-      partyCandidate,
-    );
+    candidateRepository.update.mockResolvedValue(partyCandidate);
 
-    await service.execute(
-      'candidate-1',
-      'user-1',
-      {},
-    );
+    await service.execute('candidate-1', 'user-1', {});
 
-    expect(
-      candidateValidator.validateCandidateType,
-    ).toHaveBeenCalledWith(
+    expect(candidateValidator.validateCandidateType).toHaveBeenCalledWith(
       CandidateType.PARTY,
       'party-1',
     );
   });
 
   it('should preserve the existing candidate type and party when they are not changed', async () => {
-  const partyCandidate = {
-    ...candidate,
-    candidateType: CandidateType.PARTY,
-    partyId: 'party-1',
-  };
+    const partyCandidate = {
+      ...candidate,
+      candidateType: CandidateType.PARTY,
+      partyId: 'party-1',
+    };
 
-  candidateRepository.findById.mockResolvedValue(
-    partyCandidate,
-  );
+    candidateRepository.findById.mockResolvedValue(partyCandidate);
 
-  candidateStatusValidator.validateEditable.mockReturnValue(
-    undefined,
-  );
+    candidateStatusValidator.validateEditable.mockReturnValue(undefined);
 
-  candidateValidator.validateElectionExists.mockResolvedValue(
-    election,
-  );
+    candidateValidator.validateElectionExists.mockResolvedValue(election);
 
-  candidateValidator.validateNominationWindow.mockReturnValue(
-    undefined,
-  );
+    candidateValidator.validateNominationWindow.mockReturnValue(undefined);
 
-  candidateValidator.validateCandidateType.mockResolvedValue(
-    undefined,
-  );
+    candidateValidator.validateCandidateType.mockResolvedValue(undefined);
 
-  candidateRepository.update.mockResolvedValue(
-    partyCandidate,
-  );
+    candidateRepository.update.mockResolvedValue(partyCandidate);
 
-  await service.execute(
-    'candidate-1',
-    'user-1',
-    {
+    await service.execute('candidate-1', 'user-1', {
       position: 'Updated Position',
-    },
-  );
+    });
 
-  expect(
-    candidateValidator.validateCandidateType,
-  ).toHaveBeenCalledWith(
-    CandidateType.PARTY,
-    'party-1',
-  );
-});
+    expect(candidateValidator.validateCandidateType).toHaveBeenCalledWith(
+      CandidateType.PARTY,
+      'party-1',
+    );
+  });
 
   // ============================================================
   // UPDATE DATA
   // ============================================================
 
   it('should trim text fields before updating', async () => {
-    candidateRepository.findById.mockResolvedValue(
-      candidate,
-    );
+    candidateRepository.findById.mockResolvedValue(candidate);
 
-    candidateStatusValidator.validateEditable.mockReturnValue(
-      undefined,
-    );
+    candidateStatusValidator.validateEditable.mockReturnValue(undefined);
 
-    candidateValidator.validateElectionExists.mockResolvedValue(
-      election,
-    );
+    candidateValidator.validateElectionExists.mockResolvedValue(election);
 
-    candidateValidator.validateNominationWindow.mockReturnValue(
-      undefined,
-    );
+    candidateValidator.validateNominationWindow.mockReturnValue(undefined);
 
-    candidateValidator.validateCandidateType.mockResolvedValue(
-      undefined,
-    );
+    candidateValidator.validateCandidateType.mockResolvedValue(undefined);
 
-    candidateRepository.update.mockResolvedValue(
-      updatedCandidate,
-    );
+    candidateRepository.update.mockResolvedValue(updatedCandidate);
 
-    await service.execute(
-      'candidate-1',
-      'user-1',
-      {
-        position: '  Updated Position  ',
-        manifesto: '  Updated Manifesto  ',
-        agenda: '  Updated Agenda  ',
-        achievements: '  Updated Achievements  ',
-        nominationStatement:
-          '  Updated Statement  ',
-        photoUrl:
-          '  https://example.com/photo.jpg  ',
-        documentUrl:
-          '  https://example.com/document.pdf  ',
-      },
-    );
+    await service.execute('candidate-1', 'user-1', {
+      position: '  Updated Position  ',
+      manifesto: '  Updated Manifesto  ',
+      agenda: '  Updated Agenda  ',
+      achievements: '  Updated Achievements  ',
+      nominationStatement: '  Updated Statement  ',
+      photoUrl: '  https://example.com/photo.jpg  ',
+      documentUrl: '  https://example.com/document.pdf  ',
+    });
 
-    expect(
-      candidateRepository.update,
-    ).toHaveBeenCalledWith(
+    expect(candidateRepository.update).toHaveBeenCalledWith(
       'candidate-1',
       expect.objectContaining({
         position: 'Updated Position',
@@ -560,10 +384,8 @@ describe('UpdateCandidateService', () => {
         agenda: 'Updated Agenda',
         achievements: 'Updated Achievements',
         nominationStatement: 'Updated Statement',
-        photoUrl:
-          'https://example.com/photo.jpg',
-        documentUrl:
-          'https://example.com/document.pdf',
+        photoUrl: 'https://example.com/photo.jpg',
+        documentUrl: 'https://example.com/document.pdf',
       }),
     );
   });

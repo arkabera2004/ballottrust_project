@@ -13,17 +13,11 @@ export class PublishResultsService {
   ) {}
 
   async execute(id: string, actorId?: string) {
-    const election =
-      await this.repository.findByIdOrThrow(id);
+    const election = await this.repository.findByIdOrThrow(id);
 
-    this.workflowValidator.ensureCanPublishResults(
-      election.status,
-    );
+    this.workflowValidator.ensureCanPublishResults(election.status);
 
-    const data =
-      await this.repository.publishResults(
-        id,
-      );
+    const data = await this.repository.publishResults(id);
 
     // actorId is undefined for cron-triggered auto-publish
     // (election-lifecycle.job.ts) — logged as a system action.
@@ -41,8 +35,7 @@ export class PublishResultsService {
     });
 
     return {
-      message:
-        'Results published successfully.',
+      message: 'Results published successfully.',
       data,
     };
   }

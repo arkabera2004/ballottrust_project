@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import {
-  CandidateStatus,
-} from '@prisma/client';
+import { CandidateStatus } from '@prisma/client';
 
 import { CreateCandidateDto } from '../dto/create-candidate.dto';
 
@@ -14,246 +12,193 @@ import { AuditService } from '../../audit/audit.service';
 @Injectable()
 export class SubmitNominationService {
   constructor(
-    private readonly candidateRepository:
-      CandidateRepository,
+    private readonly candidateRepository: CandidateRepository,
 
-    private readonly candidateValidator:
-      CandidateValidator,
+    private readonly candidateValidator: CandidateValidator,
 
     private readonly auditService: AuditService,
   ) {}
 
-  async execute(
-    dto: CreateCandidateDto,
-    userId: string,
-  ) {
+  async execute(dto: CreateCandidateDto, userId: string) {
     // ======================================================
     // 1. Validate Election
     // ======================================================
 
-    const election =
-      await this.candidateValidator
-        .validateElectionExists(
-          dto.electionId,
-        );
+    const election = await this.candidateValidator.validateElectionExists(
+      dto.electionId,
+    );
 
     // ======================================================
     // 2. Validate Nomination Window
     // ======================================================
 
-    this.candidateValidator
-      .validateNominationWindow(
-        election,
-      );
+    this.candidateValidator.validateNominationWindow(election);
 
     // ======================================================
     // 3. Prevent Duplicate Nomination
     // ======================================================
 
     const existingCandidate =
-  await this.candidateValidator
-    .validateNoDuplicateNomination(
-      userId,
-      dto.electionId,
-    );
+      await this.candidateValidator.validateNoDuplicateNomination(
+        userId,
+        dto.electionId,
+      );
 
     // ======================================================
     // 4. Validate Candidate Limit
     // ======================================================
 
-    await this.candidateValidator
-      .validateCandidateLimit(
-        dto.electionId,
-        election.candidateLimit,
-      );
+    await this.candidateValidator.validateCandidateLimit(
+      dto.electionId,
+      election.candidateLimit,
+    );
 
     // ======================================================
     // 5. Validate Candidate Type / Party
     // ======================================================
 
-    await this.candidateValidator
-      .validateCandidateType(
-        dto.candidateType,
-        dto.partyId,
-      );
+    await this.candidateValidator.validateCandidateType(
+      dto.candidateType,
+      dto.partyId,
+    );
 
     // ======================================================
-// 6. Restore Previously Cancelled Nomination
-// ======================================================
+    // 6. Restore Previously Cancelled Nomination
+    // ======================================================
 
-if (
-  existingCandidate &&
-  existingCandidate.deletedAt
-) {
-  const restored = await this.candidateRepository.update(
-    existingCandidate.id,
-    {
-      candidateType:
-        dto.candidateType,
+    if (existingCandidate && existingCandidate.deletedAt) {
+      const restored = await this.candidateRepository.update(
+        existingCandidate.id,
+        {
+          candidateType: dto.candidateType,
 
-      party:
-        dto.partyId
-          ? {
-              connect: {
-                id: dto.partyId,
+          party: dto.partyId
+            ? {
+                connect: {
+                  id: dto.partyId,
+                },
+              }
+            : {
+                disconnect: true,
               },
-            }
-          : {
-              disconnect: true,
-            },
 
-      position:
-        dto.position,
+          position: dto.position,
 
-      manifesto:
-        dto.manifesto,
+          manifesto: dto.manifesto,
 
-      agenda:
-        dto.agenda,
+          agenda: dto.agenda,
 
-      achievements:
-        dto.achievements,
+          achievements: dto.achievements,
 
-      nominationStatement:
-        dto.nominationStatement,
+          nominationStatement: dto.nominationStatement,
 
-      photoUrl:
-        dto.photoUrl,
+          photoUrl: dto.photoUrl,
 
-      documentUrl:
-        dto.documentUrl,
+          documentUrl: dto.documentUrl,
 
-      status:
-        CandidateStatus.PENDING,
+          status: CandidateStatus.PENDING,
 
-      submittedAt:
-        new Date(),
+          submittedAt: new Date(),
 
-      deletedAt:
-        null,
+          deletedAt: null,
 
-      // Reset verification workflow
-      verifiedBy: {
-        disconnect: true,
-      },
+          // Reset verification workflow
+          verifiedBy: {
+            disconnect: true,
+          },
 
-      verifiedAt:
-        null,
+          verifiedAt: null,
 
-      // Reset approval workflow
-      approvedBy: {
-        disconnect: true,
-      },
+          // Reset approval workflow
+          approvedBy: {
+            disconnect: true,
+          },
 
-      approvedAt:
-        null,
+          approvedAt: null,
 
-      // Reset rejection workflow
-      rejectedBy: {
-        disconnect: true,
-      },
+          // Reset rejection workflow
+          rejectedBy: {
+            disconnect: true,
+          },
 
-      rejectionReason:
-        null,
+          rejectionReason: null,
 
-      rejectedAt:
-        null,
+          rejectedAt: null,
 
-      // Reset withdrawal workflow
-      withdrawnAt:
-        null,
+          // Reset withdrawal workflow
+          withdrawnAt: null,
 
-      withdrawalReason:
-        null,
+          withdrawalReason: null,
 
-      // Reset disqualification workflow
-      disqualifiedBy: {
-        disconnect: true,
-      },
+          // Reset disqualification workflow
+          disqualifiedBy: {
+            disconnect: true,
+          },
 
-      disqualifiedAt:
-        null,
+          disqualifiedAt: null,
 
-      disqualificationReason:
-        null,
+          disqualificationReason: null,
 
-      // Reset ballot assignment
-      candidateNumber:
-        null,
+          // Reset ballot assignment
+          candidateNumber: null,
 
-      ballotOrder:
-        null,
-    },
-  );
+          ballotOrder: null,
+        },
+      );
 
-  await this.auditService.log({
-    userId,
-    action: 'CANDIDATE_NOMINATION_SUBMITTED',
-    module: 'candidate',
-    entityType: 'Candidate',
-    entityId: restored.id,
-    result: 'SUCCESS',
-    description: 'Restored a previously cancelled nomination',
-  });
+      await this.auditService.log({
+        userId,
+        action: 'CANDIDATE_NOMINATION_SUBMITTED',
+        module: 'candidate',
+        entityType: 'Candidate',
+        entityId: restored.id,
+        result: 'SUCCESS',
+        description: 'Restored a previously cancelled nomination',
+      });
 
-  return restored;
-}
+      return restored;
+    }
 
     // ======================================================
     // 6. Create Nomination
     // ======================================================
 
     const created = await this.candidateRepository.create({
-      electionId:
-        dto.electionId,
+      electionId: dto.electionId,
 
       userId,
 
-      candidateType:
-        dto.candidateType,
+      candidateType: dto.candidateType,
 
-      partyId:
-        dto.partyId,
+      partyId: dto.partyId,
 
-      position:
-  dto.position.trim(),
+      position: dto.position.trim(),
 
       // ======================================================
-// Candidate Profile
-// ======================================================
+      // Candidate Profile
+      // ======================================================
 
-      biography:
-        dto.biography?.trim(),
+      biography: dto.biography?.trim(),
 
-      campaignSlogan:
-        dto.campaignSlogan?.trim(),
+      campaignSlogan: dto.campaignSlogan?.trim(),
 
-      campaignWebsite:
-        dto.campaignWebsite?.trim(),
+      campaignWebsite: dto.campaignWebsite?.trim(),
 
-      manifesto:
-        dto.manifesto?.trim(),
+      manifesto: dto.manifesto?.trim(),
 
-      agenda:
-        dto.agenda?.trim(),
+      agenda: dto.agenda?.trim(),
 
-      achievements:
-        dto.achievements?.trim(),
+      achievements: dto.achievements?.trim(),
 
-      nominationStatement:
-        dto.nominationStatement.trim(),
+      nominationStatement: dto.nominationStatement.trim(),
 
-      photoUrl:
-        dto.photoUrl,
+      photoUrl: dto.photoUrl,
 
-      documentUrl:
-        dto.documentUrl,
+      documentUrl: dto.documentUrl,
 
-      status:
-        CandidateStatus.PENDING,
+      status: CandidateStatus.PENDING,
 
-      submittedAt:
-        new Date(),
+      submittedAt: new Date(),
     });
 
     await this.auditService.log({

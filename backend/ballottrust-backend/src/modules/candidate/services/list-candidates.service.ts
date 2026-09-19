@@ -8,23 +8,10 @@ import { CandidateRepository } from '../repository/candidate.repository';
 
 @Injectable()
 export class ListCandidatesService {
-  constructor(
-    private readonly candidateRepository:
-      CandidateRepository,
-  ) {}
+  constructor(private readonly candidateRepository: CandidateRepository) {}
 
-  async execute(
-    query: QueryCandidateDto,
-  ) {
-    const {
-      search,
-      status,
-      type,
-      electionId,
-      partyId,
-      page,
-      limit,
-    } = query;
+  async execute(query: QueryCandidateDto) {
+    const { search, status, type, electionId, partyId, page, limit } = query;
 
     const where: Prisma.CandidateWhereInput = {
       ...(status && {
@@ -82,11 +69,6 @@ export class ListCandidatesService {
       }),
     };
 
-    return this.candidateRepository
-      .findAllPaginated(
-        where,
-        page,
-        limit,
-      );
+    return this.candidateRepository.findAllPaginated(where, page, limit);
   }
 }

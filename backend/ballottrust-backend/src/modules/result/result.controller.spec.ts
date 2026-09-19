@@ -13,24 +13,18 @@ describe('ResultController', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const module: TestingModule =
-      await Test.createTestingModule({
-        controllers: [
-          ResultController,
-        ],
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [ResultController],
 
-        providers: [
-          {
-            provide: ResultService,
-            useValue: mockResultService,
-          },
-        ],
-      }).compile();
+      providers: [
+        {
+          provide: ResultService,
+          useValue: mockResultService,
+        },
+      ],
+    }).compile();
 
-    controller =
-      module.get<ResultController>(
-        ResultController,
-      );
+    controller = module.get<ResultController>(ResultController);
   });
 
   // ============================================================
@@ -94,20 +88,12 @@ describe('ResultController', () => {
       },
     };
 
-    mockResultService.getResults
-      .mockResolvedValue(results);
+    mockResultService.getResults.mockResolvedValue(results);
 
-    const result =
-      await controller.getResults(
-        'election-1',
-      );
+    const result = await controller.getResults('election-1');
 
     expect(result).toEqual(results);
 
-    expect(
-      mockResultService.getResults,
-    ).toHaveBeenCalledWith(
-      'election-1',
-    );
+    expect(mockResultService.getResults).toHaveBeenCalledWith('election-1');
   });
 });

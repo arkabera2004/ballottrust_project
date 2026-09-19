@@ -44,9 +44,7 @@ export class CheckVoterEligibilityService {
       throw new NotFoundException('Voter not found.');
     }
 
-    const activeRuleSet = await this.repository.findActive(
-      electionId,
-    );
+    const activeRuleSet = await this.repository.findActive(electionId);
 
     const rule: RuleNode = activeRuleSet
       ? (activeRuleSet.rule as unknown as RuleNode)

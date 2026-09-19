@@ -23,19 +23,17 @@ describe('AuthController', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const module: TestingModule =
-      await Test.createTestingModule({
-        controllers: [AuthController],
-        providers: [
-          {
-            provide: AuthService,
-            useValue: mockAuthService,
-          },
-        ],
-      }).compile();
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [AuthController],
+      providers: [
+        {
+          provide: AuthService,
+          useValue: mockAuthService,
+        },
+      ],
+    }).compile();
 
-    controller =
-      module.get<AuthController>(AuthController);
+    controller = module.get<AuthController>(AuthController);
   });
 
   it('should be defined', () => {

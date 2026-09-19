@@ -10,10 +10,7 @@ import {
 
 import { Transform } from 'class-transformer';
 
-import {
-  CandidateStatus,
-  CandidateType,
-} from '@prisma/client';
+import { CandidateStatus, CandidateType } from '@prisma/client';
 
 export class QueryCandidateDto {
   @IsOptional()
@@ -37,17 +34,13 @@ export class QueryCandidateDto {
   partyId?: string;
 
   @IsOptional()
-  @Transform(({ value }) =>
-    Number(value),
-  )
+  @Transform(({ value }) => Number(value))
   @IsInt()
   @Min(1)
   page: number = 1;
 
   @IsOptional()
-  @Transform(({ value }) =>
-    Number(value),
-  )
+  @Transform(({ value }) => Number(value))
   @IsInt()
   @Min(1)
   @Max(100)

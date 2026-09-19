@@ -30,14 +30,14 @@ describe('GetPublicCandidateProfileService', () => {
     const result = await service.execute('candidate-1');
 
     expect(result).toEqual({
-  ...candidate,
-  campaign: {
-    status: 'ACTIVE',
-    open: true,
-    startDate: candidate.election.startDate,
-    endDate: candidate.election.endDate,
-  },
-});
+      ...candidate,
+      campaign: {
+        status: 'ACTIVE',
+        open: true,
+        startDate: candidate.election.startDate,
+        endDate: candidate.election.endDate,
+      },
+    });
   });
 
   it('should reject a missing public profile', async () => {
@@ -50,9 +50,7 @@ describe('GetPublicCandidateProfileService', () => {
       {} as CampaignWindowValidator,
     );
 
-    await expect(
-      service.execute('candidate-1'),
-    ).rejects.toThrow(
+    await expect(service.execute('candidate-1')).rejects.toThrow(
       'Public candidate profile not found.',
     );
   });

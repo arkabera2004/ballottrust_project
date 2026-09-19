@@ -37,10 +37,7 @@ export class VoteService {
    * the voter's identity would recreate exactly the joinable link Sec11
    * forbids, even though Vote itself stays anonymous.
    */
-  async castVote(
-    userId: string,
-    data: CreateVoteDto,
-  ) {
+  async castVote(userId: string, data: CreateVoteDto) {
     try {
       const vote = await this.castVoteInternal(userId, data);
 
@@ -62,52 +59,40 @@ export class VoteService {
         entityType: 'Election',
         entityId: data.electionId,
         result: 'FAILURE',
-        description:
-          err instanceof Error ? err.message : 'Unknown error',
+        description: err instanceof Error ? err.message : 'Unknown error',
       });
 
       throw err;
     }
   }
 
-  private async castVoteInternal(
-    userId: string,
-    data: CreateVoteDto,
-  ) {
-    const candidate =
-      await this.prisma.candidate.findUnique({
-        where: {
-          id: data.candidateId,
-        },
-      });
+  private async castVoteInternal(userId: string, data: CreateVoteDto) {
+    const candidate = await this.prisma.candidate.findUnique({
+      where: {
+        id: data.candidateId,
+      },
+    });
 
     if (
       !candidate ||
       candidate.electionId !== data.electionId ||
       candidate.status !== 'APPROVED'
     ) {
-      throw new BadRequestException(
-        'Candidate not found',
-      );
+      throw new BadRequestException('Candidate not found');
     }
 
-    const election =
-      await this.prisma.election.findUnique({
-        where: {
-          id: data.electionId,
-        },
-      });
+    const election = await this.prisma.election.findUnique({
+      where: {
+        id: data.electionId,
+      },
+    });
 
     if (!election) {
-      throw new BadRequestException(
-        'Election not found',
-      );
+      throw new BadRequestException('Election not found');
     }
 
     if (election.status !== 'ACTIVE') {
-      throw new BadRequestException(
-        'Election is not active',
-      );
+      throw new BadRequestException('Election is not active');
     }
 
     // Sec4: real-time eligibility enforcement. This also persists a
@@ -115,11 +100,10 @@ export class VoteService {
     // rejected voter can query GET /elections/:id/eligibility/me for the
     // full explanation of why — the exception here stays terse on
     // purpose.
-    const { eligible } =
-      await this.checkVoterEligibilityService.execute(
-        userId,
-        data.electionId,
-      );
+    const { eligible } = await this.checkVoterEligibilityService.execute(
+      userId,
+      data.electionId,
+    );
 
     if (!eligible) {
       throw new ForbiddenException(
@@ -145,9 +129,7 @@ export class VoteService {
       });
 
       if (credential.hasVoted) {
-        throw new BadRequestException(
-          'You have already voted',
-        );
+        throw new BadRequestException('You have already voted');
       }
 
       // Conditional update: only succeeds if hasVoted is still false at
@@ -165,39 +147,30 @@ export class VoteService {
       });
 
       if (consumed.count === 0) {
-        throw new BadRequestException(
-          'You have already voted',
-        );
+        throw new BadRequestException('You have already voted');
       }
 
       // Non-reversible anonymous token — not derived from userId, so the
       // resulting Vote row cannot be traced back to the voter.
-      const anonymousToken = crypto
-        .randomBytes(32)
-        .toString('hex');
+      const anonymousToken = crypto.randomBytes(32).toString('hex');
 
       // Hash chain is scoped per-election: each election's vote ledger is
       // an independent chain anchored at its own genesis block.
-      const lastVote =
-        await tx.vote.findFirst({
-          where: {
-            electionId: data.electionId,
-          },
-          orderBy: {
-            createdAt: 'desc',
-          },
-        });
+      const lastVote = await tx.vote.findFirst({
+        where: {
+          electionId: data.electionId,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
 
-      const previousHash =
-        lastVote?.hash || 'GENESIS_BLOCK';
+      const previousHash = lastVote?.hash || 'GENESIS_BLOCK';
 
       const hash = crypto
         .createHash('sha256')
         .update(
-          anonymousToken +
-          data.candidateId +
-          data.electionId +
-          previousHash,
+          anonymousToken + data.candidateId + data.electionId + previousHash,
         )
         .digest('hex');
 

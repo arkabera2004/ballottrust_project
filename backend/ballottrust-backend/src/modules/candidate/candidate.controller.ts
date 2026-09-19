@@ -15,26 +15,15 @@ import {
 
 import { Role } from '@prisma/client';
 
-import {
-  UploadedFile,
-  UseInterceptors,
-} from '@nestjs/common';
+import { UploadedFile, UseInterceptors } from '@nestjs/common';
 
-import {
-  FileInterceptor,
-} from '@nestjs/platform-express';
+import { FileInterceptor } from '@nestjs/platform-express';
 
-import {
-  UploadCandidateDocumentDto,
-} from './documents/dto/upload-candidate-document.dto';
+import { UploadCandidateDocumentDto } from './documents/dto/upload-candidate-document.dto';
 
-import {
-  UploadCandidateDocumentService,
-} from './documents/services/upload-candidate-document.service';
+import { UploadCandidateDocumentService } from './documents/services/upload-candidate-document.service';
 
-import {
-  candidateDocumentMulterConfig,
-} from './documents/candidate-document-upload.config';
+import { candidateDocumentMulterConfig } from './documents/candidate-document-upload.config';
 
 import { CreateCandidateDto } from './dto/create-candidate.dto';
 import { QueryCandidateDto } from './dto/query-candidate.dto';
@@ -87,87 +76,59 @@ import { UpdateCandidateCampaignDto } from './dto/update-candidate-campaign.dto'
 @Controller('candidates')
 export class CandidateController {
   constructor(
-    private readonly submitNominationService:
-      SubmitNominationService,
+    private readonly submitNominationService: SubmitNominationService,
 
-    private readonly verifyCandidateService:
-      VerifyCandidateService,
+    private readonly verifyCandidateService: VerifyCandidateService,
 
-    private readonly approveCandidateService:
-      ApproveCandidateService,
+    private readonly approveCandidateService: ApproveCandidateService,
 
-    private readonly rejectCandidateService:
-      RejectCandidateService,
+    private readonly rejectCandidateService: RejectCandidateService,
 
-    private readonly withdrawCandidateService:
-      WithdrawCandidateService,
+    private readonly withdrawCandidateService: WithdrawCandidateService,
 
-    private readonly disqualifyCandidateService:
-      DisqualifyCandidateService,
+    private readonly disqualifyCandidateService: DisqualifyCandidateService,
 
-    private readonly getCandidateService:
-      GetCandidateService,
+    private readonly getCandidateService: GetCandidateService,
 
-    private readonly listCandidatesService:
-      ListCandidatesService,
+    private readonly listCandidatesService: ListCandidatesService,
 
-    private readonly myCandidatesService:
-      MyCandidatesService,
+    private readonly myCandidatesService: MyCandidatesService,
 
-    private readonly assignCandidateNumberService:
-      AssignCandidateNumberService,
+    private readonly assignCandidateNumberService: AssignCandidateNumberService,
 
-    private readonly autoAssignCandidateNumberService:
-      AutoAssignCandidateNumberService,
+    private readonly autoAssignCandidateNumberService: AutoAssignCandidateNumberService,
 
-    private readonly generateBallotOrderService:
-      GenerateBallotOrderService,
+    private readonly generateBallotOrderService: GenerateBallotOrderService,
 
-    private readonly manualBallotOrderService:
-      ManualBallotOrderService,
+    private readonly manualBallotOrderService: ManualBallotOrderService,
 
-    private readonly getBallotService:
-      GetBallotService,
+    private readonly getBallotService: GetBallotService,
 
-    private readonly finalizeBallotService:
-      FinalizeBallotService,
+    private readonly finalizeBallotService: FinalizeBallotService,
 
-    private readonly updateCandidateService:
-      UpdateCandidateService,
+    private readonly updateCandidateService: UpdateCandidateService,
 
-    private readonly cancelNominationService:
-      CancelNominationService,
+    private readonly cancelNominationService: CancelNominationService,
 
-    private readonly updateCandidateProfileService:
-      UpdateCandidateProfileService,
+    private readonly updateCandidateProfileService: UpdateCandidateProfileService,
 
-    private readonly getPublicCandidateProfileService:
-      GetPublicCandidateProfileService,
+    private readonly getPublicCandidateProfileService: GetPublicCandidateProfileService,
 
-    private readonly uploadCandidateDocumentService:
-      UploadCandidateDocumentService,
+    private readonly uploadCandidateDocumentService: UploadCandidateDocumentService,
 
-    private readonly listCandidateDocumentsService:
-      ListCandidateDocumentsService,
+    private readonly listCandidateDocumentsService: ListCandidateDocumentsService,
 
-    private readonly getCandidateDocumentService:
-      GetCandidateDocumentService,
+    private readonly getCandidateDocumentService: GetCandidateDocumentService,
 
-    private readonly replaceCandidateDocumentService:
-      ReplaceCandidateDocumentService,
+    private readonly replaceCandidateDocumentService: ReplaceCandidateDocumentService,
 
-    private readonly verifyCandidateDocumentService:
-      VerifyCandidateDocumentService,
+    private readonly verifyCandidateDocumentService: VerifyCandidateDocumentService,
 
-    private readonly rejectCandidateDocumentService:
-      RejectCandidateDocumentService,
+    private readonly rejectCandidateDocumentService: RejectCandidateDocumentService,
 
-    private readonly deleteCandidateDocumentService:
-      DeleteCandidateDocumentService,
+    private readonly deleteCandidateDocumentService: DeleteCandidateDocumentService,
 
-    private readonly updateCandidateCampaignService:
-      UpdateCandidateCampaignService,
-
+    private readonly updateCandidateCampaignService: UpdateCandidateCampaignService,
   ) {}
 
   // ======================================================
@@ -183,68 +144,58 @@ export class CandidateController {
     @CurrentUser()
     user: JwtPayload,
   ) {
-    return this.submitNominationService.execute(
-      dto,
-      user.userId,
-    );
+    return this.submitNominationService.execute(dto, user.userId);
   }
 
   // ======================================================
-// Get Public Candidate Profile
-// ======================================================
+  // Get Public Candidate Profile
+  // ======================================================
 
-@Get('public/:id')
-async getPublicCandidateProfile(
-  @Param(
-  'id',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-id: string,
-) {
-  return this.getPublicCandidateProfileService.execute(
-    id,
-  );
-}
+  @Get('public/:id')
+  async getPublicCandidateProfile(
+    @Param(
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    id: string,
+  ) {
+    return this.getPublicCandidateProfileService.execute(id);
+  }
 
-// ======================================================
-// Upload Candidate Document
-// ======================================================
+  // ======================================================
+  // Upload Candidate Document
+  // ======================================================
 
-@Post(':id/documents')
-@UseGuards(JwtAuthGuard)
-@UseInterceptors(
-  FileInterceptor(
-    'file',
-    candidateDocumentMulterConfig,
-  ),
-)
-async uploadCandidateDocument(
-  @Param(
-  'id',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-id: string,
+  @Post(':id/documents')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file', candidateDocumentMulterConfig))
+  async uploadCandidateDocument(
+    @Param(
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    id: string,
 
-  @Body()
-  dto: UploadCandidateDocumentDto,
+    @Body()
+    dto: UploadCandidateDocumentDto,
 
-  @UploadedFile()
-  file: Express.Multer.File,
+    @UploadedFile()
+    file: Express.Multer.File,
 
-  @CurrentUser()
-  user: JwtPayload,
-) {
-  return this.uploadCandidateDocumentService.execute(
-    id,
-    user.userId,
-    dto,
-    file,
-  );
-}
+    @CurrentUser()
+    user: JwtPayload,
+  ) {
+    return this.uploadCandidateDocumentService.execute(
+      id,
+      user.userId,
+      dto,
+      file,
+    );
+  }
 
   // ======================================================
   // Get My Candidacies
@@ -257,9 +208,7 @@ id: string,
     @CurrentUser()
     user: JwtPayload,
   ) {
-    return this.myCandidatesService.execute(
-      user.userId,
-    );
+    return this.myCandidatesService.execute(user.userId);
   }
 
   // ======================================================
@@ -267,52 +216,35 @@ id: string,
   // ======================================================
 
   @Get()
-@UseGuards(
-  JwtAuthGuard,
-  RolesGuard,
-)
-@Roles(
-  Role.SUPER_ADMIN,
-  Role.ELECTION_COMMISSIONER,
-)
-async findAll(
-  @Query()
-  query: QueryCandidateDto,
-) {
-  return this.listCandidatesService.execute(
-    query,
-  );
-}
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ELECTION_COMMISSIONER)
+  async findAll(
+    @Query()
+    query: QueryCandidateDto,
+  ) {
+    return this.listCandidatesService.execute(query);
+  }
 
   // ======================================================
   // Verify Candidate
   // ======================================================
 
   @Patch(':id/verify')
-  @UseGuards(
-    JwtAuthGuard,
-    RolesGuard,
-  )
-  @Roles(
-    Role.ELECTION_COMMISSIONER,
-    Role.SUPER_ADMIN,
-  )
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ELECTION_COMMISSIONER, Role.SUPER_ADMIN)
   async verify(
     @Param(
-  'id',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-id: string,
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    id: string,
 
     @CurrentUser()
     user: JwtPayload,
   ) {
-    return this.verifyCandidateService.execute(
-      id,
-      user.userId,
-    );
+    return this.verifyCandidateService.execute(id, user.userId);
   }
 
   // ======================================================
@@ -320,30 +252,21 @@ id: string,
   // ======================================================
 
   @Patch(':id/approve')
-  @UseGuards(
-    JwtAuthGuard,
-    RolesGuard,
-  )
-  @Roles(
-    Role.ELECTION_COMMISSIONER,
-    Role.SUPER_ADMIN,
-  )
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ELECTION_COMMISSIONER, Role.SUPER_ADMIN)
   async approve(
     @Param(
-  'id',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-id: string,
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    id: string,
 
     @CurrentUser()
     user: JwtPayload,
   ) {
-    return this.approveCandidateService.execute(
-      id,
-      user.userId,
-    );
+    return this.approveCandidateService.execute(id, user.userId);
   }
 
   // ======================================================
@@ -351,98 +274,74 @@ id: string,
   // ======================================================
 
   @Patch(':id/reject')
-  @UseGuards(
-    JwtAuthGuard,
-    RolesGuard,
-  )
-  @Roles(
-    Role.ELECTION_COMMISSIONER,
-    Role.SUPER_ADMIN,
-  )
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ELECTION_COMMISSIONER, Role.SUPER_ADMIN)
   async reject(
-  @Param(
-  'id',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-id: string,
+    @Param(
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    id: string,
 
-  @Body()
-  dto: RejectCandidateDto,
+    @Body()
+    dto: RejectCandidateDto,
 
-  @CurrentUser()
-  user: JwtPayload,
-) {
-  return this.rejectCandidateService.execute(
-    id,
-    user.userId,
-    dto.reason,
-  );
-}
+    @CurrentUser()
+    user: JwtPayload,
+  ) {
+    return this.rejectCandidateService.execute(id, user.userId, dto.reason);
+  }
 
   // ======================================================
-// Withdraw Candidacy
-// ======================================================
+  // Withdraw Candidacy
+  // ======================================================
 
-@Patch(':id/withdraw')
-@UseGuards(JwtAuthGuard)
-async withdraw(
-  @Param(
-  'id',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-id: string,
+  @Patch(':id/withdraw')
+  @UseGuards(JwtAuthGuard)
+  async withdraw(
+    @Param(
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    id: string,
 
-  @Body()
-  dto: WithdrawCandidateDto,
+    @Body()
+    dto: WithdrawCandidateDto,
 
-  @CurrentUser()
-  user: JwtPayload,
-) {
-  return this.withdrawCandidateService.execute(
-    id,
-    user.userId,
-    dto.reason,
-  );
-}
+    @CurrentUser()
+    user: JwtPayload,
+  ) {
+    return this.withdrawCandidateService.execute(id, user.userId, dto.reason);
+  }
 
- // ======================================================
-// Disqualify Candidate
-// ======================================================
+  // ======================================================
+  // Disqualify Candidate
+  // ======================================================
 
-@Patch(':id/disqualify')
-@UseGuards(
-  JwtAuthGuard,
-  RolesGuard,
-)
-@Roles(
-  Role.ELECTION_COMMISSIONER,
-  Role.SUPER_ADMIN,
-)
-async disqualify(
-  @Param(
-  'id',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-id: string,
+  @Patch(':id/disqualify')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ELECTION_COMMISSIONER, Role.SUPER_ADMIN)
+  async disqualify(
+    @Param(
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    id: string,
 
-  @Body()
-  dto: DisqualifyCandidateDto,
+    @Body()
+    dto: DisqualifyCandidateDto,
 
-  @CurrentUser()
-  user: JwtPayload,
-) {
-  return this.disqualifyCandidateService.execute(
-    id,
-    user.userId,
-    dto.reason,
-  );
-}
+    @CurrentUser()
+    user: JwtPayload,
+  ) {
+    return this.disqualifyCandidateService.execute(id, user.userId, dto.reason);
+  }
 
   // ======================================================
   // Get Candidate By ID
@@ -450,533 +349,444 @@ id: string,
   // ======================================================
 
   @Get(':id')
-@UseGuards(JwtAuthGuard)
-async findOne(
-  @Param(
-  'id',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-id: string,
+  @UseGuards(JwtAuthGuard)
+  async findOne(
+    @Param(
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    id: string,
 
-  @CurrentUser()
-  user: JwtPayload,
-) {
-  return this.getCandidateService.execute(
-    id,
-    user.userId,
-    user.role,
-  );
-}
+    @CurrentUser()
+    user: JwtPayload,
+  ) {
+    return this.getCandidateService.execute(id, user.userId, user.role);
+  }
 
   // ======================================================
-// Assign Candidate Number
-// ======================================================
+  // Assign Candidate Number
+  // ======================================================
 
-@Patch(':id/candidate-number')
-@UseGuards(
-  JwtAuthGuard,
-  RolesGuard,
-)
-@Roles(
-  Role.SUPER_ADMIN,
-  Role.ELECTION_COMMISSIONER,
-)
-async assignCandidateNumber(
-  @Param(
-  'id',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-id: string,
+  @Patch(':id/candidate-number')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ELECTION_COMMISSIONER)
+  async assignCandidateNumber(
+    @Param(
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    id: string,
 
-  @Body()
-  dto: AssignCandidateNumberDto,
-) {
-  return this.assignCandidateNumberService.execute(
-    id,
-    dto.candidateNumber,
-  );
-}
-
-// ======================================================
-// Auto Assign Candidate Number
-// ======================================================
-
-@Patch(':id/candidate-number/auto')
-@UseGuards(
-  JwtAuthGuard,
-  RolesGuard,
-)
-@Roles(
-  Role.SUPER_ADMIN,
-  Role.ELECTION_COMMISSIONER,
-)
-async autoAssignCandidateNumber(
-  @Param(
-  'id',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-id: string,
-) {
-  return this.autoAssignCandidateNumberService.execute(
-    id,
-  );
-}
-
-// ======================================================
-// Generate Ballot Order
-// ======================================================
-
-@Patch('election/:electionId/ballot-order/generate')
-@UseGuards(
-  JwtAuthGuard,
-  RolesGuard,
-)
-@Roles(
-  Role.SUPER_ADMIN,
-  Role.ELECTION_COMMISSIONER,
-)
-async generateBallotOrder(
-  @Param(
-  'electionId',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-electionId: string,
-
-  @Body()
-  dto: GenerateBallotOrderDto,
-) {
-  return this.generateBallotOrderService.execute(
-    electionId,
-    dto.method,
-  );
-}
-
-// ======================================================
-// Manual Ballot Order
-// ======================================================
-
-@Patch('election/:electionId/ballot-order/manual')
-@UseGuards(
-  JwtAuthGuard,
-  RolesGuard,
-)
-@Roles(
-  Role.SUPER_ADMIN,
-  Role.ELECTION_COMMISSIONER,
-)
-async manualBallotOrder(
-  @Param(
-  'electionId',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-electionId: string,
-
-  @Body()
-  dto: ManualBallotOrderDto,
-) {
-  return this.manualBallotOrderService.execute(
-    electionId,
-    dto.candidateIds,
-  );
-}
-
-// ======================================================
-// Get Election Ballot
-// ======================================================
-
-@Get('election/:electionId/ballot')
-async getElectionBallot(
-  @Param(
-  'electionId',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-electionId: string,
-) {
-  return this.getBallotService.execute(
-    electionId,
-  );
-}
-
-// ======================================================
-// Finalize Election Ballot
-// ======================================================
-
-@Patch('election/:electionId/ballot/finalize')
-@UseGuards(
-  JwtAuthGuard,
-  RolesGuard,
-)
-@Roles(
-  Role.SUPER_ADMIN,
-  Role.ELECTION_COMMISSIONER,
-)
-async finalizeBallot(
-  @Param(
-  'electionId',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-electionId: string,
-
-  @CurrentUser()
-  user: JwtPayload,
-) {
-  return this.finalizeBallotService.execute(
-    electionId,
-    user.userId,
-  );
-}
-
-// ======================================================
-// Update Own Pending Nomination
-// ======================================================
-
-@Patch(':id')
-@UseGuards(JwtAuthGuard)
-async updateCandidate(
-  @Param(
-  'id',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-id: string,
-
-  @Body()
-  dto: UpdateCandidateDto,
-
-  @CurrentUser()
-  user: JwtPayload,
-) {
-  return this.updateCandidateService.execute(
-    id,
-    user.userId,
-    dto,
-  );
-}
-
-// ======================================================
-// Cancel Own Pending Nomination
-// ======================================================
-
-@Delete(':id/nomination')
-@UseGuards(JwtAuthGuard)
-async cancelNomination(
-  @Param(
-  'id',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-id: string,
-
-  @CurrentUser()
-  user: JwtPayload,
-) {
-  return this.cancelNominationService.execute(
-    id,
-    user.userId,
-  );
-}
-
-// ======================================================
-// Update Candidate Profile
-// ======================================================
-
-@Patch(':id/profile')
-@UseGuards(JwtAuthGuard)
-async updateCandidateProfile(
-  @Param(
-  'id',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-id: string,
-
-  @Body()
-  dto: UpdateCandidateProfileDto,
-
-  @CurrentUser()
-  user: JwtPayload,
-) {
-  return this.updateCandidateProfileService.execute(
-    id,
-    user.userId,
-    dto,
-  );
-}
-
-// ======================================================
-// List Candidate Documents
-// ======================================================
-
-@Get(':id/documents')
-@UseGuards(JwtAuthGuard)
-async listCandidateDocuments(
-  @Param(
-  'id',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-id: string,
-
-  @CurrentUser()
-  user: JwtPayload,
-) {
-  return this.listCandidateDocumentsService.execute(
-    id,
-    user.userId,
-    user.role,
-  );
-}
-
-// ======================================================
-// Get Candidate Document
-// ======================================================
-
-@Get(':candidateId/documents/:documentId')
-@UseGuards(JwtAuthGuard)
-async getCandidateDocument(
-  @Param(
-  'candidateId',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-candidateId: string,
-
-  @Param(
-  'documentId',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-documentId: string,
-
-  @CurrentUser()
-  user: JwtPayload,
-) {
-  const document =
-   await this.getCandidateDocumentService.execute(
-  candidateId,
-  documentId,
-  user.userId,
-  user.role,
-);
-
-  if (
-    document.candidateId !==
-    candidateId
+    @Body()
+    dto: AssignCandidateNumberDto,
   ) {
-    throw new NotFoundException(
-      'Candidate document not found.',
+    return this.assignCandidateNumberService.execute(id, dto.candidateNumber);
+  }
+
+  // ======================================================
+  // Auto Assign Candidate Number
+  // ======================================================
+
+  @Patch(':id/candidate-number/auto')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ELECTION_COMMISSIONER)
+  async autoAssignCandidateNumber(
+    @Param(
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    id: string,
+  ) {
+    return this.autoAssignCandidateNumberService.execute(id);
+  }
+
+  // ======================================================
+  // Generate Ballot Order
+  // ======================================================
+
+  @Patch('election/:electionId/ballot-order/generate')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ELECTION_COMMISSIONER)
+  async generateBallotOrder(
+    @Param(
+      'electionId',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    electionId: string,
+
+    @Body()
+    dto: GenerateBallotOrderDto,
+  ) {
+    return this.generateBallotOrderService.execute(electionId, dto.method);
+  }
+
+  // ======================================================
+  // Manual Ballot Order
+  // ======================================================
+
+  @Patch('election/:electionId/ballot-order/manual')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ELECTION_COMMISSIONER)
+  async manualBallotOrder(
+    @Param(
+      'electionId',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    electionId: string,
+
+    @Body()
+    dto: ManualBallotOrderDto,
+  ) {
+    return this.manualBallotOrderService.execute(electionId, dto.candidateIds);
+  }
+
+  // ======================================================
+  // Get Election Ballot
+  // ======================================================
+
+  @Get('election/:electionId/ballot')
+  async getElectionBallot(
+    @Param(
+      'electionId',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    electionId: string,
+  ) {
+    return this.getBallotService.execute(electionId);
+  }
+
+  // ======================================================
+  // Finalize Election Ballot
+  // ======================================================
+
+  @Patch('election/:electionId/ballot/finalize')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ELECTION_COMMISSIONER)
+  async finalizeBallot(
+    @Param(
+      'electionId',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    electionId: string,
+
+    @CurrentUser()
+    user: JwtPayload,
+  ) {
+    return this.finalizeBallotService.execute(electionId, user.userId);
+  }
+
+  // ======================================================
+  // Update Own Pending Nomination
+  // ======================================================
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  async updateCandidate(
+    @Param(
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    id: string,
+
+    @Body()
+    dto: UpdateCandidateDto,
+
+    @CurrentUser()
+    user: JwtPayload,
+  ) {
+    return this.updateCandidateService.execute(id, user.userId, dto);
+  }
+
+  // ======================================================
+  // Cancel Own Pending Nomination
+  // ======================================================
+
+  @Delete(':id/nomination')
+  @UseGuards(JwtAuthGuard)
+  async cancelNomination(
+    @Param(
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    id: string,
+
+    @CurrentUser()
+    user: JwtPayload,
+  ) {
+    return this.cancelNominationService.execute(id, user.userId);
+  }
+
+  // ======================================================
+  // Update Candidate Profile
+  // ======================================================
+
+  @Patch(':id/profile')
+  @UseGuards(JwtAuthGuard)
+  async updateCandidateProfile(
+    @Param(
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    id: string,
+
+    @Body()
+    dto: UpdateCandidateProfileDto,
+
+    @CurrentUser()
+    user: JwtPayload,
+  ) {
+    return this.updateCandidateProfileService.execute(id, user.userId, dto);
+  }
+
+  // ======================================================
+  // List Candidate Documents
+  // ======================================================
+
+  @Get(':id/documents')
+  @UseGuards(JwtAuthGuard)
+  async listCandidateDocuments(
+    @Param(
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    id: string,
+
+    @CurrentUser()
+    user: JwtPayload,
+  ) {
+    return this.listCandidateDocumentsService.execute(
+      id,
+      user.userId,
+      user.role,
     );
   }
 
-  return document;
-}
+  // ======================================================
+  // Get Candidate Document
+  // ======================================================
 
-// ======================================================
-// Replace Candidate Document
-// ======================================================
+  @Get(':candidateId/documents/:documentId')
+  @UseGuards(JwtAuthGuard)
+  async getCandidateDocument(
+    @Param(
+      'candidateId',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    candidateId: string,
 
-@Post(':candidateId/documents/:documentId/replace')
-@UseGuards(JwtAuthGuard)
-@UseInterceptors(
-  FileInterceptor(
-    'file',
-    candidateDocumentMulterConfig,
-  ),
-)
-async replaceCandidateDocument(
-  @Param(
-  'candidateId',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-candidateId: string,
+    @Param(
+      'documentId',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    documentId: string,
 
-  @Param(
-  'documentId',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-documentId: string,
+    @CurrentUser()
+    user: JwtPayload,
+  ) {
+    const document = await this.getCandidateDocumentService.execute(
+      candidateId,
+      documentId,
+      user.userId,
+      user.role,
+    );
 
-  @UploadedFile()
-  file: Express.Multer.File,
+    if (document.candidateId !== candidateId) {
+      throw new NotFoundException('Candidate document not found.');
+    }
 
-  @CurrentUser()
-  user: JwtPayload,
-) {
-  return this.replaceCandidateDocumentService.execute(
-    candidateId,
-    documentId,
-    user.userId,
-    file,
-  );
-}
+    return document;
+  }
 
-// ======================================================
-// Verify Candidate Document
-// ======================================================
+  // ======================================================
+  // Replace Candidate Document
+  // ======================================================
 
-@Patch(':candidateId/documents/:documentId/verify')
-@UseGuards(
-  JwtAuthGuard,
-  RolesGuard,
-)
-@Roles(
-  Role.SUPER_ADMIN,
-  Role.ELECTION_COMMISSIONER,
-)
-async verifyCandidateDocument(
-  @Param(
-  'candidateId',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-candidateId: string,
+  @Post(':candidateId/documents/:documentId/replace')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file', candidateDocumentMulterConfig))
+  async replaceCandidateDocument(
+    @Param(
+      'candidateId',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    candidateId: string,
 
-  @Param(
-  'documentId',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-documentId: string,
+    @Param(
+      'documentId',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    documentId: string,
 
-  @CurrentUser()
-  user: JwtPayload,
-) {
-  return this.verifyCandidateDocumentService.execute(
-    candidateId,
-    documentId,
-    user.userId,
-  );
-}
+    @UploadedFile()
+    file: Express.Multer.File,
 
-// ======================================================
-// Reject Candidate Document
-// ======================================================
+    @CurrentUser()
+    user: JwtPayload,
+  ) {
+    return this.replaceCandidateDocumentService.execute(
+      candidateId,
+      documentId,
+      user.userId,
+      file,
+    );
+  }
 
-@Patch(':candidateId/documents/:documentId/reject')
-@UseGuards(
-  JwtAuthGuard,
-  RolesGuard,
-)
-@Roles(
-  Role.SUPER_ADMIN,
-  Role.ELECTION_COMMISSIONER,
-)
-async rejectCandidateDocument(
-  @Param(
-  'candidateId',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-candidateId: string,
+  // ======================================================
+  // Verify Candidate Document
+  // ======================================================
 
-  @Param(
-  'documentId',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-documentId: string,
+  @Patch(':candidateId/documents/:documentId/verify')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ELECTION_COMMISSIONER)
+  async verifyCandidateDocument(
+    @Param(
+      'candidateId',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    candidateId: string,
 
-  @Body()
-  dto: RejectCandidateDocumentDto,
+    @Param(
+      'documentId',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    documentId: string,
 
-  @CurrentUser()
-  user: JwtPayload,
-) {
-  return this.rejectCandidateDocumentService.execute(
-    candidateId,
-    documentId,
-    user.userId,
-    dto.reason,
-  );
-}
+    @CurrentUser()
+    user: JwtPayload,
+  ) {
+    return this.verifyCandidateDocumentService.execute(
+      candidateId,
+      documentId,
+      user.userId,
+    );
+  }
 
-// ======================================================
-// Delete Candidate Document
-// ======================================================
+  // ======================================================
+  // Reject Candidate Document
+  // ======================================================
 
-@Delete(':candidateId/documents/:documentId')
-@UseGuards(JwtAuthGuard)
-async deleteCandidateDocument(
-  @Param(
-  'candidateId',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-candidateId: string,
+  @Patch(':candidateId/documents/:documentId/reject')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ELECTION_COMMISSIONER)
+  async rejectCandidateDocument(
+    @Param(
+      'candidateId',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    candidateId: string,
 
-  @Param(
-  'documentId',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-documentId: string,
+    @Param(
+      'documentId',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    documentId: string,
 
-  @CurrentUser()
-  user: JwtPayload,
-) {
-  return this.deleteCandidateDocumentService.execute(
-    candidateId,
-    documentId,
-    user.userId,
-  );
-}
+    @Body()
+    dto: RejectCandidateDocumentDto,
 
-// ======================================================
-// Update Candidate Campaign
-// ======================================================
+    @CurrentUser()
+    user: JwtPayload,
+  ) {
+    return this.rejectCandidateDocumentService.execute(
+      candidateId,
+      documentId,
+      user.userId,
+      dto.reason,
+    );
+  }
 
-@Patch(':id/campaign')
-@UseGuards(JwtAuthGuard)
-async updateCampaign(
-  @Param(
-  'id',
-  new ParseUUIDPipe({
-    version: '4',
-  }),
-)
-id: string,
+  // ======================================================
+  // Delete Candidate Document
+  // ======================================================
 
-  @Body()
-  dto: UpdateCandidateCampaignDto,
+  @Delete(':candidateId/documents/:documentId')
+  @UseGuards(JwtAuthGuard)
+  async deleteCandidateDocument(
+    @Param(
+      'candidateId',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    candidateId: string,
 
-  @CurrentUser()
-  user: JwtPayload,
-) {
-  return this.updateCandidateCampaignService.execute(
-    id,
-    user.userId,
-    dto,
-  );
-}
+    @Param(
+      'documentId',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    documentId: string,
 
+    @CurrentUser()
+    user: JwtPayload,
+  ) {
+    return this.deleteCandidateDocumentService.execute(
+      candidateId,
+      documentId,
+      user.userId,
+    );
+  }
+
+  // ======================================================
+  // Update Candidate Campaign
+  // ======================================================
+
+  @Patch(':id/campaign')
+  @UseGuards(JwtAuthGuard)
+  async updateCampaign(
+    @Param(
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+      }),
+    )
+    id: string,
+
+    @Body()
+    dto: UpdateCandidateCampaignDto,
+
+    @CurrentUser()
+    user: JwtPayload,
+  ) {
+    return this.updateCandidateCampaignService.execute(id, user.userId, dto);
+  }
 }

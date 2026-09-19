@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { CandidateRepository } from '../repository/candidate.repository';
 import { CampaignWindowValidator } from '../validators/campaign-window.validator';
@@ -9,39 +6,28 @@ import { CampaignWindowValidator } from '../validators/campaign-window.validator
 @Injectable()
 export class GetPublicCandidateProfileService {
   constructor(
-    private readonly candidateRepository:
-      CandidateRepository,
+    private readonly candidateRepository: CandidateRepository,
 
-    private readonly campaignWindowValidator:
-      CampaignWindowValidator,
+    private readonly campaignWindowValidator: CampaignWindowValidator,
   ) {}
 
-  async execute(
-    candidateId: string,
-  ) {
+  async execute(candidateId: string) {
     const candidate =
-      await this.candidateRepository
-        .findPublicProfile(
-          candidateId,
-        );
+      await this.candidateRepository.findPublicProfile(candidateId);
 
     if (!candidate) {
-      throw new NotFoundException(
-        'Public candidate profile not found.',
-      );
+      throw new NotFoundException('Public candidate profile not found.');
     }
 
-    const campaignStatus =
-      this.campaignWindowValidator.getStatus(
-        candidate.election.startDate,
-        candidate.election.endDate,
-      );
+    const campaignStatus = this.campaignWindowValidator.getStatus(
+      candidate.election.startDate,
+      candidate.election.endDate,
+    );
 
-    const campaignOpen =
-      this.campaignWindowValidator.isOpen(
-        candidate.election.startDate,
-        candidate.election.endDate,
-      );
+    const campaignOpen = this.campaignWindowValidator.isOpen(
+      candidate.election.startDate,
+      candidate.election.endDate,
+    );
 
     return {
       ...candidate,
@@ -49,10 +35,8 @@ export class GetPublicCandidateProfileService {
       campaign: {
         status: campaignStatus,
         open: campaignOpen,
-        startDate:
-          candidate.election.startDate,
-        endDate:
-          candidate.election.endDate,
+        startDate: candidate.election.startDate,
+        endDate: candidate.election.endDate,
       },
     };
   }

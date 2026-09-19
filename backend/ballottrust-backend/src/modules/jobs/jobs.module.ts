@@ -16,9 +16,6 @@ import { AuditModule } from '../audit/audit.module';
     AuditModule,
   ],
 
-  providers: [
-    ElectionLifecycleJob,
-    ElectionLifecycleService,
-  ],
+  providers: [ElectionLifecycleJob, ElectionLifecycleService],
 })
 export class JobsModule {}

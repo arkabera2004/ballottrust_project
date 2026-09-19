@@ -13,16 +13,15 @@ describe('AuditController', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const module: TestingModule =
-      await Test.createTestingModule({
-        controllers: [AuditController],
-        providers: [
-          {
-            provide: AuditService,
-            useValue: mockAuditService,
-          },
-        ],
-      }).compile();
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [AuditController],
+      providers: [
+        {
+          provide: AuditService,
+          useValue: mockAuditService,
+        },
+      ],
+    }).compile();
 
     controller = module.get<AuditController>(AuditController);
   });

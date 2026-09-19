@@ -13,7 +13,6 @@ import { GoogleStrategy } from './strategies/google.strategy';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { AuditModule } from '../audit/audit.module';
 
-
 @Module({
   imports: [
     PrismaModule,
@@ -26,7 +25,7 @@ import { AuditModule } from '../audit/audit.module';
       },
     }),
 
-    MailModule,   // <-- ADD THIS
+    MailModule, // <-- ADD THIS
     AuditModule,
   ],
 

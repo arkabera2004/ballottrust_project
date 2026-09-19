@@ -5,9 +5,7 @@ import { DEFAULT_RULE } from '../types';
 
 @Injectable()
 export class GetActiveEligibilityRulesService {
-  constructor(
-    private readonly repository: EligibilityRuleSetRepository,
-  ) {}
+  constructor(private readonly repository: EligibilityRuleSetRepository) {}
 
   async execute(electionId: string) {
     const active = await this.repository.findActive(electionId);

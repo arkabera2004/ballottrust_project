@@ -40,11 +40,7 @@ describe('DefineEligibilityRulesService', () => {
     mockPrisma.election.findUnique.mockResolvedValue(null);
 
     await expect(
-      service.execute(
-        'election-1',
-        { rule: { type: 'CONDITION' } },
-        'admin-1',
-      ),
+      service.execute('election-1', { rule: { type: 'CONDITION' } }, 'admin-1'),
     ).rejects.toThrow(NotFoundException);
 
     expect(mockValidator.validate).not.toHaveBeenCalled();
@@ -61,11 +57,7 @@ describe('DefineEligibilityRulesService', () => {
     });
 
     await expect(
-      service.execute(
-        'election-1',
-        { rule: { type: 'NONSENSE' } },
-        'admin-1',
-      ),
+      service.execute('election-1', { rule: { type: 'NONSENSE' } }, 'admin-1'),
     ).rejects.toThrow(BadRequestException);
 
     expect(mockRepository.createNewVersion).not.toHaveBeenCalled();

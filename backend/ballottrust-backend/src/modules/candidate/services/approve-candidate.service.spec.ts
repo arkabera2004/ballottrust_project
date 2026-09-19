@@ -11,18 +11,17 @@ describe('ApproveCandidateService', () => {
   let service: ApproveCandidateService;
 
   const candidateRepository = {
-  findById: jest.fn<(...args: any[]) => any>(),
-  update: jest.fn<(...args: any[]) => any>(),
-};
+    findById: jest.fn<(...args: any[]) => any>(),
+    update: jest.fn<(...args: any[]) => any>(),
+  };
 
-const candidateStatusValidator = {
-  validateTransition:
-    jest.fn<(...args: any[]) => any>(),
-};
+  const candidateStatusValidator = {
+    validateTransition: jest.fn<(...args: any[]) => any>(),
+  };
 
-const auditService = {
-  log: jest.fn<(...args: any[]) => any>(),
-};
+  const auditService = {
+    log: jest.fn<(...args: any[]) => any>(),
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -39,11 +38,9 @@ const auditService = {
   // ======================================================
 
   it('should approve an existing candidate', async () => {
-    const candidateId =
-      '16d19b1c-0ef6-4692-8e8d-31870e900c15';
+    const candidateId = '16d19b1c-0ef6-4692-8e8d-31870e900c15';
 
-    const approvedById =
-      '8729d5c3-6bd9-4916-b141-dbbce38293ed';
+    const approvedById = '8729d5c3-6bd9-4916-b141-dbbce38293ed';
 
     const candidate = {
       id: candidateId,
@@ -56,22 +53,13 @@ const auditService = {
       approvedById,
     };
 
-    candidateRepository.findById.mockResolvedValue(
-      candidate,
-    );
+    candidateRepository.findById.mockResolvedValue(candidate);
 
-    candidateStatusValidator.validateTransition.mockReturnValue(
-      undefined,
-    );
+    candidateStatusValidator.validateTransition.mockReturnValue(undefined);
 
-    candidateRepository.update.mockResolvedValue(
-      updatedCandidate,
-    );
+    candidateRepository.update.mockResolvedValue(updatedCandidate);
 
-    const result = await service.execute(
-      candidateId,
-      approvedById,
-    );
+    const result = await service.execute(candidateId, approvedById);
 
     expect(result).toEqual(updatedCandidate);
 
@@ -84,20 +72,14 @@ const auditService = {
       }),
     );
 
-    expect(
-      candidateRepository.findById,
-    ).toHaveBeenCalledWith(candidateId);
+    expect(candidateRepository.findById).toHaveBeenCalledWith(candidateId);
 
-    expect(
-      candidateStatusValidator.validateTransition,
-    ).toHaveBeenCalledWith(
+    expect(candidateStatusValidator.validateTransition).toHaveBeenCalledWith(
       CandidateStatus.VERIFIED,
       CandidateStatus.APPROVED,
     );
 
-    expect(
-      candidateRepository.update,
-    ).toHaveBeenCalledWith(
+    expect(candidateRepository.update).toHaveBeenCalledWith(
       candidateId,
       expect.objectContaining({
         status: CandidateStatus.APPROVED,
@@ -116,31 +98,21 @@ const auditService = {
   // ======================================================
 
   it('should throw NotFoundException when candidate does not exist', async () => {
-    const candidateId =
-      '16d19b1c-0ef6-4692-8e8d-31870e900c15';
+    const candidateId = '16d19b1c-0ef6-4692-8e8d-31870e900c15';
 
-    const approvedById =
-      '8729d5c3-6bd9-4916-b141-dbbce38293ed';
+    const approvedById = '8729d5c3-6bd9-4916-b141-dbbce38293ed';
 
-    candidateRepository.findById.mockResolvedValue(
-      null,
+    candidateRepository.findById.mockResolvedValue(null);
+
+    await expect(service.execute(candidateId, approvedById)).rejects.toThrow(
+      NotFoundException,
     );
 
-    await expect(
-      service.execute(candidateId, approvedById),
-    ).rejects.toThrow(NotFoundException);
+    expect(candidateRepository.findById).toHaveBeenCalledWith(candidateId);
 
-    expect(
-      candidateRepository.findById,
-    ).toHaveBeenCalledWith(candidateId);
+    expect(candidateStatusValidator.validateTransition).not.toHaveBeenCalled();
 
-    expect(
-      candidateStatusValidator.validateTransition,
-    ).not.toHaveBeenCalled();
-
-    expect(
-      candidateRepository.update,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.update).not.toHaveBeenCalled();
   });
 
   // ======================================================
@@ -148,44 +120,30 @@ const auditService = {
   // ======================================================
 
   it('should reject an invalid lifecycle transition', async () => {
-    const candidateId =
-      '16d19b1c-0ef6-4692-8e8d-31870e900c15';
+    const candidateId = '16d19b1c-0ef6-4692-8e8d-31870e900c15';
 
-    const approvedById =
-      '8729d5c3-6bd9-4916-b141-dbbce38293ed';
+    const approvedById = '8729d5c3-6bd9-4916-b141-dbbce38293ed';
 
     const candidate = {
       id: candidateId,
       status: CandidateStatus.PENDING,
     };
 
-    candidateRepository.findById.mockResolvedValue(
-      candidate,
-    );
+    candidateRepository.findById.mockResolvedValue(candidate);
 
-    candidateStatusValidator.validateTransition.mockImplementation(
-      () => {
-        throw new Error(
-          'Invalid candidate status transition.',
-        );
-      },
-    );
+    candidateStatusValidator.validateTransition.mockImplementation(() => {
+      throw new Error('Invalid candidate status transition.');
+    });
 
-    await expect(
-      service.execute(candidateId, approvedById),
-    ).rejects.toThrow(
+    await expect(service.execute(candidateId, approvedById)).rejects.toThrow(
       'Invalid candidate status transition.',
     );
 
-    expect(
-      candidateStatusValidator.validateTransition,
-    ).toHaveBeenCalledWith(
+    expect(candidateStatusValidator.validateTransition).toHaveBeenCalledWith(
       CandidateStatus.PENDING,
       CandidateStatus.APPROVED,
     );
 
-    expect(
-      candidateRepository.update,
-    ).not.toHaveBeenCalled();
+    expect(candidateRepository.update).not.toHaveBeenCalled();
   });
 });

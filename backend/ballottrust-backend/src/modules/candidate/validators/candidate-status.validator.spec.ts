@@ -8,8 +8,7 @@ describe('CandidateStatusValidator', () => {
   let validator: CandidateStatusValidator;
 
   beforeEach(() => {
-    validator =
-      new CandidateStatusValidator();
+    validator = new CandidateStatusValidator();
   });
 
   // ============================================================
@@ -147,9 +146,7 @@ describe('CandidateStatusValidator', () => {
         CandidateStatus.PENDING,
         CandidateStatus.PENDING,
       ),
-    ).toThrow(
-      'Candidate is already in PENDING status.',
-    );
+    ).toThrow('Candidate is already in PENDING status.');
   });
 
   it('should reject repeated VERIFIED status', () => {
@@ -158,9 +155,7 @@ describe('CandidateStatusValidator', () => {
         CandidateStatus.VERIFIED,
         CandidateStatus.VERIFIED,
       ),
-    ).toThrow(
-      'Candidate is already in VERIFIED status.',
-    );
+    ).toThrow('Candidate is already in VERIFIED status.');
   });
 
   it('should reject repeated APPROVED status', () => {
@@ -169,9 +164,7 @@ describe('CandidateStatusValidator', () => {
         CandidateStatus.APPROVED,
         CandidateStatus.APPROVED,
       ),
-    ).toThrow(
-      'Candidate is already in APPROVED status.',
-    );
+    ).toThrow('Candidate is already in APPROVED status.');
   });
 
   // ============================================================
@@ -179,51 +172,27 @@ describe('CandidateStatusValidator', () => {
   // ============================================================
 
   it('should identify REJECTED as a final status', () => {
-    expect(
-      validator.isFinalStatus(
-        CandidateStatus.REJECTED,
-      ),
-    ).toBe(true);
+    expect(validator.isFinalStatus(CandidateStatus.REJECTED)).toBe(true);
   });
 
   it('should identify WITHDRAWN as a final status', () => {
-    expect(
-      validator.isFinalStatus(
-        CandidateStatus.WITHDRAWN,
-      ),
-    ).toBe(true);
+    expect(validator.isFinalStatus(CandidateStatus.WITHDRAWN)).toBe(true);
   });
 
   it('should identify DISQUALIFIED as a final status', () => {
-    expect(
-      validator.isFinalStatus(
-        CandidateStatus.DISQUALIFIED,
-      ),
-    ).toBe(true);
+    expect(validator.isFinalStatus(CandidateStatus.DISQUALIFIED)).toBe(true);
   });
 
   it('should identify PENDING as a non-final status', () => {
-    expect(
-      validator.isFinalStatus(
-        CandidateStatus.PENDING,
-      ),
-    ).toBe(false);
+    expect(validator.isFinalStatus(CandidateStatus.PENDING)).toBe(false);
   });
 
   it('should identify VERIFIED as a non-final status', () => {
-    expect(
-      validator.isFinalStatus(
-        CandidateStatus.VERIFIED,
-      ),
-    ).toBe(false);
+    expect(validator.isFinalStatus(CandidateStatus.VERIFIED)).toBe(false);
   });
 
   it('should identify APPROVED as a non-final status', () => {
-    expect(
-      validator.isFinalStatus(
-        CandidateStatus.APPROVED,
-      ),
-    ).toBe(false);
+    expect(validator.isFinalStatus(CandidateStatus.APPROVED)).toBe(false);
   });
 
   // ============================================================
@@ -232,34 +201,26 @@ describe('CandidateStatusValidator', () => {
 
   it('should allow candidate editing while PENDING', () => {
     expect(() =>
-      validator.validateEditable(
-        CandidateStatus.PENDING,
-      ),
+      validator.validateEditable(CandidateStatus.PENDING),
     ).not.toThrow();
   });
 
   it('should reject candidate editing while VERIFIED', () => {
-    expect(() =>
-      validator.validateEditable(
-        CandidateStatus.VERIFIED,
-      ),
-    ).toThrow(BadRequestException);
+    expect(() => validator.validateEditable(CandidateStatus.VERIFIED)).toThrow(
+      BadRequestException,
+    );
   });
 
   it('should reject candidate editing while APPROVED', () => {
-    expect(() =>
-      validator.validateEditable(
-        CandidateStatus.APPROVED,
-      ),
-    ).toThrow(BadRequestException);
+    expect(() => validator.validateEditable(CandidateStatus.APPROVED)).toThrow(
+      BadRequestException,
+    );
   });
 
   it('should reject candidate editing after REJECTED', () => {
-    expect(() =>
-      validator.validateEditable(
-        CandidateStatus.REJECTED,
-      ),
-    ).toThrow(BadRequestException);
+    expect(() => validator.validateEditable(CandidateStatus.REJECTED)).toThrow(
+      BadRequestException,
+    );
   });
 
   // ============================================================
@@ -268,33 +229,25 @@ describe('CandidateStatusValidator', () => {
 
   it('should allow campaign editing while APPROVED', () => {
     expect(() =>
-      validator.validateCampaignEditable(
-        CandidateStatus.APPROVED,
-      ),
+      validator.validateCampaignEditable(CandidateStatus.APPROVED),
     ).not.toThrow();
   });
 
   it('should reject campaign editing while PENDING', () => {
     expect(() =>
-      validator.validateCampaignEditable(
-        CandidateStatus.PENDING,
-      ),
+      validator.validateCampaignEditable(CandidateStatus.PENDING),
     ).toThrow(BadRequestException);
   });
 
   it('should reject campaign editing while VERIFIED', () => {
     expect(() =>
-      validator.validateCampaignEditable(
-        CandidateStatus.VERIFIED,
-      ),
+      validator.validateCampaignEditable(CandidateStatus.VERIFIED),
     ).toThrow(BadRequestException);
   });
 
   it('should reject campaign editing after REJECTED', () => {
     expect(() =>
-      validator.validateCampaignEditable(
-        CandidateStatus.REJECTED,
-      ),
+      validator.validateCampaignEditable(CandidateStatus.REJECTED),
     ).toThrow(BadRequestException);
   });
 });

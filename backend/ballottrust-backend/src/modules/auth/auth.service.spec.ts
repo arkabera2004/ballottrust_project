@@ -43,40 +43,38 @@ describe('AuthService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const module: TestingModule =
-      await Test.createTestingModule({
-        providers: [
-          AuthService,
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        AuthService,
 
-          {
-            provide: PrismaService,
-            useValue: mockPrismaService,
-          },
+        {
+          provide: PrismaService,
+          useValue: mockPrismaService,
+        },
 
-          {
-            provide: JwtService,
-            useValue: mockJwtService,
-          },
+        {
+          provide: JwtService,
+          useValue: mockJwtService,
+        },
 
-          {
-            provide: RefreshTokenService,
-            useValue: mockRefreshTokenService,
-          },
+        {
+          provide: RefreshTokenService,
+          useValue: mockRefreshTokenService,
+        },
 
-          {
-            provide: MailService,
-            useValue: mockMailService,
-          },
+        {
+          provide: MailService,
+          useValue: mockMailService,
+        },
 
-          {
-            provide: AuditService,
-            useValue: mockAuditService,
-          },
-        ],
-      }).compile();
+        {
+          provide: AuditService,
+          useValue: mockAuditService,
+        },
+      ],
+    }).compile();
 
-    service =
-      module.get<AuthService>(AuthService);
+    service = module.get<AuthService>(AuthService);
   });
 
   it('should be defined', () => {

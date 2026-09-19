@@ -24,28 +24,25 @@ describe('ApproveElectionService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const module: TestingModule =
-      await Test.createTestingModule({
-        providers: [
-          ApproveElectionService,
-          {
-            provide: ElectionRepository,
-            useValue: mockRepository,
-          },
-          {
-            provide: ElectionWorkflowValidator,
-            useValue: mockWorkflowValidator,
-          },
-          {
-            provide: AuditService,
-            useValue: mockAuditService,
-          },
-        ],
-      }).compile();
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        ApproveElectionService,
+        {
+          provide: ElectionRepository,
+          useValue: mockRepository,
+        },
+        {
+          provide: ElectionWorkflowValidator,
+          useValue: mockWorkflowValidator,
+        },
+        {
+          provide: AuditService,
+          useValue: mockAuditService,
+        },
+      ],
+    }).compile();
 
-    service = module.get<ApproveElectionService>(
-      ApproveElectionService,
-    );
+    service = module.get<ApproveElectionService>(ApproveElectionService);
   });
 
   it('should be defined', () => {
@@ -99,9 +96,9 @@ describe('ApproveElectionService', () => {
       throw new Error('Cannot approve from DRAFT');
     });
 
-    await expect(
-      service.execute('election-1', 'admin-1'),
-    ).rejects.toThrow('Cannot approve from DRAFT');
+    await expect(service.execute('election-1', 'admin-1')).rejects.toThrow(
+      'Cannot approve from DRAFT',
+    );
 
     expect(mockRepository.approveElection).not.toHaveBeenCalled();
     expect(mockAuditService.log).not.toHaveBeenCalled();

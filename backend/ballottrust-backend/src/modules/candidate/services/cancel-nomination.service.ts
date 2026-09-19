@@ -5,9 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import {
-  CandidateStatus,
-} from '@prisma/client';
+import { CandidateStatus } from '@prisma/client';
 
 import { CandidateRepository } from '../repository/candidate.repository';
 import { CandidateValidator } from '../validators/candidate.validator';
@@ -16,32 +14,22 @@ import { AuditService } from '../../audit/audit.service';
 @Injectable()
 export class CancelNominationService {
   constructor(
-    private readonly candidateRepository:
-      CandidateRepository,
+    private readonly candidateRepository: CandidateRepository,
 
-    private readonly candidateValidator:
-      CandidateValidator,
+    private readonly candidateValidator: CandidateValidator,
 
     private readonly auditService: AuditService,
   ) {}
 
-  async execute(
-    candidateId: string,
-    userId: string,
-  ) {
+  async execute(candidateId: string, userId: string) {
     // ======================================================
     // 1. Find Candidate
     // ======================================================
 
-    const candidate =
-      await this.candidateRepository.findById(
-        candidateId,
-      );
+    const candidate = await this.candidateRepository.findById(candidateId);
 
     if (!candidate) {
-      throw new NotFoundException(
-        'Candidate not found.',
-      );
+      throw new NotFoundException('Candidate not found.');
     }
 
     // ======================================================
@@ -49,19 +37,14 @@ export class CancelNominationService {
     // ======================================================
 
     if (candidate.userId !== userId) {
-      throw new ForbiddenException(
-        'You can only cancel your own nomination.',
-      );
+      throw new ForbiddenException('You can only cancel your own nomination.');
     }
 
     // ======================================================
     // 3. Only Pending Nominations Can Be Cancelled
     // ======================================================
 
-    if (
-      candidate.status !==
-      CandidateStatus.PENDING
-    ) {
+    if (candidate.status !== CandidateStatus.PENDING) {
       throw new BadRequestException(
         'Only pending nominations can be cancelled.',
       );
@@ -71,28 +54,21 @@ export class CancelNominationService {
     // 4. Validate Election
     // ======================================================
 
-    const election =
-      await this.candidateValidator
-        .validateElectionExists(
-          candidate.electionId,
-        );
+    const election = await this.candidateValidator.validateElectionExists(
+      candidate.electionId,
+    );
 
     // ======================================================
     // 5. Validate Nomination Window
     // ======================================================
 
-    this.candidateValidator
-      .validateNominationWindow(
-        election,
-      );
+    this.candidateValidator.validateNominationWindow(election);
 
     // ======================================================
     // 6. Soft Delete Nomination
     // ======================================================
 
-    await this.candidateRepository.softDelete(
-      candidateId,
-    );
+    await this.candidateRepository.softDelete(candidateId);
 
     await this.auditService.log({
       userId,
@@ -104,8 +80,7 @@ export class CancelNominationService {
     });
 
     return {
-      message:
-        'Nomination cancelled successfully.',
+      message: 'Nomination cancelled successfully.',
     };
   }
 }

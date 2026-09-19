@@ -17,21 +17,15 @@ export class UpdateElectionService {
     private readonly validator: ElectionValidator,
   ) {}
 
-  async execute(
-    id: string,
-    dto: UpdateElectionDto,
-  ): Promise<Election> {
+  async execute(id: string, dto: UpdateElectionDto): Promise<Election> {
     // ============================================
     // Step 1 - Check Election Exists
     // ============================================
 
-    const election =
-      await this.repository.findById(id);
+    const election = await this.repository.findById(id);
 
     if (!election) {
-      throw new NotFoundException(
-        'Election not found.',
-      );
+      throw new NotFoundException('Election not found.');
     }
 
     // ============================================
@@ -39,9 +33,7 @@ export class UpdateElectionService {
     // ============================================
 
     if (election.status === 'PUBLISHED') {
-      throw new BadRequestException(
-        'Published elections cannot be modified.',
-      );
+      throw new BadRequestException('Published elections cannot be modified.');
     }
 
     // ============================================
@@ -77,17 +69,11 @@ export class UpdateElectionService {
         ? new Date(dto.campaignStart)
         : undefined,
 
-      campaignEnd: dto.campaignEnd
-        ? new Date(dto.campaignEnd)
-        : undefined,
+      campaignEnd: dto.campaignEnd ? new Date(dto.campaignEnd) : undefined,
 
-      startDate: dto.startDate
-        ? new Date(dto.startDate)
-        : undefined,
+      startDate: dto.startDate ? new Date(dto.startDate) : undefined,
 
-      endDate: dto.endDate
-        ? new Date(dto.endDate)
-        : undefined,
+      endDate: dto.endDate ? new Date(dto.endDate) : undefined,
     });
   }
 }

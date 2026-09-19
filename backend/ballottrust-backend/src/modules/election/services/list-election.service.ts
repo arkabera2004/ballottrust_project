@@ -5,13 +5,9 @@ import { QueryElectionDto } from '../dto';
 
 @Injectable()
 export class ListElectionsService {
-  constructor(
-    private readonly repository: ElectionRepository,
-  ) {}
+  constructor(private readonly repository: ElectionRepository) {}
 
-  async execute(
-    query: QueryElectionDto,
-  ) {
+  async execute(query: QueryElectionDto) {
     return this.repository.findAll(query);
   }
 }

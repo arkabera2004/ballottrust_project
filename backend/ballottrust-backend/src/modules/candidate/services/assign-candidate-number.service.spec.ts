@@ -52,11 +52,12 @@ describe('AssignCandidateNumberService', () => {
     const result = await service.execute('candidate-1', 7);
 
     expect(result).toEqual(updated);
-    expect(candidateValidator.validateCandidateNumber)
-      .toHaveBeenCalledWith('election-1', 7);
-    expect(candidateRepository.update)
-      .toHaveBeenCalledWith('candidate-1', {
-        candidateNumber: 7,
-      });
+    expect(candidateValidator.validateCandidateNumber).toHaveBeenCalledWith(
+      'election-1',
+      7,
+    );
+    expect(candidateRepository.update).toHaveBeenCalledWith('candidate-1', {
+      candidateNumber: 7,
+    });
   });
 });

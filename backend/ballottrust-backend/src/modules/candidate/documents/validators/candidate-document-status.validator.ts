@@ -3,28 +3,22 @@ import { CandidateDocumentStatus } from '@prisma/client';
 
 @Injectable()
 export class CandidateDocumentStatusValidator {
-
   // ======================================================
   // Document Lifecycle Transition Map
   // ======================================================
 
-  private readonly transitions:
-    Partial<
-      Record<
-        CandidateDocumentStatus,
-        CandidateDocumentStatus[]
-      >
-    > = {
+  private readonly transitions: Partial<
+    Record<CandidateDocumentStatus, CandidateDocumentStatus[]>
+  > = {
+    [CandidateDocumentStatus.PENDING]: [
+      CandidateDocumentStatus.VERIFIED,
+      CandidateDocumentStatus.REJECTED,
+    ],
 
-      [CandidateDocumentStatus.PENDING]: [
-        CandidateDocumentStatus.VERIFIED,
-        CandidateDocumentStatus.REJECTED,
-      ],
+    [CandidateDocumentStatus.VERIFIED]: [],
 
-      [CandidateDocumentStatus.VERIFIED]: [],
-
-      [CandidateDocumentStatus.REJECTED]: [],
-    };
+    [CandidateDocumentStatus.REJECTED]: [],
+  };
 
   // ======================================================
   // Validate Transition
@@ -34,21 +28,15 @@ export class CandidateDocumentStatusValidator {
     currentStatus: CandidateDocumentStatus,
     targetStatus: CandidateDocumentStatus,
   ): void {
-
     if (currentStatus === targetStatus) {
       throw new BadRequestException(
         `Candidate document is already in ${targetStatus} status.`,
       );
     }
 
-    const allowedTransitions =
-      this.transitions[currentStatus] ?? [];
+    const allowedTransitions = this.transitions[currentStatus] ?? [];
 
-    if (
-      !allowedTransitions.includes(
-        targetStatus,
-      )
-    ) {
+    if (!allowedTransitions.includes(targetStatus)) {
       throw new BadRequestException(
         `Candidate document status cannot transition from ${currentStatus} to ${targetStatus}.`,
       );
@@ -59,17 +47,12 @@ export class CandidateDocumentStatusValidator {
   // Final State Check
   // ======================================================
 
-  isFinalStatus(
-    status: CandidateDocumentStatus,
-  ): boolean {
-    const finalStatuses:
-      CandidateDocumentStatus[] = [
-        CandidateDocumentStatus.VERIFIED,
-        CandidateDocumentStatus.REJECTED,
-      ];
+  isFinalStatus(status: CandidateDocumentStatus): boolean {
+    const finalStatuses: CandidateDocumentStatus[] = [
+      CandidateDocumentStatus.VERIFIED,
+      CandidateDocumentStatus.REJECTED,
+    ];
 
-    return finalStatuses.includes(
-      status,
-    );
+    return finalStatuses.includes(status);
   }
 }

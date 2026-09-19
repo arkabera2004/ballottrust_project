@@ -6,7 +6,6 @@ import { AuditService } from '../../audit/audit.service';
 
 @Injectable()
 export class SubmitElectionForApprovalService {
-
   constructor(
     private readonly repository: ElectionRepository,
     private readonly workflowValidator: ElectionWorkflowValidator,
@@ -14,13 +13,9 @@ export class SubmitElectionForApprovalService {
   ) {}
 
   async execute(id: string, actorId?: string) {
+    const election = await this.repository.findByIdOrThrow(id);
 
-    const election =
-      await this.repository.findByIdOrThrow(id);
-
-    this.workflowValidator.ensureCanSubmit(
-      election.status,
-    );
+    this.workflowValidator.ensureCanSubmit(election.status);
 
     const result = await this.repository.submitForApproval(id);
 
@@ -35,7 +30,5 @@ export class SubmitElectionForApprovalService {
     });
 
     return result;
-
   }
-
 }

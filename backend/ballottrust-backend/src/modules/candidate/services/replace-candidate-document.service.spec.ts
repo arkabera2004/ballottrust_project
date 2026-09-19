@@ -1,10 +1,4 @@
-import {
-  describe,
-  it,
-  beforeEach,
-  expect,
-  jest,
-} from '@jest/globals';
+import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 
 import { RejectCandidateDocumentService } from '../documents/services/reject-candidate-document.service';
 
@@ -32,62 +26,45 @@ describe('RejectCandidateDocumentService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    service =
-      new RejectCandidateDocumentService(
-        candidateDocumentRepository as unknown as CandidateDocumentRepository,
-        candidateDocumentStatusValidator as unknown as CandidateDocumentStatusValidator,
-        auditService as unknown as AuditService,
-      );
+    service = new RejectCandidateDocumentService(
+      candidateDocumentRepository as unknown as CandidateDocumentRepository,
+      candidateDocumentStatusValidator as unknown as CandidateDocumentStatusValidator,
+      auditService as unknown as AuditService,
+    );
   });
 
   // ======================================================
   // 1. Missing Document
   // ======================================================
 
-  it(
-    'should reject a missing document',
-    async () => {
-      candidateDocumentRepository.findById.mockResolvedValue(
-        null as never,
-      );
+  it('should reject a missing document', async () => {
+    candidateDocumentRepository.findById.mockResolvedValue(null as never);
 
-      await expect(
-        service.execute(
-          'candidate-1',
-          'document-1',
-          'admin-1',
-          'Unreadable document',
-        ),
-      ).rejects.toThrow(
-        'Candidate document not found.',
-      );
-
-      expect(
-        candidateDocumentRepository.findById,
-      ).toHaveBeenCalledWith(
+    await expect(
+      service.execute(
+        'candidate-1',
         'document-1',
-      );
+        'admin-1',
+        'Unreadable document',
+      ),
+    ).rejects.toThrow('Candidate document not found.');
 
-      expect(
-        candidateDocumentStatusValidator
-          .validateTransition,
-      ).not.toHaveBeenCalled();
+    expect(candidateDocumentRepository.findById).toHaveBeenCalledWith(
+      'document-1',
+    );
 
-      expect(
-        candidateDocumentRepository
-          .rejectDocument,
-      ).not.toHaveBeenCalled();
-    },
-  );
+    expect(
+      candidateDocumentStatusValidator.validateTransition,
+    ).not.toHaveBeenCalled();
+
+    expect(candidateDocumentRepository.rejectDocument).not.toHaveBeenCalled();
+  });
 
   // ======================================================
   // 2. Service Definition
   // ======================================================
 
-  it(
-    'should be defined',
-    () => {
-      expect(service).toBeDefined();
-    },
-  );
+  it('should be defined', () => {
+    expect(service).toBeDefined();
+  });
 });

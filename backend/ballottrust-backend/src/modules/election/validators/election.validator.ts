@@ -1,7 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
 import { CreateElectionDto } from '../dto/create-election.dto';
 
@@ -25,17 +22,10 @@ export class ElectionValidator {
     // Registration
     // =====================================
 
-    if (
-      dto.registrationStart &&
-      dto.registrationEnd
-    ) {
-      const registrationStart = new Date(
-        dto.registrationStart,
-      );
+    if (dto.registrationStart && dto.registrationEnd) {
+      const registrationStart = new Date(dto.registrationStart);
 
-      const registrationEnd = new Date(
-        dto.registrationEnd,
-      );
+      const registrationEnd = new Date(dto.registrationEnd);
 
       if (registrationStart >= registrationEnd) {
         throw new BadRequestException(
@@ -48,17 +38,10 @@ export class ElectionValidator {
     // Nomination
     // =====================================
 
-    if (
-      dto.nominationStart &&
-      dto.nominationEnd
-    ) {
-      const nominationStart = new Date(
-        dto.nominationStart,
-      );
+    if (dto.nominationStart && dto.nominationEnd) {
+      const nominationStart = new Date(dto.nominationStart);
 
-      const nominationEnd = new Date(
-        dto.nominationEnd,
-      );
+      const nominationEnd = new Date(dto.nominationEnd);
 
       if (nominationStart >= nominationEnd) {
         throw new BadRequestException(
@@ -71,17 +54,10 @@ export class ElectionValidator {
     // Campaign
     // =====================================
 
-    if (
-      dto.campaignStart &&
-      dto.campaignEnd
-    ) {
-      const campaignStart = new Date(
-        dto.campaignStart,
-      );
+    if (dto.campaignStart && dto.campaignEnd) {
+      const campaignStart = new Date(dto.campaignStart);
 
-      const campaignEnd = new Date(
-        dto.campaignEnd,
-      );
+      const campaignEnd = new Date(dto.campaignEnd);
 
       if (campaignStart >= campaignEnd) {
         throw new BadRequestException(
@@ -94,26 +70,18 @@ export class ElectionValidator {
     // Maximum Votes
     // =====================================
 
-    if (
-      dto.maximumVotes &&
-      dto.maximumVotes < 1
-    ) {
-      throw new BadRequestException(
-        'Maximum votes must be at least 1.',
-      );
+    if (dto.maximumVotes && dto.maximumVotes < 1) {
+      throw new BadRequestException('Maximum votes must be at least 1.');
     }
   }
 
   validateUpdate(dto: any): void {
-  if (
-    dto.startDate &&
-    dto.endDate &&
-    new Date(dto.startDate) >=
-      new Date(dto.endDate)
-  ) {
-    throw new BadRequestException(
-      'End date must be after start date.',
-    );
+    if (
+      dto.startDate &&
+      dto.endDate &&
+      new Date(dto.startDate) >= new Date(dto.endDate)
+    ) {
+      throw new BadRequestException('End date must be after start date.');
+    }
   }
-}
 }

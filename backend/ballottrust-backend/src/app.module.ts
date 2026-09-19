@@ -80,13 +80,8 @@ import { JobsModule } from './modules/jobs/jobs.module';
     JobsModule,
   ],
 
-  controllers: [
-    AppController,
-    AdminController,
-  ],
+  controllers: [AppController, AdminController],
 
-  providers: [
-    AppService,
-  ],
+  providers: [AppService],
 })
 export class AppModule {}

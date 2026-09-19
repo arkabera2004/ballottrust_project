@@ -1,7 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-} from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 
 import { Election } from '@prisma/client';
 
@@ -23,7 +20,6 @@ export class CreateElectionService {
     dto: CreateElectionDto,
     createdById?: string,
   ): Promise<Election> {
-
     // =====================================================
     // Step 1 - Validate Business Rules
     // =====================================================
@@ -36,25 +32,19 @@ export class CreateElectionService {
 
     const totalElections = await this.repository.count();
 
-    const electionCode =
-      this.codeGenerator.generate(
-        dto.electionType,
-        totalElections + 1,
-      );
+    const electionCode = this.codeGenerator.generate(
+      dto.electionType,
+      totalElections + 1,
+    );
 
     // =====================================================
     // Step 3 - Ensure Election Code is Unique
     // =====================================================
 
-    const exists =
-      await this.repository.electionCodeExists(
-        electionCode,
-      );
+    const exists = await this.repository.electionCodeExists(electionCode);
 
     if (exists) {
-      throw new ConflictException(
-        'Election code already exists.',
-      );
+      throw new ConflictException('Election code already exists.');
     }
 
     // =====================================================
@@ -90,17 +80,13 @@ export class CreateElectionService {
         ? new Date(dto.campaignStart)
         : undefined,
 
-      campaignEnd: dto.campaignEnd
-        ? new Date(dto.campaignEnd)
-        : undefined,
+      campaignEnd: dto.campaignEnd ? new Date(dto.campaignEnd) : undefined,
 
       startDate: new Date(dto.startDate),
 
       endDate: new Date(dto.endDate),
 
-      resultDate: dto.resultDate
-        ? new Date(dto.resultDate)
-        : undefined,
+      resultDate: dto.resultDate ? new Date(dto.resultDate) : undefined,
 
       candidateLimit: dto.candidateLimit,
 

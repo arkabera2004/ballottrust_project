@@ -13,17 +13,11 @@ export class ArchiveElectionService {
   ) {}
 
   async execute(id: string, actorId?: string) {
-    const election =
-      await this.repository.findByIdOrThrow(id);
+    const election = await this.repository.findByIdOrThrow(id);
 
-    this.workflowValidator.ensureCanArchive(
-      election.status,
-    );
+    this.workflowValidator.ensureCanArchive(election.status);
 
-    const data =
-      await this.repository.archiveElection(
-        id,
-      );
+    const data = await this.repository.archiveElection(id);
 
     // actorId is undefined for cron-triggered auto-archive
     // (election-lifecycle.job.ts) — logged as a system action.
@@ -41,8 +35,7 @@ export class ArchiveElectionService {
     });
 
     return {
-      message:
-        'Election archived successfully.',
+      message: 'Election archived successfully.',
       data,
     };
   }

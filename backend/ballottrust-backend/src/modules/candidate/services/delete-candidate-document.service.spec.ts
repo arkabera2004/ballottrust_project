@@ -1,9 +1,6 @@
 import { DeleteCandidateDocumentService } from '../documents/services/delete-candidate-document.service';
 import { CandidateDocumentRepository } from '../documents/candidate-document.repository';
-import {
-  CandidateDocumentStatus,
-  CandidateStatus,
-} from '@prisma/client';
+import { CandidateDocumentStatus, CandidateStatus } from '@prisma/client';
 
 describe('DeleteCandidateDocumentService', () => {
   it('should reject a missing document', async () => {
@@ -16,14 +13,8 @@ describe('DeleteCandidateDocumentService', () => {
     );
 
     await expect(
-      service.execute(
-        'candidate-1',
-        'document-1',
-        'user-1',
-      ),
-    ).rejects.toThrow(
-      'Candidate document not found.',
-    );
+      service.execute('candidate-1', 'document-1', 'user-1'),
+    ).rejects.toThrow('Candidate document not found.');
   });
 
   it('should be defined', () => {
@@ -34,7 +25,7 @@ describe('DeleteCandidateDocumentService', () => {
     expect(service).toBeDefined();
   });
 
-    it('should reject another user from deleting a candidate document', async () => {
+  it('should reject another user from deleting a candidate document', async () => {
     const repository = {
       findById: jest.fn().mockResolvedValue({
         id: 'document-1',
@@ -53,23 +44,14 @@ describe('DeleteCandidateDocumentService', () => {
       softDelete: jest.fn(),
     };
 
-    const service =
-      new DeleteCandidateDocumentService(
-        repository as unknown as CandidateDocumentRepository,
-      );
-
-    await expect(
-      service.execute(
-        'candidate-1',
-        'document-1',
-        'different-user',
-      ),
-    ).rejects.toThrow(
-      'You can only delete your own candidate documents.',
+    const service = new DeleteCandidateDocumentService(
+      repository as unknown as CandidateDocumentRepository,
     );
 
-    expect(
-      repository.softDelete,
-    ).not.toHaveBeenCalled();
+    await expect(
+      service.execute('candidate-1', 'document-1', 'different-user'),
+    ).rejects.toThrow('You can only delete your own candidate documents.');
+
+    expect(repository.softDelete).not.toHaveBeenCalled();
   });
 });

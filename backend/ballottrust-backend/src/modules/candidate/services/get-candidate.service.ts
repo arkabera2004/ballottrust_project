@@ -14,35 +14,23 @@ import { CandidateDocumentCompletenessService } from '../documents/services/cand
 @Injectable()
 export class GetCandidateService {
   constructor(
-    private readonly candidateRepository:
-      CandidateRepository,
+    private readonly candidateRepository: CandidateRepository,
 
-    private readonly candidateProfileCompletenessService:
-      CandidateProfileCompletenessService,
+    private readonly candidateProfileCompletenessService: CandidateProfileCompletenessService,
 
-    private readonly candidateDocumentCompletenessService:
-      CandidateDocumentCompletenessService,
+    private readonly candidateDocumentCompletenessService: CandidateDocumentCompletenessService,
   ) {}
 
-  async execute(
-    candidateId: string,
-    userId: string,
-    role: Role,
-  ) {
+  async execute(candidateId: string, userId: string, role: Role) {
     // ======================================================
     // 1. Find Candidate
     // ======================================================
 
     const candidate =
-      await this.candidateRepository
-        .findByIdWithDetails(
-          candidateId,
-        );
+      await this.candidateRepository.findByIdWithDetails(candidateId);
 
     if (!candidate) {
-      throw new NotFoundException(
-        'Candidate not found.',
-      );
+      throw new NotFoundException('Candidate not found.');
     }
 
     // ======================================================
@@ -50,21 +38,15 @@ export class GetCandidateService {
     // ======================================================
 
     const isAdministrator =
-      role === Role.SUPER_ADMIN ||
-      role ===
-        Role.ELECTION_COMMISSIONER;
+      role === Role.SUPER_ADMIN || role === Role.ELECTION_COMMISSIONER;
 
     // ======================================================
     // 3. Candidate Ownership Access
     // ======================================================
 
-    const isOwner =
-      candidate.userId === userId;
+    const isOwner = candidate.userId === userId;
 
-    if (
-      !isAdministrator &&
-      !isOwner
-    ) {
+    if (!isAdministrator && !isOwner) {
       throw new ForbiddenException(
         'You are not authorized to view this candidate record.',
       );
@@ -75,16 +57,10 @@ export class GetCandidateService {
     // ======================================================
 
     const profileCompleteness =
-      this.candidateProfileCompletenessService
-        .calculate(
-          candidate,
-        );
+      this.candidateProfileCompletenessService.calculate(candidate);
 
     const documentCompleteness =
-  await this.candidateDocumentCompletenessService
-    .calculate(
-      candidate.id,
-    );
+      await this.candidateDocumentCompletenessService.calculate(candidate.id);
 
     // ======================================================
     // 5. Return Candidate + Completeness

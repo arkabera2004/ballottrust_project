@@ -25,32 +25,23 @@ describe('BlockchainService', () => {
   ) =>
     crypto
       .createHash('sha256')
-      .update(
-        anonymousToken +
-          candidateId +
-          electionId +
-          previousHash,
-      )
+      .update(anonymousToken + candidateId + electionId + previousHash)
       .digest('hex');
 
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const module: TestingModule =
-      await Test.createTestingModule({
-        providers: [
-          BlockchainService,
-          {
-            provide: PrismaService,
-            useValue: mockPrismaService,
-          },
-        ],
-      }).compile();
-
-    service =
-      module.get<BlockchainService>(
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
         BlockchainService,
-      );
+        {
+          provide: PrismaService,
+          useValue: mockPrismaService,
+        },
+      ],
+    }).compile();
+
+    service = module.get<BlockchainService>(BlockchainService);
   });
 
   // ============================================================
@@ -193,12 +184,7 @@ describe('BlockchainService', () => {
         'GENESIS_BLOCK',
       );
 
-      const hash2 = hashOf(
-        'anon-token-2',
-        'candidate-2',
-        'election-1',
-        hash1,
-      );
+      const hash2 = hashOf('anon-token-2', 'candidate-2', 'election-1', hash1);
 
       mockPrismaService.vote.findMany.mockResolvedValue([
         {

@@ -34,19 +34,15 @@ describe('ListCandidatesService', () => {
       totalPages: 1,
     };
 
-    candidateRepository.findAllPaginated.mockResolvedValue(
-      mockResult,
-    );
+    candidateRepository.findAllPaginated.mockResolvedValue(mockResult);
 
     const result = await service.execute({
       page: 1,
       limit: 10,
-    } as any);
+    });
 
     expect(result).toEqual(mockResult);
 
-    expect(
-      candidateRepository.findAllPaginated,
-    ).toHaveBeenCalled();
+    expect(candidateRepository.findAllPaginated).toHaveBeenCalled();
   });
 });

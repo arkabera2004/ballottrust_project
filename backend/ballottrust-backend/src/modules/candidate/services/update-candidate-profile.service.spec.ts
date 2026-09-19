@@ -26,62 +26,44 @@ describe('UpdateCandidateProfileService', () => {
       statusValidator as unknown as CandidateStatusValidator,
     );
 
-    const result = await service.execute(
-      'candidate-1',
-      'user-1',
-      {
-        biography: '  Updated biography  ',
-      } as any,
-    );
+    const result = await service.execute('candidate-1', 'user-1', {
+      biography: '  Updated biography  ',
+    });
 
     expect(result.biography).toBe('Updated biography');
 
-    expect(repository.update)
-      .toHaveBeenCalledWith(
-        'candidate-1',
-        {
-          biography: 'Updated biography',
-        },
-      );
+    expect(repository.update).toHaveBeenCalledWith('candidate-1', {
+      biography: 'Updated biography',
+    });
   });
 
   it('should reject another user from updating the candidate profile', async () => {
-  const repository = {
-    findById: jest.fn().mockResolvedValue({
-      id: 'candidate-1',
-      userId: 'owner-user',
-      status: CandidateStatus.PENDING,
-    }),
-    update: jest.fn(),
-  };
+    const repository = {
+      findById: jest.fn().mockResolvedValue({
+        id: 'candidate-1',
+        userId: 'owner-user',
+        status: CandidateStatus.PENDING,
+      }),
+      update: jest.fn(),
+    };
 
-  const statusValidator = {
-    validateEditable: jest.fn(),
-  };
+    const statusValidator = {
+      validateEditable: jest.fn(),
+    };
 
-  const service = new UpdateCandidateProfileService(
-    repository as unknown as CandidateRepository,
-    statusValidator as unknown as CandidateStatusValidator,
-  );
+    const service = new UpdateCandidateProfileService(
+      repository as unknown as CandidateRepository,
+      statusValidator as unknown as CandidateStatusValidator,
+    );
 
-  await expect(
-    service.execute(
-      'candidate-1',
-      'different-user',
-      {
+    await expect(
+      service.execute('candidate-1', 'different-user', {
         biography: 'Unauthorized update',
-      } as any,
-    ),
-  ).rejects.toThrow(
-    'You can only update your own candidate profile.',
-  );
+      } as any),
+    ).rejects.toThrow('You can only update your own candidate profile.');
 
-  expect(
-    statusValidator.validateEditable,
-  ).not.toHaveBeenCalled();
+    expect(statusValidator.validateEditable).not.toHaveBeenCalled();
 
-  expect(
-    repository.update,
-  ).not.toHaveBeenCalled();
-});
+    expect(repository.update).not.toHaveBeenCalled();
+  });
 });

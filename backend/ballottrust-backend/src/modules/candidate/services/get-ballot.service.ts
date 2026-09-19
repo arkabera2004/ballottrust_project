@@ -4,36 +4,24 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import {
-  ElectionStatus,
-} from '@prisma/client';
+import { ElectionStatus } from '@prisma/client';
 
 import { CandidateRepository } from '../repository/candidate.repository';
 
 @Injectable()
 export class GetBallotService {
-  constructor(
-    private readonly candidateRepository:
-      CandidateRepository,
-  ) {}
+  constructor(private readonly candidateRepository: CandidateRepository) {}
 
-  async execute(
-    electionId: string,
-  ) {
+  async execute(electionId: string) {
     // ======================================================
     // 1. Find Election
     // ======================================================
 
     const election =
-      await this.candidateRepository
-        .findElectionBallotState(
-          electionId,
-        );
+      await this.candidateRepository.findElectionBallotState(electionId);
 
     if (!election) {
-      throw new NotFoundException(
-        'Election not found.',
-      );
+      throw new NotFoundException('Election not found.');
     }
 
     // ======================================================
@@ -50,20 +38,15 @@ export class GetBallotService {
     // 3. Validate Public Election Lifecycle
     // ======================================================
 
-    const publicStatuses:
-      ElectionStatus[] = [
-        ElectionStatus.PUBLISHED,
-        ElectionStatus.ACTIVE,
-        ElectionStatus.VOTING_CLOSED,
-        ElectionStatus.RESULT_PUBLISHED,
-        ElectionStatus.ARCHIVED,
-      ];
+    const publicStatuses: ElectionStatus[] = [
+      ElectionStatus.PUBLISHED,
+      ElectionStatus.ACTIVE,
+      ElectionStatus.VOTING_CLOSED,
+      ElectionStatus.RESULT_PUBLISHED,
+      ElectionStatus.ARCHIVED,
+    ];
 
-    if (
-      !publicStatuses.includes(
-        election.status,
-      )
-    ) {
+    if (!publicStatuses.includes(election.status)) {
       throw new BadRequestException(
         `The ballot is not publicly available while the election is in ${election.status} status.`,
       );
@@ -74,10 +57,7 @@ export class GetBallotService {
     // ======================================================
 
     const candidates =
-      await this.candidateRepository
-        .findOrderedBallot(
-          electionId,
-        );
+      await this.candidateRepository.findOrderedBallot(electionId);
 
     if (candidates.length === 0) {
       throw new NotFoundException(
@@ -92,17 +72,13 @@ export class GetBallotService {
     return {
       electionId,
 
-      status:
-        election.status,
+      status: election.status,
 
-      ballotOrderMethod:
-        election.ballotOrderMethod,
+      ballotOrderMethod: election.ballotOrderMethod,
 
-      ballotFinalizedAt:
-        election.ballotFinalizedAt,
+      ballotFinalizedAt: election.ballotFinalizedAt,
 
-      totalCandidates:
-        candidates.length,
+      totalCandidates: candidates.length,
 
       candidates,
     };

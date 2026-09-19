@@ -1,6 +1,4 @@
-import {
-  Injectable,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import {
   CandidateDocument,
@@ -9,16 +7,11 @@ import {
   Prisma,
 } from '@prisma/client';
 
-import {
-  PrismaService,
-} from '../../../prisma/prisma.service';
+import { PrismaService } from '../../../prisma/prisma.service';
 
 @Injectable()
 export class CandidateDocumentRepository {
-  constructor(
-    private readonly prisma:
-      PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   // ==========================================
   // Find Active Document By Type
@@ -55,95 +48,89 @@ export class CandidateDocumentRepository {
   }
 
   // ==========================================
-// Find Documents By Candidate
-// ==========================================
+  // Find Documents By Candidate
+  // ==========================================
 
-async findByCandidateId(
-  candidateId: string,
-) {
-  return this.prisma.candidateDocument.findMany({
-    where: {
-      candidateId,
-      deletedAt: null,
-    },
-
-    orderBy: {
-      createdAt: 'desc',
-    },
-
-    include: {
-      verifiedBy: {
-        select: {
-          id: true,
-          fullName: true,
-          role: true,
-        },
+  async findByCandidateId(candidateId: string) {
+    return this.prisma.candidateDocument.findMany({
+      where: {
+        candidateId,
+        deletedAt: null,
       },
 
-      rejectedBy: {
-        select: {
-          id: true,
-          fullName: true,
-          role: true,
-        },
-      },
-    },
-  });
-}
-
-// ==========================================
-// Find Document By ID
-// ==========================================
-
-async findById(
-  documentId: string,
-) {
-  return this.prisma.candidateDocument.findFirst({
-    where: {
-      id: documentId,
-      deletedAt: null,
-    },
-
-    include: {
-      candidate: {
-        select: {
-          id: true,
-          userId: true,
-          electionId: true,
-          status: true,
-        },
+      orderBy: {
+        createdAt: 'desc',
       },
 
-      verifiedBy: {
-        select: {
-          id: true,
-          fullName: true,
-          role: true,
+      include: {
+        verifiedBy: {
+          select: {
+            id: true,
+            fullName: true,
+            role: true,
+          },
+        },
+
+        rejectedBy: {
+          select: {
+            id: true,
+            fullName: true,
+            role: true,
+          },
         },
       },
+    });
+  }
 
-      rejectedBy: {
-        select: {
-          id: true,
-          fullName: true,
-          role: true,
+  // ==========================================
+  // Find Document By ID
+  // ==========================================
+
+  async findById(documentId: string) {
+    return this.prisma.candidateDocument.findFirst({
+      where: {
+        id: documentId,
+        deletedAt: null,
+      },
+
+      include: {
+        candidate: {
+          select: {
+            id: true,
+            userId: true,
+            electionId: true,
+            status: true,
+          },
+        },
+
+        verifiedBy: {
+          select: {
+            id: true,
+            fullName: true,
+            role: true,
+          },
+        },
+
+        rejectedBy: {
+          select: {
+            id: true,
+            fullName: true,
+            role: true,
+          },
         },
       },
-    },
-  });
-}
+    });
+  }
 
-// ==========================================
-// Replace Candidate Document
-// ==========================================
+  // ==========================================
+  // Replace Candidate Document
+  // ==========================================
 
-async replaceDocument(
-  existingDocumentId: string,
-  newDocumentData:
-    Prisma.CandidateDocumentCreateInput,
-): Promise<CandidateDocument> {
-  return this.prisma.$transaction(
-    async (tx) => {
+  async replaceDocument(
+    existingDocumentId: string,
+    newDocumentData: Prisma.CandidateDocumentCreateInput,
+  ): Promise<CandidateDocument> {
+    return this.prisma.$transaction(async (tx) => {
       const replacedAt = new Date();
 
       // ======================================
@@ -167,117 +154,114 @@ async replaceDocument(
       return tx.candidateDocument.create({
         data: newDocumentData,
       });
-    },
-  );
-}
+    });
+  }
 
-// ==========================================
-// Verify Candidate Document
-// ==========================================
+  // ==========================================
+  // Verify Candidate Document
+  // ==========================================
 
-async verifyDocument(
-  documentId: string,
-  verifiedById: string,
-): Promise<CandidateDocument> {
-  return this.prisma.candidateDocument.update({
-    where: {
-      id: documentId,
-    },
+  async verifyDocument(
+    documentId: string,
+    verifiedById: string,
+  ): Promise<CandidateDocument> {
+    return this.prisma.candidateDocument.update({
+      where: {
+        id: documentId,
+      },
 
-    data: {
-      status: CandidateDocumentStatus.VERIFIED,
+      data: {
+        status: CandidateDocumentStatus.VERIFIED,
 
-      verifiedBy: {
-        connect: {
-          id: verifiedById,
+        verifiedBy: {
+          connect: {
+            id: verifiedById,
+          },
         },
-      },
 
-      verifiedAt: new Date(),
+        verifiedAt: new Date(),
 
-      // Ensure rejection metadata is cleared
-      rejectedBy: {
-        disconnect: true,
-      },
-
-      rejectedAt: null,
-      rejectionReason: null,
-    },
-  });
-}
-
-// ==========================================
-// Reject Candidate Document
-// ==========================================
-
-async rejectDocument(
-  documentId: string,
-  rejectedById: string,
-  reason: string,
-): Promise<CandidateDocument> {
-  return this.prisma.candidateDocument.update({
-    where: {
-      id: documentId,
-    },
-
-    data: {
-      status: CandidateDocumentStatus.REJECTED,
-
-      rejectedBy: {
-        connect: {
-          id: rejectedById,
+        // Ensure rejection metadata is cleared
+        rejectedBy: {
+          disconnect: true,
         },
+
+        rejectedAt: null,
+        rejectionReason: null,
+      },
+    });
+  }
+
+  // ==========================================
+  // Reject Candidate Document
+  // ==========================================
+
+  async rejectDocument(
+    documentId: string,
+    rejectedById: string,
+    reason: string,
+  ): Promise<CandidateDocument> {
+    return this.prisma.candidateDocument.update({
+      where: {
+        id: documentId,
       },
 
-      rejectedAt: new Date(),
+      data: {
+        status: CandidateDocumentStatus.REJECTED,
 
-      rejectionReason: reason,
+        rejectedBy: {
+          connect: {
+            id: rejectedById,
+          },
+        },
 
-      // Ensure verification metadata is cleared
-      verifiedBy: {
-        disconnect: true,
+        rejectedAt: new Date(),
+
+        rejectionReason: reason,
+
+        // Ensure verification metadata is cleared
+        verifiedBy: {
+          disconnect: true,
+        },
+
+        verifiedAt: null,
+      },
+    });
+  }
+
+  // ==========================================
+  // Soft Delete Candidate Document
+  // ==========================================
+
+  async softDelete(documentId: string): Promise<CandidateDocument> {
+    return this.prisma.candidateDocument.update({
+      where: {
+        id: documentId,
       },
 
-      verifiedAt: null,
-    },
-  });
-}
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+  }
 
-// ==========================================
-// Soft Delete Candidate Document
-// ==========================================
+  // ==========================================
+  // Find Active Documents By Candidate
+  // ==========================================
 
-async softDelete(
-  documentId: string,
-): Promise<CandidateDocument> {
-  return this.prisma.candidateDocument.update({
-    where: {
-      id: documentId,
-    },
+  async findActiveByCandidateId(
+    candidateId: string,
+  ): Promise<CandidateDocument[]> {
+    return this.prisma.candidateDocument.findMany({
+      where: {
+        candidateId,
+        deletedAt: null,
+        replacedAt: null,
+      },
 
-    data: {
-      deletedAt: new Date(),
-    },
-  });
-}
-
-// ==========================================
-// Find Active Documents By Candidate
-// ==========================================
-
-async findActiveByCandidateId(
-  candidateId: string,
-): Promise<CandidateDocument[]> {
-  return this.prisma.candidateDocument.findMany({
-    where: {
-      candidateId,
-      deletedAt: null,
-      replacedAt: null,
-    },
-
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
-}
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
 }

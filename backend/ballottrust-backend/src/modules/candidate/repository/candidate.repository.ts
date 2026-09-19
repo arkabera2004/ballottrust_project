@@ -12,17 +12,13 @@ import { PrismaService } from '../../../prisma/prisma.service';
 
 @Injectable()
 export class CandidateRepository {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   // ==========================================
   // Create Candidate
   // ==========================================
 
-  async create(
-    data: Prisma.CandidateUncheckedCreateInput,
-  ): Promise<Candidate> {
+  async create(data: Prisma.CandidateUncheckedCreateInput): Promise<Candidate> {
     return this.prisma.candidate.create({
       data,
     });
@@ -32,9 +28,7 @@ export class CandidateRepository {
   // Find Candidate By ID
   // ==========================================
 
-  async findById(
-    id: string,
-  ): Promise<Candidate | null> {
+  async findById(id: string): Promise<Candidate | null> {
     return this.prisma.candidate.findFirst({
       where: {
         id,
@@ -48,184 +42,181 @@ export class CandidateRepository {
   // ==========================================
 
   async findByIdWithDetails(id: string) {
-  return this.prisma.candidate.findFirst({
-    where: {
-      id,
-      deletedAt: null,
-    },
-
-    include: {
-      user: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          registrationNumber: true,
-          department: true,
-          profilePhoto: true,
-        },
+    return this.prisma.candidate.findFirst({
+      where: {
+        id,
+        deletedAt: null,
       },
 
-      election: {
-        select: {
-          id: true,
-          title: true,
-          electionCode: true,
-          electionType: true,
-          status: true,
-          startDate: true,
-          endDate: true,
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            registrationNumber: true,
+            department: true,
+            profilePhoto: true,
+          },
+        },
+
+        election: {
+          select: {
+            id: true,
+            title: true,
+            electionCode: true,
+            electionType: true,
+            status: true,
+            startDate: true,
+            endDate: true,
+          },
+        },
+
+        party: {
+          select: {
+            id: true,
+            name: true,
+            abbreviation: true,
+            symbol: true,
+            logo: true,
+          },
+        },
+
+        verifiedBy: {
+          select: {
+            id: true,
+            fullName: true,
+            role: true,
+          },
+        },
+
+        approvedBy: {
+          select: {
+            id: true,
+            fullName: true,
+            role: true,
+          },
+        },
+
+        rejectedBy: {
+          select: {
+            id: true,
+            fullName: true,
+            role: true,
+          },
+        },
+
+        disqualifiedBy: {
+          select: {
+            id: true,
+            fullName: true,
+            role: true,
+          },
         },
       },
+    });
+  }
 
-      party: {
-        select: {
-          id: true,
-          name: true,
-          abbreviation: true,
-          symbol: true,
-          logo: true,
-        },
-      },
+  // ==========================================
+  // Find Public Candidate Profile
+  // ==========================================
 
-      verifiedBy: {
-        select: {
-          id: true,
-          fullName: true,
-          role: true,
-        },
-      },
+  async findPublicProfile(candidateId: string) {
+    return this.prisma.candidate.findFirst({
+      where: {
+        id: candidateId,
 
-      approvedBy: {
-        select: {
-          id: true,
-          fullName: true,
-          role: true,
-        },
-      },
+        status: CandidateStatus.APPROVED,
 
-      rejectedBy: {
-        select: {
-          id: true,
-          fullName: true,
-          role: true,
-        },
-      },
-
-      disqualifiedBy: {
-        select: {
-          id: true,
-          fullName: true,
-          role: true,
-        },
-      },
-    },
-  });
-}
-
-// ==========================================
-// Find Public Candidate Profile
-// ==========================================
-
-async findPublicProfile(
-  candidateId: string,
-) {
-  return this.prisma.candidate.findFirst({
-    where: {
-      id: candidateId,
-
-      status:
-        CandidateStatus.APPROVED,
-
-      deletedAt: null,
-
-      election: {
         deletedAt: null,
 
-        status: {
-          in: [
-            ElectionStatus.PUBLISHED,
-            ElectionStatus.ACTIVE,
-            ElectionStatus.VOTING_CLOSED,
-            ElectionStatus.RESULT_PUBLISHED,
-            ElectionStatus.ARCHIVED,
-          ],
-        },
-      },
-    },
+        election: {
+          deletedAt: null,
 
-    select: {
-      id: true,
-
-      candidateType: true,
-      candidateNumber: true,
-      ballotOrder: true,
-      position: true,
-
-      // ======================================
-      // Public Candidate Profile
-      // ======================================
-
-      biography: true,
-      campaignSlogan: true,
-      campaignWebsite: true,
-
-      // ======================================
-      // Campaign Information
-      // ======================================
-
-      manifesto: true,
-      agenda: true,
-      achievements: true,
-      nominationStatement: true,
-
-      photoUrl: true,
-
-      // ======================================
-      // Public User Information
-      // ======================================
-
-      user: {
-        select: {
-          id: true,
-          fullName: true,
-          department: true,
-          profilePhoto: true,
+          status: {
+            in: [
+              ElectionStatus.PUBLISHED,
+              ElectionStatus.ACTIVE,
+              ElectionStatus.VOTING_CLOSED,
+              ElectionStatus.RESULT_PUBLISHED,
+              ElectionStatus.ARCHIVED,
+            ],
+          },
         },
       },
 
-      // ======================================
-      // Public Party Information
-      // ======================================
+      select: {
+        id: true,
 
-      party: {
-        select: {
-          id: true,
-          name: true,
-          abbreviation: true,
-          symbol: true,
-          logo: true,
+        candidateType: true,
+        candidateNumber: true,
+        ballotOrder: true,
+        position: true,
+
+        // ======================================
+        // Public Candidate Profile
+        // ======================================
+
+        biography: true,
+        campaignSlogan: true,
+        campaignWebsite: true,
+
+        // ======================================
+        // Campaign Information
+        // ======================================
+
+        manifesto: true,
+        agenda: true,
+        achievements: true,
+        nominationStatement: true,
+
+        photoUrl: true,
+
+        // ======================================
+        // Public User Information
+        // ======================================
+
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            department: true,
+            profilePhoto: true,
+          },
+        },
+
+        // ======================================
+        // Public Party Information
+        // ======================================
+
+        party: {
+          select: {
+            id: true,
+            name: true,
+            abbreviation: true,
+            symbol: true,
+            logo: true,
+          },
+        },
+
+        // ======================================
+        // Public Election Information
+        // ======================================
+
+        election: {
+          select: {
+            id: true,
+            title: true,
+            electionCode: true,
+            electionType: true,
+            status: true,
+            startDate: true,
+            endDate: true,
+          },
         },
       },
-
-      // ======================================
-      // Public Election Information
-      // ======================================
-
-      election: {
-        select: {
-          id: true,
-          title: true,
-          electionCode: true,
-          electionType: true,
-          status: true,
-          startDate: true,
-          endDate: true,
-        },
-      },
-    },
-  });
-}
+    });
+  }
 
   // ==========================================
   // Find Candidate For User + Election
@@ -249,9 +240,7 @@ async findPublicProfile(
   // List Candidates
   // ==========================================
 
-  async findMany(
-    where: Prisma.CandidateWhereInput = {},
-  ) {
+  async findMany(where: Prisma.CandidateWhereInput = {}) {
     return this.prisma.candidate.findMany({
       where: {
         ...where,
@@ -292,9 +281,7 @@ async findPublicProfile(
   // Count Candidates
   // ==========================================
 
-  async count(
-    where: Prisma.CandidateWhereInput = {},
-  ): Promise<number> {
+  async count(where: Prisma.CandidateWhereInput = {}): Promise<number> {
     return this.prisma.candidate.count({
       where: {
         ...where,
@@ -323,10 +310,7 @@ async findPublicProfile(
   // Update Status
   // ==========================================
 
-  async updateStatus(
-    id: string,
-    status: CandidateStatus,
-  ): Promise<Candidate> {
+  async updateStatus(id: string, status: CandidateStatus): Promise<Candidate> {
     return this.prisma.candidate.update({
       where: {
         id,
@@ -346,31 +330,27 @@ async findPublicProfile(
     electionId: string,
     candidateNumber: number,
   ): Promise<boolean> {
-    const candidate =
-      await this.prisma.candidate.findFirst({
-        where: {
-          electionId,
-          candidateNumber,
-          deletedAt: null,
-        },
+    const candidate = await this.prisma.candidate.findFirst({
+      where: {
+        electionId,
+        candidateNumber,
+        deletedAt: null,
+      },
 
-        select: {
-          id: true,
-        },
-      });
+      select: {
+        id: true,
+      },
+    });
 
     return !!candidate;
   }
 
   // ==========================================
-// Get Highest Candidate Number
-// ==========================================
+  // Get Highest Candidate Number
+  // ==========================================
 
-async getHighestCandidateNumber(
-  electionId: string,
-): Promise<number> {
-  const candidate =
-    await this.prisma.candidate.findFirst({
+  async getHighestCandidateNumber(electionId: string): Promise<number> {
+    const candidate = await this.prisma.candidate.findFirst({
       where: {
         electionId,
 
@@ -388,116 +368,108 @@ async getHighestCandidateNumber(
       },
     });
 
-  return candidate?.candidateNumber ?? 0;
-}
+    return candidate?.candidateNumber ?? 0;
+  }
 
-// ==========================================
-// Find Eligible Candidates For Ballot
-// ==========================================
+  // ==========================================
+  // Find Eligible Candidates For Ballot
+  // ==========================================
 
-async findEligibleForBallot(
-  electionId: string,
-) {
-  return this.prisma.candidate.findMany({
-    where: {
-      electionId,
+  async findEligibleForBallot(electionId: string) {
+    return this.prisma.candidate.findMany({
+      where: {
+        electionId,
 
-      status:
-        CandidateStatus.APPROVED,
+        status: CandidateStatus.APPROVED,
 
-      candidateNumber: {
-        not: null,
+        candidateNumber: {
+          not: null,
+        },
+
+        deletedAt: null,
       },
 
-      deletedAt: null,
-    },
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+          },
+        },
 
-    include: {
-      user: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
+        party: {
+          select: {
+            id: true,
+            name: true,
+            abbreviation: true,
+          },
         },
       },
+    });
+  }
 
-      party: {
-        select: {
-          id: true,
-          name: true,
-          abbreviation: true,
-        },
-      },
-    },
-  });
-}
+  // ==========================================
+  // Update Ballot Orders
+  // ==========================================
 
-// ==========================================
-// Update Ballot Orders
-// ==========================================
-
-async updateBallotOrders(
-  assignments: {
-    candidateId: string;
-    ballotOrder: number;
-  }[],
-) {
-  return this.prisma.$transaction(
-    assignments.map(
-      (assignment) =>
+  async updateBallotOrders(
+    assignments: {
+      candidateId: string;
+      ballotOrder: number;
+    }[],
+  ) {
+    return this.prisma.$transaction(
+      assignments.map((assignment) =>
         this.prisma.candidate.update({
           where: {
             id: assignment.candidateId,
           },
 
           data: {
-            ballotOrder:
-              assignment.ballotOrder,
+            ballotOrder: assignment.ballotOrder,
           } as any,
         } as any),
-    ),
-  );
-}
+      ),
+    );
+  }
 
-// ==========================================
-// Clear Ballot Orders
-// ==========================================
+  // ==========================================
+  // Clear Ballot Orders
+  // ==========================================
 
-async clearBallotOrders(
-  electionId: string,
-) {
-  return this.prisma.candidate.updateMany({
-    where: {
-      electionId,
-      ballotOrder: {
-        not: null,
-      },
-    } as any,
+  async clearBallotOrders(electionId: string) {
+    return this.prisma.candidate.updateMany({
+      where: {
+        electionId,
+        ballotOrder: {
+          not: null,
+        },
+      } as any,
 
-    data: {
-      ballotOrder: null,
-    } as any,
-  } as any);
-}
+      data: {
+        ballotOrder: null,
+      } as any,
+    });
+  }
 
-// ==========================================
-// Replace Ballot Orders Atomically
-// ==========================================
+  // ==========================================
+  // Replace Ballot Orders Atomically
+  // ==========================================
 
-// ==========================================
-// Replace Ballot Orders Atomically
-// ==========================================
+  // ==========================================
+  // Replace Ballot Orders Atomically
+  // ==========================================
 
-async replaceBallotOrders(
-  electionId: string,
-  method: BallotOrderMethod,
-  assignments: {
-    candidateId: string;
-    ballotOrder: number;
-  }[],
-) {
-  return this.prisma.$transaction(
-    async (tx) => {
+  async replaceBallotOrders(
+    electionId: string,
+    method: BallotOrderMethod,
+    assignments: {
+      candidateId: string;
+      ballotOrder: number;
+    }[],
+  ) {
+    return this.prisma.$transaction(async (tx) => {
       // ==========================================
       // Clear Existing Ballot Orders
       // ==========================================
@@ -522,25 +494,18 @@ async replaceBallotOrders(
 
       const updatedCandidates: Candidate[] = [];
 
-      for (
-        const assignment of assignments
-      ) {
-        const candidate =
-          await tx.candidate.update({
-            where: {
-              id:
-                assignment.candidateId,
-            },
+      for (const assignment of assignments) {
+        const candidate = await tx.candidate.update({
+          where: {
+            id: assignment.candidateId,
+          },
 
-            data: {
-              ballotOrder:
-                assignment.ballotOrder,
-            },
-          });
+          data: {
+            ballotOrder: assignment.ballotOrder,
+          },
+        });
 
-        updatedCandidates.push(
-          candidate,
-        );
+        updatedCandidates.push(candidate);
       }
 
       // ==========================================
@@ -553,134 +518,24 @@ async replaceBallotOrders(
         },
 
         data: {
-          ballotOrderMethod:
-            method,
+          ballotOrderMethod: method,
         },
       });
 
       return updatedCandidates;
-    },
-  );
-}
+    });
+  }
 
-// ==========================================
-// Get Ordered Ballot
-// ==========================================
+  // ==========================================
+  // Get Ordered Ballot
+  // ==========================================
 
-async findOrderedBallot(
-  electionId: string,
-) {
-  return this.prisma.candidate.findMany({
-    where: {
-      electionId,
-
-      status:
-        CandidateStatus.APPROVED,
-
-      candidateNumber: {
-        not: null,
-      },
-
-      ballotOrder: {
-        not: null,
-      },
-
-      deletedAt: null,
-    },
-
-    orderBy: {
-      ballotOrder: 'asc',
-    },
-
-    select: {
-      id: true,
-
-      candidateNumber: true,
-      ballotOrder: true,
-
-      candidateType: true,
-      position: true,
-
-      manifesto: true,
-      agenda: true,
-      achievements: true,
-
-      photoUrl: true,
-
-      user: {
-        select: {
-          id: true,
-          fullName: true,
-          profilePhoto: true,
-        },
-      },
-
-      party: {
-        select: {
-          id: true,
-          name: true,
-          abbreviation: true,
-          symbol: true,
-          logo: true,
-        },
-      },
-    },
-  });
-}
-
-// ==========================================
-// Find Election Ballot State
-// ==========================================
-
-async findElectionBallotState(
-  electionId: string,
-) {
-  return this.prisma.election.findFirst({
-    where: {
-      id: electionId,
-      deletedAt: null,
-    },
-
-    select: {
-      id: true,
-      status: true,
-      ballotOrderMethod: true,
-      startDate: true,
-      endDate: true,
-      ballotFinalizedAt: true,
-      ballotFinalizedById: true,
-    },
-  });
-}
-
-// ==========================================
-// Get Ballot Readiness
-// ==========================================
-
-async getBallotReadiness(
-  electionId: string,
-) {
-  const [
-    totalApprovedCandidates,
-    readyCandidates,
-  ] = await this.prisma.$transaction([
-    this.prisma.candidate.count({
+  async findOrderedBallot(electionId: string) {
+    return this.prisma.candidate.findMany({
       where: {
         electionId,
 
-        status:
-          CandidateStatus.APPROVED,
-
-        deletedAt: null,
-      },
-    }),
-
-    this.prisma.candidate.count({
-      where: {
-        electionId,
-
-        status:
-          CandidateStatus.APPROVED,
+        status: CandidateStatus.APPROVED,
 
         candidateNumber: {
           not: null,
@@ -692,64 +547,156 @@ async getBallotReadiness(
 
         deletedAt: null,
       },
-    }),
-  ]);
 
-  return {
-    totalApprovedCandidates,
-    readyCandidates,
-  };
-}
+      orderBy: {
+        ballotOrder: 'asc',
+      },
 
-// ==========================================
-// Finalize Election Ballot
-// ==========================================
+      select: {
+        id: true,
 
-async finalizeBallot(
-  electionId: string,
-  finalizedById: string,
-) {
-  return this.prisma.election.update({
-    where: {
-      id: electionId,
-    },
+        candidateNumber: true,
+        ballotOrder: true,
 
-    data: {
-  ballotFinalizedAt: new Date(),
+        candidateType: true,
+        position: true,
 
-  ballotFinalizedBy: {
-    connect: {
-      id: finalizedById,
-    },
-  },
-},
+        manifesto: true,
+        agenda: true,
+        achievements: true,
 
-    select: {
-      id: true,
-      title: true,
-      status: true,
+        photoUrl: true,
 
-      ballotOrderMethod: true,
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            profilePhoto: true,
+          },
+        },
 
-      ballotFinalizedAt: true,
-
-      ballotFinalizedBy: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
+        party: {
+          select: {
+            id: true,
+            name: true,
+            abbreviation: true,
+            symbol: true,
+            logo: true,
+          },
         },
       },
-    },
-  });
-}
+    });
+  }
+
+  // ==========================================
+  // Find Election Ballot State
+  // ==========================================
+
+  async findElectionBallotState(electionId: string) {
+    return this.prisma.election.findFirst({
+      where: {
+        id: electionId,
+        deletedAt: null,
+      },
+
+      select: {
+        id: true,
+        status: true,
+        ballotOrderMethod: true,
+        startDate: true,
+        endDate: true,
+        ballotFinalizedAt: true,
+        ballotFinalizedById: true,
+      },
+    });
+  }
+
+  // ==========================================
+  // Get Ballot Readiness
+  // ==========================================
+
+  async getBallotReadiness(electionId: string) {
+    const [totalApprovedCandidates, readyCandidates] =
+      await this.prisma.$transaction([
+        this.prisma.candidate.count({
+          where: {
+            electionId,
+
+            status: CandidateStatus.APPROVED,
+
+            deletedAt: null,
+          },
+        }),
+
+        this.prisma.candidate.count({
+          where: {
+            electionId,
+
+            status: CandidateStatus.APPROVED,
+
+            candidateNumber: {
+              not: null,
+            },
+
+            ballotOrder: {
+              not: null,
+            },
+
+            deletedAt: null,
+          },
+        }),
+      ]);
+
+    return {
+      totalApprovedCandidates,
+      readyCandidates,
+    };
+  }
+
+  // ==========================================
+  // Finalize Election Ballot
+  // ==========================================
+
+  async finalizeBallot(electionId: string, finalizedById: string) {
+    return this.prisma.election.update({
+      where: {
+        id: electionId,
+      },
+
+      data: {
+        ballotFinalizedAt: new Date(),
+
+        ballotFinalizedBy: {
+          connect: {
+            id: finalizedById,
+          },
+        },
+      },
+
+      select: {
+        id: true,
+        title: true,
+        status: true,
+
+        ballotOrderMethod: true,
+
+        ballotFinalizedAt: true,
+
+        ballotFinalizedBy: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+          },
+        },
+      },
+    });
+  }
   // ==========================================
   // Soft Delete
   // ==========================================
 
-  async softDelete(
-    id: string,
-  ): Promise<Candidate> {
+  async softDelete(id: string): Promise<Candidate> {
     return this.prisma.candidate.update({
       where: {
         id,
@@ -762,23 +709,20 @@ async finalizeBallot(
   }
 
   async findAllPaginated(
-  where: Prisma.CandidateWhereInput,
-  page: number,
-  limit: number,
-) {
-  const [data, total] =
-    await this.prisma.$transaction([
+    where: Prisma.CandidateWhereInput,
+    page: number,
+    limit: number,
+  ) {
+    const [data, total] = await this.prisma.$transaction([
       this.prisma.candidate.findMany({
         where: {
           ...where,
           deletedAt: null,
         },
 
-        skip:
-          (page - 1) * limit,
+        skip: (page - 1) * limit,
 
-        take:
-          limit,
+        take: limit,
 
         orderBy: {
           createdAt: 'desc',
@@ -825,39 +769,34 @@ async finalizeBallot(
       }),
     ]);
 
-  return {
-    data,
-    total,
-    page,
-    limit,
+    return {
+      data,
+      total,
+      page,
+      limit,
 
-    totalPages:
-      Math.ceil(
-        total / limit,
-      ),
-  };
-}
+      totalPages: Math.ceil(total / limit),
+    };
+  }
 
-// ==========================================
-// Find Election Campaign State
-// ==========================================
+  // ==========================================
+  // Find Election Campaign State
+  // ==========================================
 
-async findElectionCampaignState(
-  electionId: string,
-) {
-  return this.prisma.election.findFirst({
-    where: {
-      id: electionId,
-      deletedAt: null,
-    },
+  async findElectionCampaignState(electionId: string) {
+    return this.prisma.election.findFirst({
+      where: {
+        id: electionId,
+        deletedAt: null,
+      },
 
-    select: {
-      id: true,
-      status: true,
-      campaignStart: true,
-      campaignEnd: true,
-      ballotFinalizedAt: true,
-    },
-  });
-}
+      select: {
+        id: true,
+        status: true,
+        campaignStart: true,
+        campaignEnd: true,
+        ballotFinalizedAt: true,
+      },
+    });
+  }
 }

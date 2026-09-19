@@ -27,14 +27,9 @@ import {
 } from './services';
 
 @Module({
-  imports: [
-    PrismaModule,
-    AuditModule,
-  ],
+  imports: [PrismaModule, AuditModule],
 
-  controllers: [
-    ElectionController,
-  ],
+  controllers: [ElectionController],
 
   providers: [
     ElectionRepository,
@@ -54,11 +49,8 @@ import {
     CloseElectionService,
     PublishResultsService,
     ArchiveElectionService,
-],
-
-  exports: [
-    ElectionRepository,
-    CreateElectionService,
   ],
+
+  exports: [ElectionRepository, CreateElectionService],
 })
 export class ElectionModule {}

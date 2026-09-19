@@ -1,22 +1,10 @@
-import {
-  IsEnum,
-  IsInt,
-  IsOptional,
-  IsString,
-  Min,
-} from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
 
-import {
-  Type,
-} from 'class-transformer';
+import { Type } from 'class-transformer';
 
-import {
-  ElectionStatus,
-  ElectionType,
-} from '@prisma/client';
+import { ElectionStatus, ElectionType } from '@prisma/client';
 
 export class QueryElectionDto {
-
   @IsOptional()
   @IsString()
   search?: string;
@@ -40,5 +28,4 @@ export class QueryElectionDto {
   @IsInt()
   @Min(1)
   limit = 10;
-
 }

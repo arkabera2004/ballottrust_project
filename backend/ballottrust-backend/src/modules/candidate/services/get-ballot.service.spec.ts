@@ -44,18 +44,14 @@ describe('GetBallotService', () => {
       ballotFinalizedAt: new Date(),
     });
 
-    candidateRepository.findOrderedBallot.mockResolvedValue(
-      ballot,
-    );
+    candidateRepository.findOrderedBallot.mockResolvedValue(ballot);
 
-    const result = await service.execute(
-      'election-1',
-    );
+    const result = await service.execute('election-1');
 
     expect(result).toBeDefined();
 
-    expect(
-      candidateRepository.findOrderedBallot,
-    ).toHaveBeenCalledWith('election-1');
+    expect(candidateRepository.findOrderedBallot).toHaveBeenCalledWith(
+      'election-1',
+    );
   });
 });

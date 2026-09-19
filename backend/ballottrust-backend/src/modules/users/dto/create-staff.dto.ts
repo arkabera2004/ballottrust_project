@@ -1,9 +1,4 @@
-
-import {
-  IsEmail,
-  IsEnum,
-  IsString,
-} from 'class-validator';
+import { IsEmail, IsEnum, IsString } from 'class-validator';
 
 export enum StaffRole {
   ELECTION_COMMISSIONER = 'ELECTION_COMMISSIONER',
@@ -23,4 +18,3 @@ export class CreateStaffDto {
   @IsEnum(StaffRole)
   role!: StaffRole;
 }
-

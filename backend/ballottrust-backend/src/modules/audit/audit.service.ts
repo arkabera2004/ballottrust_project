@@ -86,9 +86,7 @@ export class AuditService {
                 entityId: entry.entityId,
                 description: entry.description,
                 severity: entry.severity ?? AuditSeverity.LOW,
-                metadata: entry.metadata as
-                  | Prisma.InputJsonValue
-                  | undefined,
+                metadata: entry.metadata as Prisma.InputJsonValue | undefined,
                 ipAddress: entry.ipAddress,
                 result: entry.result,
                 previousHash,
@@ -98,8 +96,7 @@ export class AuditService {
             });
           },
           {
-            isolationLevel:
-              Prisma.TransactionIsolationLevel.Serializable,
+            isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
           },
         );
 
@@ -158,10 +155,7 @@ export class AuditService {
         };
       }
 
-      if (
-        i > 0 &&
-        record.previousHash !== logs[i - 1].hash
-      ) {
+      if (i > 0 && record.previousHash !== logs[i - 1].hash) {
         return {
           valid: false,
           message: `Broken chain at audit record ${record.id}`,
@@ -182,13 +176,13 @@ export class AuditService {
       .createHash('sha256')
       .update(
         fields.previousHash +
-        (fields.userId ?? '') +
-        fields.action +
-        fields.module +
-        (fields.entityType ?? '') +
-        (fields.entityId ?? '') +
-        fields.result +
-        fields.createdAt.toISOString(),
+          (fields.userId ?? '') +
+          fields.action +
+          fields.module +
+          (fields.entityType ?? '') +
+          (fields.entityId ?? '') +
+          fields.result +
+          fields.createdAt.toISOString(),
       )
       .digest('hex');
   }

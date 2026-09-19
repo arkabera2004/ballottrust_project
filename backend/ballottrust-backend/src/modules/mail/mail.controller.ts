@@ -3,14 +3,10 @@ import { MailService } from './mail.service';
 
 @Controller('mail')
 export class MailController {
-  constructor(
-    private readonly mailService: MailService,
-  ) {}
+  constructor(private readonly mailService: MailService) {}
 
   @Post('test')
-  async send(
-    @Body('email') email: string,
-  ) {
+  async send(@Body('email') email: string) {
     await this.mailService.sendTestMail(email);
 
     return {

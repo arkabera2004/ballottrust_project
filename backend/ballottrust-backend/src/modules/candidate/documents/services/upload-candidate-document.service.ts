@@ -6,33 +6,23 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import {
-  CandidateStatus,
-} from '@prisma/client';
+import { CandidateStatus } from '@prisma/client';
 
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {
-  CandidateRepository,
-} from '../../repository/candidate.repository';
+import { CandidateRepository } from '../../repository/candidate.repository';
 
-import {
-  CandidateDocumentRepository,
-} from '../candidate-document.repository';
+import { CandidateDocumentRepository } from '../candidate-document.repository';
 
-import {
-  UploadCandidateDocumentDto,
-} from '../dto/upload-candidate-document.dto';
+import { UploadCandidateDocumentDto } from '../dto/upload-candidate-document.dto';
 
 @Injectable()
 export class UploadCandidateDocumentService {
   constructor(
-    private readonly candidateRepository:
-      CandidateRepository,
+    private readonly candidateRepository: CandidateRepository,
 
-    private readonly candidateDocumentRepository:
-      CandidateDocumentRepository,
+    private readonly candidateDocumentRepository: CandidateDocumentRepository,
   ) {}
 
   async execute(
@@ -46,26 +36,19 @@ export class UploadCandidateDocumentService {
     // ==========================================
 
     if (!file) {
-      throw new BadRequestException(
-        'Candidate document file is required.',
-      );
+      throw new BadRequestException('Candidate document file is required.');
     }
 
     // ==========================================
     // 2. Find Candidate
     // ==========================================
 
-    const candidate =
-      await this.candidateRepository.findById(
-        candidateId,
-      );
+    const candidate = await this.candidateRepository.findById(candidateId);
 
     if (!candidate) {
       this.deleteUploadedFile(file);
 
-      throw new NotFoundException(
-        'Candidate not found.',
-      );
+      throw new NotFoundException('Candidate not found.');
     }
 
     // ==========================================
@@ -89,11 +72,7 @@ export class UploadCandidateDocumentService {
       CandidateStatus.VERIFIED,
     ];
 
-    if (
-      !editableStatuses.includes(
-        candidate.status,
-      )
-    ) {
+    if (!editableStatuses.includes(candidate.status)) {
       this.deleteUploadedFile(file);
 
       throw new BadRequestException(
@@ -106,11 +85,10 @@ export class UploadCandidateDocumentService {
     // ==========================================
 
     const existingDocument =
-      await this.candidateDocumentRepository
-        .findActiveByType(
-          candidateId,
-          dto.documentType,
-        );
+      await this.candidateDocumentRepository.findActiveByType(
+        candidateId,
+        dto.documentType,
+      );
 
     if (existingDocument) {
       this.deleteUploadedFile(file);
@@ -132,20 +110,15 @@ export class UploadCandidateDocumentService {
           },
         },
 
-        documentType:
-          dto.documentType,
+        documentType: dto.documentType,
 
-        originalFileName:
-          file.originalname,
+        originalFileName: file.originalname,
 
-        fileUrl:
-          `/uploads/${file.filename}`,
+        fileUrl: `/uploads/${file.filename}`,
 
-        mimeType:
-          file.mimetype,
+        mimeType: file.mimetype,
 
-        fileSize:
-          file.size,
+        fileSize: file.size,
       });
     } catch (error) {
       // The physical file already exists at this point.
@@ -160,26 +133,16 @@ export class UploadCandidateDocumentService {
   // Remove Orphaned Uploaded File
   // ==========================================
 
-  private deleteUploadedFile(
-    file: Express.Multer.File,
-  ): void {
+  private deleteUploadedFile(file: Express.Multer.File): void {
     if (!file) {
       return;
     }
 
     const filePath =
-      file.path ||
-      path.join(
-        process.cwd(),
-        'uploads',
-        file.filename,
-      );
+      file.path || path.join(process.cwd(), 'uploads', file.filename);
 
     try {
-      if (
-        filePath &&
-        fs.existsSync(filePath)
-      ) {
+      if (filePath && fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
     } catch {

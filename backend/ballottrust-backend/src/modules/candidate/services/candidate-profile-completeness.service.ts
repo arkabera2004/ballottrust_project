@@ -33,17 +33,16 @@ export class CandidateProfileCompletenessService {
   // Required Profile Fields
   // ======================================================
 
-  private readonly requiredFields:
-    (keyof CandidateProfileData)[] = [
-      'position',
-      'biography',
-      'campaignSlogan',
-      'manifesto',
-      'agenda',
-      'achievements',
-      'nominationStatement',
-      'photoUrl',
-    ];
+  private readonly requiredFields: (keyof CandidateProfileData)[] = [
+    'position',
+    'biography',
+    'campaignSlogan',
+    'manifesto',
+    'agenda',
+    'achievements',
+    'nominationStatement',
+    'photoUrl',
+  ];
 
   // ======================================================
   // Calculate Profile Completeness
@@ -52,31 +51,20 @@ export class CandidateProfileCompletenessService {
   calculate(
     candidate: CandidateProfileData,
   ): CandidateProfileCompletenessResult {
-    const missingFields =
-      this.requiredFields.filter(
-        (field) =>
-          !this.hasValue(
-            candidate[field],
-          ),
-      );
+    const missingFields = this.requiredFields.filter(
+      (field) => !this.hasValue(candidate[field]),
+    );
 
-    const totalFields =
-      this.requiredFields.length;
+    const totalFields = this.requiredFields.length;
 
-    const completedFields =
-      totalFields -
-      missingFields.length;
+    const completedFields = totalFields - missingFields.length;
 
-    const completionPercentage =
-      Math.round(
-        (completedFields /
-          totalFields) *
-          100,
-      );
+    const completionPercentage = Math.round(
+      (completedFields / totalFields) * 100,
+    );
 
     return {
-      complete:
-        missingFields.length === 0,
+      complete: missingFields.length === 0,
 
       completionPercentage,
 
@@ -92,12 +80,7 @@ export class CandidateProfileCompletenessService {
   // Value Check
   // ======================================================
 
-  private hasValue(
-    value: string | null | undefined,
-  ): boolean {
-    return (
-      typeof value === 'string' &&
-      value.trim().length > 0
-    );
+  private hasValue(value: string | null | undefined): boolean {
+    return typeof value === 'string' && value.trim().length > 0;
   }
 }

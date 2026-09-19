@@ -4,9 +4,7 @@ import { EligibilityRuleSetRepository } from '../repository/eligibility-rule-set
 
 @Injectable()
 export class ListEligibilityRuleVersionsService {
-  constructor(
-    private readonly repository: EligibilityRuleSetRepository,
-  ) {}
+  constructor(private readonly repository: EligibilityRuleSetRepository) {}
 
   async execute(electionId: string) {
     return this.repository.findVersions(electionId);

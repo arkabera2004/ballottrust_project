@@ -12,11 +12,7 @@ import {
 
 import { Role } from '@prisma/client';
 
-import {
-  CreateElectionDto,
-  QueryElectionDto,
-  UpdateElectionDto,
-} from '../dto';
+import { CreateElectionDto, QueryElectionDto, UpdateElectionDto } from '../dto';
 
 import {
   CreateElectionService,
@@ -42,35 +38,25 @@ import type { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
 @Controller('elections')
 export class ElectionController {
   constructor(
-    private readonly createElectionService:
-      CreateElectionService,
+    private readonly createElectionService: CreateElectionService,
 
-    private readonly updateElectionService:
-      UpdateElectionService,
+    private readonly updateElectionService: UpdateElectionService,
 
-    private readonly getElectionService:
-      GetElectionService,
+    private readonly getElectionService: GetElectionService,
 
-    private readonly getElectionByIdService:
-      GetElectionByIdService,
+    private readonly getElectionByIdService: GetElectionByIdService,
 
-    private readonly deleteElectionService:
-      DeleteElectionService,
+    private readonly deleteElectionService: DeleteElectionService,
 
-    private readonly submitElectionForApprovalService:
-      SubmitElectionForApprovalService,
+    private readonly submitElectionForApprovalService: SubmitElectionForApprovalService,
 
-    private readonly approveElectionService:
-      ApproveElectionService,
+    private readonly approveElectionService: ApproveElectionService,
 
-    private readonly publishElectionService:
-      PublishElectionService,
+    private readonly publishElectionService: PublishElectionService,
 
-    private readonly listElectionsService:
-      ListElectionsService,
+    private readonly listElectionsService: ListElectionsService,
 
-      private readonly startElectionService:
-  StartElectionService,
+    private readonly startElectionService: StartElectionService,
   ) {}
 
   // ======================================================
@@ -78,14 +64,8 @@ export class ElectionController {
   // ======================================================
 
   @Post()
-  @UseGuards(
-    JwtAuthGuard,
-    RolesGuard,
-  )
-  @Roles(
-    Role.SUPER_ADMIN,
-    Role.ELECTION_COMMISSIONER,
-  )
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ELECTION_COMMISSIONER)
   async create(
     @Body()
     dto: CreateElectionDto,
@@ -93,51 +73,33 @@ export class ElectionController {
     @CurrentUser()
     user: JwtPayload,
   ) {
-    return this.createElectionService.execute(
-      dto,
-      user.userId,
-    );
+    return this.createElectionService.execute(dto, user.userId);
   }
 
-// ======================================================
-// Start Election
-// ======================================================
+  // ======================================================
+  // Start Election
+  // ======================================================
 
-@Patch(':id/start')
-@UseGuards(
-  JwtAuthGuard,
-  RolesGuard,
-)
-@Roles(
-  Role.SUPER_ADMIN,
-  Role.ELECTION_COMMISSIONER,
-)
-async startElection(
-  @Param('id')
-  id: string,
+  @Patch(':id/start')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ELECTION_COMMISSIONER)
+  async startElection(
+    @Param('id')
+    id: string,
 
-  @CurrentUser()
-  user: JwtPayload,
-) {
-  return this.startElectionService.execute(
-    id,
-    user.userId,
-  );
-}
+    @CurrentUser()
+    user: JwtPayload,
+  ) {
+    return this.startElectionService.execute(id, user.userId);
+  }
 
   // ======================================================
   // Update Election
   // ======================================================
 
   @Patch(':id')
-  @UseGuards(
-    JwtAuthGuard,
-    RolesGuard,
-  )
-  @Roles(
-    Role.ELECTION_COMMISSIONER,
-    Role.SUPER_ADMIN,
-  )
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ELECTION_COMMISSIONER, Role.SUPER_ADMIN)
   async updateElection(
     @Param('id')
     id: string,
@@ -145,10 +107,7 @@ async startElection(
     @Body()
     dto: UpdateElectionDto,
   ) {
-    return this.updateElectionService.execute(
-      id,
-      dto,
-    );
+    return this.updateElectionService.execute(id, dto);
   }
 
   // ======================================================
@@ -161,9 +120,7 @@ async startElection(
     @Query()
     query: QueryElectionDto,
   ) {
-    return this.listElectionsService.execute(
-      query,
-    );
+    return this.listElectionsService.execute(query);
   }
 
   // ======================================================
@@ -176,9 +133,7 @@ async startElection(
     @Param('id')
     id: string,
   ) {
-    return this.getElectionByIdService.execute(
-      id,
-    );
+    return this.getElectionByIdService.execute(id);
   }
 
   // ======================================================
@@ -186,21 +141,13 @@ async startElection(
   // ======================================================
 
   @Delete(':id')
-  @UseGuards(
-    JwtAuthGuard,
-    RolesGuard,
-  )
-  @Roles(
-    Role.SUPER_ADMIN,
-    Role.ELECTION_COMMISSIONER,
-  )
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ELECTION_COMMISSIONER)
   async delete(
     @Param('id')
     id: string,
   ) {
-    return this.deleteElectionService.execute(
-      id,
-    );
+    return this.deleteElectionService.execute(id);
   }
 
   // ======================================================
@@ -208,14 +155,8 @@ async startElection(
   // ======================================================
 
   @Patch(':id/submit')
-  @UseGuards(
-    JwtAuthGuard,
-    RolesGuard,
-  )
-  @Roles(
-    Role.ELECTION_COMMISSIONER,
-    Role.SUPER_ADMIN,
-  )
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ELECTION_COMMISSIONER, Role.SUPER_ADMIN)
   async submitForApproval(
     @Param('id')
     id: string,
@@ -223,10 +164,7 @@ async startElection(
     @CurrentUser()
     user: JwtPayload,
   ) {
-    return this.submitElectionForApprovalService.execute(
-      id,
-      user.userId,
-    );
+    return this.submitElectionForApprovalService.execute(id, user.userId);
   }
 
   // ======================================================
@@ -234,10 +172,7 @@ async startElection(
   // ======================================================
 
   @Patch(':id/approve')
-  @UseGuards(
-    JwtAuthGuard,
-    RolesGuard,
-  )
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN)
   async approve(
     @Param('id')
@@ -246,10 +181,7 @@ async startElection(
     @CurrentUser()
     user: JwtPayload,
   ) {
-    return this.approveElectionService.execute(
-      id,
-      user.userId,
-    );
+    return this.approveElectionService.execute(id, user.userId);
   }
 
   // ======================================================
@@ -257,14 +189,8 @@ async startElection(
   // ======================================================
 
   @Patch(':id/publish')
-  @UseGuards(
-    JwtAuthGuard,
-    RolesGuard,
-  )
-  @Roles(
-    Role.ELECTION_COMMISSIONER,
-    Role.SUPER_ADMIN,
-  )
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ELECTION_COMMISSIONER, Role.SUPER_ADMIN)
   async publish(
     @Param('id')
     id: string,
@@ -272,9 +198,6 @@ async startElection(
     @CurrentUser()
     user: JwtPayload,
   ) {
-    return this.publishElectionService.execute(
-      id,
-      user.userId,
-    );
+    return this.publishElectionService.execute(id, user.userId);
   }
 }

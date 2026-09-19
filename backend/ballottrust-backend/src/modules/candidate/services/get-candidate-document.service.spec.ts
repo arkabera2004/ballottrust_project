@@ -18,10 +18,9 @@ describe('GetCandidateDocumentService', () => {
       findById: jest.fn(),
     };
 
-    service =
-      new GetCandidateDocumentService(
-        candidateDocumentRepository as unknown as CandidateDocumentRepository,
-      );
+    service = new GetCandidateDocumentService(
+      candidateDocumentRepository as unknown as CandidateDocumentRepository,
+    );
   });
 
   // ============================================================
@@ -49,25 +48,18 @@ describe('GetCandidateDocumentService', () => {
       deletedAt: null,
     };
 
-    candidateDocumentRepository.findById.mockResolvedValue(
-      document,
+    candidateDocumentRepository.findById.mockResolvedValue(document);
+
+    const result = await service.execute(
+      'candidate-1',
+      'document-1',
+      'user-1',
+      Role.CANDIDATE,
     );
 
-    const result =
-      await service.execute(
-        'candidate-1',
-        'document-1',
-        'user-1',
-        Role.CANDIDATE,
-      );
+    expect(result).toEqual(document);
 
-    expect(result).toEqual(
-      document,
-    );
-
-    expect(
-      candidateDocumentRepository.findById,
-    ).toHaveBeenCalledWith(
+    expect(candidateDocumentRepository.findById).toHaveBeenCalledWith(
       'document-1',
     );
   });
@@ -97,21 +89,16 @@ describe('GetCandidateDocumentService', () => {
       deletedAt: null,
     };
 
-    candidateDocumentRepository.findById.mockResolvedValue(
-      document,
+    candidateDocumentRepository.findById.mockResolvedValue(document);
+
+    const result = await service.execute(
+      'candidate-1',
+      'document-1',
+      'admin-user',
+      Role.SUPER_ADMIN,
     );
 
-    const result =
-      await service.execute(
-        'candidate-1',
-        'document-1',
-        'admin-user',
-        Role.SUPER_ADMIN,
-      );
-
-    expect(result).toEqual(
-      document,
-    );
+    expect(result).toEqual(document);
   });
 
   // ============================================================
@@ -139,21 +126,16 @@ describe('GetCandidateDocumentService', () => {
       deletedAt: null,
     };
 
-    candidateDocumentRepository.findById.mockResolvedValue(
-      document,
+    candidateDocumentRepository.findById.mockResolvedValue(document);
+
+    const result = await service.execute(
+      'candidate-1',
+      'document-1',
+      'commissioner-user',
+      Role.ELECTION_COMMISSIONER,
     );
 
-    const result =
-      await service.execute(
-        'candidate-1',
-        'document-1',
-        'commissioner-user',
-        Role.ELECTION_COMMISSIONER,
-      );
-
-    expect(result).toEqual(
-      document,
-    );
+    expect(result).toEqual(document);
   });
 
   // ============================================================
@@ -161,24 +143,13 @@ describe('GetCandidateDocumentService', () => {
   // ============================================================
 
   it('should reject when the document does not exist', async () => {
-    candidateDocumentRepository.findById.mockResolvedValue(
-      null,
-    );
+    candidateDocumentRepository.findById.mockResolvedValue(null);
 
     await expect(
-      service.execute(
-        'candidate-1',
-        'document-1',
-        'user-1',
-        Role.CANDIDATE,
-      ),
-    ).rejects.toThrow(
-      'Candidate document not found.',
-    );
+      service.execute('candidate-1', 'document-1', 'user-1', Role.CANDIDATE),
+    ).rejects.toThrow('Candidate document not found.');
 
-    expect(
-      candidateDocumentRepository.findById,
-    ).toHaveBeenCalledWith(
+    expect(candidateDocumentRepository.findById).toHaveBeenCalledWith(
       'document-1',
     );
   });
@@ -208,20 +179,11 @@ describe('GetCandidateDocumentService', () => {
       deletedAt: null,
     };
 
-    candidateDocumentRepository.findById.mockResolvedValue(
-      document,
-    );
+    candidateDocumentRepository.findById.mockResolvedValue(document);
 
     await expect(
-      service.execute(
-        'candidate-1',
-        'document-1',
-        'user-1',
-        Role.CANDIDATE,
-      ),
-    ).rejects.toThrow(
-      'Candidate document not found.',
-    );
+      service.execute('candidate-1', 'document-1', 'user-1', Role.CANDIDATE),
+    ).rejects.toThrow('Candidate document not found.');
   });
 
   // ============================================================
@@ -249,9 +211,7 @@ describe('GetCandidateDocumentService', () => {
       deletedAt: null,
     };
 
-    candidateDocumentRepository.findById.mockResolvedValue(
-      document,
-    );
+    candidateDocumentRepository.findById.mockResolvedValue(document);
 
     await expect(
       service.execute(
@@ -280,9 +240,7 @@ describe('GetCandidateDocumentService', () => {
       },
     };
 
-    candidateDocumentRepository.findById.mockResolvedValue(
-      document,
-    );
+    candidateDocumentRepository.findById.mockResolvedValue(document);
 
     await service.execute(
       'candidate-1',
@@ -291,18 +249,14 @@ describe('GetCandidateDocumentService', () => {
       Role.CANDIDATE,
     );
 
-    expect(
-      candidateDocumentRepository.findById,
-    ).toHaveBeenCalledTimes(1);
+    expect(candidateDocumentRepository.findById).toHaveBeenCalledTimes(1);
 
-    expect(
-      candidateDocumentRepository.findById,
-    ).toHaveBeenCalledWith(
+    expect(candidateDocumentRepository.findById).toHaveBeenCalledWith(
       'document-123',
     );
   });
 
-    // ============================================================
+  // ============================================================
   // ADMIN CANNOT BYPASS CANDIDATE RELATIONSHIP
   // ============================================================
 
@@ -327,9 +281,7 @@ describe('GetCandidateDocumentService', () => {
       deletedAt: null,
     };
 
-    candidateDocumentRepository.findById.mockResolvedValue(
-      document,
-    );
+    candidateDocumentRepository.findById.mockResolvedValue(document);
 
     await expect(
       service.execute(
@@ -338,9 +290,7 @@ describe('GetCandidateDocumentService', () => {
         'document-1',
         Role.SUPER_ADMIN,
       ),
-    ).rejects.toThrow(
-      'Candidate document not found.',
-    );
+    ).rejects.toThrow('Candidate document not found.');
   });
 
   // ============================================================
@@ -368,17 +318,10 @@ describe('GetCandidateDocumentService', () => {
       deletedAt: null,
     };
 
-    candidateDocumentRepository.findById.mockResolvedValue(
-      document,
-    );
+    candidateDocumentRepository.findById.mockResolvedValue(document);
 
     await expect(
-      service.execute(
-        'candidate-1',
-        'user-1',
-        'document-1',
-        Role.CANDIDATE,
-      ),
+      service.execute('candidate-1', 'user-1', 'document-1', Role.CANDIDATE),
     ).rejects.toThrow(
       'You are not authorized to view this candidate document.',
     );

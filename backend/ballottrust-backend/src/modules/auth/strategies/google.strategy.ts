@@ -3,24 +3,16 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, Profile, VerifyCallback } from 'passport-google-oauth20';
 
 @Injectable()
-export class GoogleStrategy extends PassportStrategy(
-  Strategy,
-  'google',
-) {
+export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor() {
     super({
       clientID: process.env.GOOGLE_CLIENT_ID!,
 
-      clientSecret:
-        process.env.GOOGLE_CLIENT_SECRET!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
 
-      callbackURL:
-        process.env.GOOGLE_CALLBACK_URL!,
+      callbackURL: process.env.GOOGLE_CALLBACK_URL!,
 
-      scope: [
-        'email',
-        'profile',
-      ],
+      scope: ['email', 'profile'],
     });
   }
 
@@ -33,9 +25,7 @@ export class GoogleStrategy extends PassportStrategy(
 
     done: VerifyCallback,
   ) {
-
     const {
-
       id,
 
       displayName,
@@ -43,23 +33,16 @@ export class GoogleStrategy extends PassportStrategy(
       emails,
 
       photos,
-
     } = profile;
 
     done(null, {
-
       providerId: id,
 
-      email:
-        emails?.[0]?.value,
+      email: emails?.[0]?.value,
 
-      fullName:
-        displayName,
+      fullName: displayName,
 
-      avatar:
-        photos?.[0]?.value,
-
+      avatar: photos?.[0]?.value,
     });
-
   }
 }

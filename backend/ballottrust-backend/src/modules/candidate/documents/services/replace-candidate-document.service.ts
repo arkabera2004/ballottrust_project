@@ -5,22 +5,17 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import {
-  CandidateStatus,
-} from '@prisma/client';
+import { CandidateStatus } from '@prisma/client';
 
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {
-  CandidateDocumentRepository,
-} from '../candidate-document.repository';
+import { CandidateDocumentRepository } from '../candidate-document.repository';
 
 @Injectable()
 export class ReplaceCandidateDocumentService {
   constructor(
-    private readonly candidateDocumentRepository:
-      CandidateDocumentRepository,
+    private readonly candidateDocumentRepository: CandidateDocumentRepository,
   ) {}
 
   async execute(
@@ -34,9 +29,7 @@ export class ReplaceCandidateDocumentService {
     // ==========================================
 
     if (!file) {
-      throw new BadRequestException(
-        'Replacement document file is required.',
-      );
+      throw new BadRequestException('Replacement document file is required.');
     }
 
     // ==========================================
@@ -44,42 +37,29 @@ export class ReplaceCandidateDocumentService {
     // ==========================================
 
     const existingDocument =
-      await this.candidateDocumentRepository
-        .findById(
-          documentId,
-        );
+      await this.candidateDocumentRepository.findById(documentId);
 
     if (!existingDocument) {
       this.deleteUploadedFile(file);
 
-      throw new NotFoundException(
-        'Candidate document not found.',
-      );
+      throw new NotFoundException('Candidate document not found.');
     }
 
     // ==========================================
     // 3. Validate Candidate Relationship
     // ==========================================
 
-    if (
-      existingDocument.candidateId !==
-      candidateId
-    ) {
+    if (existingDocument.candidateId !== candidateId) {
       this.deleteUploadedFile(file);
 
-      throw new NotFoundException(
-        'Candidate document not found.',
-      );
+      throw new NotFoundException('Candidate document not found.');
     }
 
     // ==========================================
     // 4. Validate Ownership
     // ==========================================
 
-    if (
-      existingDocument.candidate.userId !==
-      userId
-    ) {
+    if (existingDocument.candidate.userId !== userId) {
       this.deleteUploadedFile(file);
 
       throw new ForbiddenException(
@@ -91,9 +71,7 @@ export class ReplaceCandidateDocumentService {
     // 5. Validate Active Document
     // ==========================================
 
-    if (
-      existingDocument.replacedAt !== null
-    ) {
+    if (existingDocument.replacedAt !== null) {
       this.deleteUploadedFile(file);
 
       throw new BadRequestException(
@@ -110,11 +88,7 @@ export class ReplaceCandidateDocumentService {
       CandidateStatus.VERIFIED,
     ];
 
-    if (
-      !editableStatuses.includes(
-        existingDocument.candidate.status,
-      )
-    ) {
+    if (!editableStatuses.includes(existingDocument.candidate.status)) {
       this.deleteUploadedFile(file);
 
       throw new BadRequestException(
@@ -127,32 +101,26 @@ export class ReplaceCandidateDocumentService {
     // ==========================================
 
     try {
-      return await this.candidateDocumentRepository
-        .replaceDocument(
-          existingDocument.id,
-          {
-            candidate: {
-              connect: {
-                id: candidateId,
-              },
+      return await this.candidateDocumentRepository.replaceDocument(
+        existingDocument.id,
+        {
+          candidate: {
+            connect: {
+              id: candidateId,
             },
-
-            documentType:
-              existingDocument.documentType,
-
-            originalFileName:
-              file.originalname,
-
-            fileUrl:
-              `/uploads/${file.filename}`,
-
-            mimeType:
-              file.mimetype,
-
-            fileSize:
-              file.size,
           },
-        );
+
+          documentType: existingDocument.documentType,
+
+          originalFileName: file.originalname,
+
+          fileUrl: `/uploads/${file.filename}`,
+
+          mimeType: file.mimetype,
+
+          fileSize: file.size,
+        },
+      );
     } catch (error) {
       // Database replacement failed.
       // Remove only the newly uploaded file.
@@ -166,22 +134,12 @@ export class ReplaceCandidateDocumentService {
   // Remove Failed Replacement File
   // ==========================================
 
-  private deleteUploadedFile(
-    file: Express.Multer.File,
-  ): void {
+  private deleteUploadedFile(file: Express.Multer.File): void {
     const filePath =
-      file.path ||
-      path.join(
-        process.cwd(),
-        'uploads',
-        file.filename,
-      );
+      file.path || path.join(process.cwd(), 'uploads', file.filename);
 
     try {
-      if (
-        filePath &&
-        fs.existsSync(filePath)
-      ) {
+      if (filePath && fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
     } catch {
