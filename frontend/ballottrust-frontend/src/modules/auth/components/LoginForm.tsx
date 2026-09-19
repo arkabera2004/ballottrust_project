@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 
+import { ENV } from '../../../config/env';
+
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -201,7 +203,7 @@ export default function LoginForm() {
           <button
                 onClick={() => {
                     window.location.href =
-                        'http://localhost:3000/auth/google';
+                        `${ENV.API_URL}/auth/google`;
                 }}
                 className="w-full mt-4 border p-3 rounded-lg font-medium hover:bg-gray-100 transition"
             >

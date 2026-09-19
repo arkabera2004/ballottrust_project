@@ -1,10 +1,8 @@
 import axios from 'axios';
-import type {
-  AxiosError,
-  InternalAxiosRequestConfig,
-} from 'axios';
+import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 import { ENV } from '../config/env';
+import { ROUTES } from '../constants/routes';
 import TokenStorage from '../utils/token-storage';
 
 const api = axios.create({
@@ -19,43 +17,11 @@ const api = axios.create({
 // ======================================================
 
 api.interceptors.request.use(
-  (
-    config: InternalAxiosRequestConfig,
-  ) => {
-    console.log(
-      '================================',
-    );
-    console.log('AXIOS REQUEST');
-
-    console.log(
-      'URL:',
-      `${config.baseURL ?? ''}${config.url ?? ''}`,
-    );
-
-    const token =
-      TokenStorage.getAccessToken();
-
-    console.log(
-      'TokenStorage Token:',
-      token,
-    );
-
-    console.log(
-      'LocalStorage Token:',
-      localStorage.getItem('token'),
-    );
+  (config: InternalAxiosRequestConfig) => {
+    const token = TokenStorage.getAccessToken();
 
     if (token) {
-      config.headers.Authorization =
-        `Bearer ${token}`;
-
-      console.log(
-        'Authorization Header Attached',
-      );
-    } else {
-      console.warn(
-        'No access token found.',
-      );
+      config.headers.Authorization = `Bearer ${token}`;
     }
 
     return config;
@@ -74,21 +40,28 @@ let failedQueue: {
   reject: (error: unknown) => void;
 }[] = [];
 
-function processQueue(
-  error: unknown,
-  token?: string,
-) {
-  failedQueue.forEach(
-    (promise) => {
-      if (error) {
-        promise.reject(error);
-      } else {
-        promise.resolve(token!);
-      }
-    },
-  );
+function processQueue(error: unknown, token?: string) {
+  failedQueue.forEach((promise) => {
+    if (error) {
+      promise.reject(error);
+    } else {
+      promise.resolve(token!);
+    }
+  });
 
   failedQueue = [];
+}
+
+/**
+ * Every backend response is wrapped by the API's ResponseInterceptor as
+ * `{ success, timestamp, data }`, so the payload is one level deeper
+ * than a plain axios response. Reading `response.data.access_token`
+ * here yields undefined and silently stores a broken token.
+ */
+interface RefreshEnvelope {
+  data?: {
+    access_token?: string;
+  };
 }
 
 // ======================================================
@@ -96,25 +69,12 @@ function processQueue(
 // ======================================================
 
 api.interceptors.response.use(
-  (response) => {
-    console.log(
-      `SUCCESS: ${response.config.url} ${response.status}`,
-    );
-
-    return response;
-  },
+  (response) => response,
 
   async (error: AxiosError) => {
-    const originalRequest =
-      error.config as
-        | (InternalAxiosRequestConfig & {
-            _retry?: boolean;
-          })
-        | undefined;
-
-    console.error(
-      `ERROR: ${originalRequest?.url} ${error.response?.status}`,
-    );
+    const originalRequest = error.config as
+      | (InternalAxiosRequestConfig & { _retry?: boolean })
+      | undefined;
 
     if (
       error.response?.status !== 401 ||
@@ -127,70 +87,58 @@ api.interceptors.response.use(
     originalRequest._retry = true;
 
     if (isRefreshing) {
-      return new Promise(
-        (resolve, reject) => {
-          failedQueue.push({
-            resolve: (token) => {
-              originalRequest.headers.Authorization =
-                `Bearer ${token}`;
+      return new Promise((resolve, reject) => {
+        failedQueue.push({
+          resolve: (token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
 
-              resolve(
-                api(originalRequest),
-              );
-            },
-            reject,
-          });
-        },
-      );
+            resolve(api(originalRequest));
+          },
+          reject,
+        });
+      });
     }
 
     isRefreshing = true;
 
     try {
-      const refreshToken =
-        TokenStorage.getRefreshToken();
+      const refreshToken = TokenStorage.getRefreshToken();
 
       if (!refreshToken) {
-        throw new Error(
-          'No refresh token found.',
-        );
+        throw new Error('No refresh token found.');
       }
 
-      const response =
-        await axios.post(
-          `${ENV.API_URL}/auth/refresh`,
-          {
-            refreshToken,
-          },
-        );
-
-      const newAccessToken =
-        response.data.access_token;
-
-      TokenStorage.setAccessToken(
-        newAccessToken,
+      // Deliberately a bare axios call, not `api`: routing the refresh
+      // through this same instance would re-enter these interceptors and
+      // could recurse if the refresh itself 401s.
+      const response = await axios.post<RefreshEnvelope>(
+        `${ENV.API_URL}/auth/refresh`,
+        { refreshToken },
       );
 
-      processQueue(
-        null,
-        newAccessToken,
-      );
+      const newAccessToken = response.data?.data?.access_token;
 
-      originalRequest.headers.Authorization =
-        `Bearer ${newAccessToken}`;
+      if (!newAccessToken) {
+        throw new Error('Refresh response did not contain an access token.');
+      }
+
+      TokenStorage.setAccessToken(newAccessToken);
+
+      processQueue(null, newAccessToken);
+
+      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
       return api(originalRequest);
     } catch (err) {
-      console.error(
-        'Refresh Token Failed:',
-        err,
-      );
-
       processQueue(err);
 
       TokenStorage.clear();
 
-      window.location.href = '/';
+      // Full reload rather than a router navigation: the session is gone,
+      // so every cached query and context value must be discarded too.
+      if (window.location.pathname !== ROUTES.LOGIN) {
+        window.location.href = ROUTES.LOGIN;
+      }
 
       return Promise.reject(err);
     } finally {

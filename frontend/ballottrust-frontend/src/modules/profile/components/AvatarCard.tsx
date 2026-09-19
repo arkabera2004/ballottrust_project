@@ -8,6 +8,7 @@ import Avatar from '../../../components/ui/Avatar';
 import AvatarUpload from './AvatarUpload';
 
 import type { Profile } from '../types/profile';
+import { ENV } from '../../../config/env';
 
 type Props = {
   profile: Profile | null;
@@ -40,7 +41,7 @@ export default function AvatarCard({
             <Avatar
               src={
                 profile?.avatarUrl
-                  ? `http://localhost:3000${profile.avatarUrl}`
+                  ? `${ENV.API_URL}${profile.avatarUrl}`
                   : undefined
               }
               name={profile?.fullName}
