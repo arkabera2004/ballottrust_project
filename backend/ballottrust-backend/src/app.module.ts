@@ -24,6 +24,8 @@ import { VoteModule } from './modules/vote/vote.module';
 import { VoterModule } from './modules/voter/voter.module';
 import { ManifestoModule } from './modules/manifesto/manifesto.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { SystemConfigModule } from './modules/config/config.module';
+import { WorkflowModule } from './modules/workflow/workflow.module';
 import { ResultModule } from './modules/result/result.module';
 
 import { BlockchainModule } from './modules/blockchain/blockchain.module';
@@ -80,6 +82,8 @@ import { JobsModule } from './modules/jobs/jobs.module';
     VoterModule,
     ManifestoModule,
     NotificationModule,
+    SystemConfigModule,
+    WorkflowModule,
     ResultModule,
 
     BlockchainModule,

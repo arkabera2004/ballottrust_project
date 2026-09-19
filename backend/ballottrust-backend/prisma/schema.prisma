@@ -91,6 +91,11 @@ model User {
   rejectedVoterRegistrations    VoterRegistration[]        @relation("VoterRegistrationRejectedBy")
   approvedManifestos            CandidateManifesto[]       @relation("ManifestoApprovedBy")
   rejectedManifestos            CandidateManifesto[]       @relation("ManifestoRejectedBy")
+  updatedSystemConfigs          SystemConfiguration[]      @relation("SystemConfigUpdatedBy")
+  assignedTasks                 WorkflowTask[]             @relation("WorkflowTaskAssignedTo")
+  createdTasks                  WorkflowTask[]             @relation("WorkflowTaskAssignedBy")
+  completedTasks                WorkflowTask[]             @relation("WorkflowTaskCompletedBy")
+  workflowComments              WorkflowComment[]
 
   @@index([email])
   @@index([role])
@@ -152,6 +157,7 @@ model Election {
   voterCredentials     VoterCredential[]
   eligibilityRuleSets  EligibilityRuleSet[]
   eligibilitySnapshots VoterEligibilitySnapshot[]
+  workflowTasks        WorkflowTask[]
 
   @@index([status])
   @@index([startDate])
@@ -991,4 +997,128 @@ enum NotificationDeliveryStatus {
   PENDING
   SENT
   FAILED
+}
+
+/// How a configuration value should be interpreted when read back.
+enum ConfigValueType {
+  STRING
+  NUMBER
+  BOOLEAN
+  JSON
+}
+
+/// Broad grouping used to organise the settings screen.
+enum ConfigCategory {
+  GENERAL
+  BRANDING
+  SECURITY
+  PASSWORD_POLICY
+  EMAIL
+  FEATURE_FLAG
+  BACKUP
+}
+
+/// One platform-wide setting.
+///
+/// Values are stored as text and interpreted via `valueType`, so adding
+/// a setting never requires a migration. `isSecret` marks values that
+/// must be redacted when read back over the API.
+model SystemConfiguration {
+  id          String          @id @default(uuid())
+  key         String          @unique
+  value       String
+  valueType   ConfigValueType @default(STRING)
+  category    ConfigCategory  @default(GENERAL)
+  description String?
+  /// Redacted on read. Changes are still audited, values never logged.
+  isSecret    Boolean         @default(false)
+  /// Seeded defaults cannot be deleted, only overwritten.
+  isSystem    Boolean         @default(false)
+
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  updatedBy User? @relation("SystemConfigUpdatedBy", fields: [updatedById], references: [id])
+
+  @@index([category])
+  @@index([key])
+}
+
+enum WorkflowTaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum WorkflowTaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+/// A unit of review work assigned to a member of staff.
+///
+/// Generic over the thing being reviewed (`entityType`/`entityId`) so
+/// any module can raise a task without the workflow module needing to
+/// know about it — docs/07 §12 lists its dependency as "All Business
+/// Modules".
+model WorkflowTask {
+  id String @id @default(uuid())
+
+  title       String
+  description String?
+  module      String
+  entityType  String?
+  entityId    String?
+
+  status   WorkflowTaskStatus   @default(PENDING)
+  priority WorkflowTaskPriority @default(MEDIUM)
+
+  assignedToId String
+  assignedById String?
+  dueDate      DateTime?
+
+  /// Set when the task is escalated; records why.
+  escalatedAt    DateTime?
+  escalationNote String?
+
+  completedById String?
+  completedAt   DateTime?
+  outcome       String?
+
+  electionId String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  assignedTo  User      @relation("WorkflowTaskAssignedTo", fields: [assignedToId], references: [id])
+  assignedBy  User?     @relation("WorkflowTaskAssignedBy", fields: [assignedById], references: [id])
+  completedBy User?     @relation("WorkflowTaskCompletedBy", fields: [completedById], references: [id])
+  election    Election? @relation(fields: [electionId], references: [id], onDelete: Cascade)
+
+  comments WorkflowComment[]
+
+  @@index([assignedToId, status])
+  @@index([status])
+  @@index([entityType, entityId])
+  @@index([electionId])
+}
+
+/// A comment on a workflow task.
+model WorkflowComment {
+  id        String    @id @default(uuid())
+  taskId    String
+  authorId  String
+  body      String
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  task   WorkflowTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author User         @relation(fields: [authorId], references: [id])
+
+  @@index([taskId])
 }
