@@ -21,6 +21,7 @@ import { ElectionModule } from './modules/election/election.module';
 import { CandidateModule } from './modules/candidate/candidate.module';
 import { VoteModule } from './modules/vote/vote.module';
 import { VoterModule } from './modules/voter/voter.module';
+import { ManifestoModule } from './modules/manifesto/manifesto.module';
 import { ResultModule } from './modules/result/result.module';
 
 import { BlockchainModule } from './modules/blockchain/blockchain.module';
@@ -71,6 +72,7 @@ import { JobsModule } from './modules/jobs/jobs.module';
     CandidateModule,
     VoteModule,
     VoterModule,
+    ManifestoModule,
     ResultModule,
 
     BlockchainModule,

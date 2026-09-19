@@ -89,6 +89,8 @@ model User {
   verifiedVoterRegistrations    VoterRegistration[]        @relation("VoterRegistrationVerifiedBy")
   approvedVoterRegistrations    VoterRegistration[]        @relation("VoterRegistrationApprovedBy")
   rejectedVoterRegistrations    VoterRegistration[]        @relation("VoterRegistrationRejectedBy")
+  approvedManifestos            CandidateManifesto[]       @relation("ManifestoApprovedBy")
+  rejectedManifestos            CandidateManifesto[]       @relation("ManifestoRejectedBy")
 
   @@index([email])
   @@index([role])
@@ -319,6 +321,7 @@ model Candidate {
   // ==========================================
   // Constraints
   // ==========================================
+  manifestos CandidateManifesto[]
 
   @@unique([userId, electionId])
   @@unique([electionId, candidateNumber])
@@ -914,5 +917,60 @@ model VoterRegistration {
   @@unique([userId, electionId])
   @@index([electionId, status])
   @@index([userId])
+  @@index([status])
+}
+
+/// Review state of one manifesto version.
+enum ManifestoStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+/// One immutable version of a candidate's manifesto.
+///
+/// Business rule (docs/07 §7): every update creates a new version rather
+/// than mutating the existing row, so an approved manifesto can never be
+/// silently edited after the fact. The "current" manifesto is simply the
+/// highest version for the candidate; the publicly visible one is the
+/// highest version with status APPROVED. Deriving both from `version`
+/// avoids an `isCurrent` flag that could drift out of sync.
+model CandidateManifesto {
+  id          String @id @default(uuid())
+  candidateId String
+  version     Int
+
+  title       String
+  summary     String?
+  /// Rich text, stored as sanitised HTML.
+  content     String
+  /// Optional uploaded PDF, served from /uploads.
+  documentUrl String?
+  /// Optional external video link.
+  videoUrl    String?
+  coverImage  String?
+
+  status ManifestoStatus @default(DRAFT)
+
+  submittedAt DateTime?
+
+  approvedById String?
+  approvedAt   DateTime?
+
+  rejectedById    String?
+  rejectedAt      DateTime?
+  rejectionReason String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  candidate  Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  approvedBy User?     @relation("ManifestoApprovedBy", fields: [approvedById], references: [id])
+  rejectedBy User?     @relation("ManifestoRejectedBy", fields: [rejectedById], references: [id])
+
+  @@unique([candidateId, version])
+  @@index([candidateId, status])
   @@index([status])
 }
