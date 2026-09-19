@@ -30,7 +30,7 @@ export type ElectionType =
   (typeof ElectionType)[keyof typeof ElectionType];
 
 export const ResultVisibility = {
-  IMMEDIATELY: 'IMMEDIATELY',
+  IMMEDIATE: 'IMMEDIATE',
   AFTER_CLOSURE: 'AFTER_CLOSURE',
   MANUAL: 'MANUAL',
 } as const;

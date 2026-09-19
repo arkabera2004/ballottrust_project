@@ -5,7 +5,7 @@ import RoleRoute from '../routes/RoleRoute';
 import AdminDashboardPage from '../modules/dashboard/pages/AdminDashboardPage';
 
 import CandidateApproval from '../pages/CandidateApproval';
-import VoterApproval from '../pages/VoterApproval';
+import { VoterRollPage } from '../modules/voter';
 import StaffManagement from '../pages/StaffManagement';
 
 export const AdminRoutes = (
@@ -45,9 +45,10 @@ export const AdminRoutes = (
           allowedRoles={[
             'SUPER_ADMIN',
             'ELECTION_COMMISSIONER',
+            'VERIFICATION_OFFICER',
           ]}
         >
-          <VoterApproval />
+          <VoterRollPage />
         </RoleRoute>
       }
     />
