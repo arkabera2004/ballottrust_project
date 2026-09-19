@@ -10,12 +10,15 @@ import {
   CandidateRoutes,
   VoterRoutes,
   CommonRoutes,
+  PublicRoutes,
 } from './routes';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+
+        {PublicRoutes}
 
         {AuthRoutes}
 

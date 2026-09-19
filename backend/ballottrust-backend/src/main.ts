@@ -9,6 +9,12 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // docs/05 §2 specifies /api/v1 as the base URL. Controllers declare
+  // their paths without it, so it is applied globally here. Static
+  // uploads are served by ServeStaticModule middleware and are not
+  // affected by this prefix.
+  app.setGlobalPrefix('api/v1');
+
   app.useGlobalInterceptors(new ResponseInterceptor());
 
   app.enableCors({

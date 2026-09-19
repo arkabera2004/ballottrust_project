@@ -41,7 +41,7 @@ export default function AvatarCard({
             <Avatar
               src={
                 profile?.avatarUrl
-                  ? `${ENV.API_URL}${profile.avatarUrl}`
+                  ? `${ENV.ASSET_URL}${profile.avatarUrl}`
                   : undefined
               }
               name={profile?.fullName}
