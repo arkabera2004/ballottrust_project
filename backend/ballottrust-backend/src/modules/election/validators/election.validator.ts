@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 
 import { CreateElectionDto } from '../dto/create-election.dto';
+import { UpdateElectionDto } from '../dto/update-election.dto';
 
 @Injectable()
 export class ElectionValidator {
@@ -75,7 +76,7 @@ export class ElectionValidator {
     }
   }
 
-  validateUpdate(dto: any): void {
+  validateUpdate(dto: UpdateElectionDto): void {
     if (
       dto.startDate &&
       dto.endDate &&

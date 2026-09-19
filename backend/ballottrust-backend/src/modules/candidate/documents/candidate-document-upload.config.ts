@@ -1,12 +1,18 @@
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { BadRequestException } from '@nestjs/common';
+import type { Request } from 'express';
+import type { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 
-export const candidateDocumentMulterConfig = {
+export const candidateDocumentMulterConfig: MulterOptions = {
   storage: diskStorage({
     destination: './uploads',
 
-    filename: (_, file, callback) => {
+    filename: (
+      _req: Request,
+      file: Express.Multer.File,
+      callback: (error: Error | null, filename: string) => void,
+    ) => {
       const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
 
       callback(
@@ -16,7 +22,11 @@ export const candidateDocumentMulterConfig = {
     },
   }),
 
-  fileFilter: (_, file, callback) => {
+  fileFilter: (
+    _req: Request,
+    file: Express.Multer.File,
+    callback: (error: Error | null, acceptFile: boolean) => void,
+  ) => {
     const allowedMimeTypes = [
       'application/pdf',
       'image/jpeg',

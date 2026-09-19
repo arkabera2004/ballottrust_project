@@ -1,3 +1,4 @@
+import { Role } from '@prisma/client';
 import { JwtStrategy } from './jwt.strategy';
 
 describe('JwtStrategy', () => {
@@ -25,10 +26,10 @@ describe('JwtStrategy', () => {
     const payload = {
       sub: 'user-123',
       email: 'user@example.com',
-      role: 'VOTER',
+      role: Role.VOTER,
     };
 
-    const result = await strategy.validate(payload);
+    const result = strategy.validate(payload);
 
     expect(result).toEqual({
       userId: 'user-123',
@@ -45,10 +46,10 @@ describe('JwtStrategy', () => {
     const payload = {
       sub: 'admin-123',
       email: 'admin@ballottrust.com',
-      role: 'SUPER_ADMIN',
+      role: Role.SUPER_ADMIN,
     };
 
-    const result = await strategy.validate(payload);
+    const result = strategy.validate(payload);
 
     expect(result.userId).toBe('admin-123');
 
@@ -65,10 +66,10 @@ describe('JwtStrategy', () => {
     const payload = {
       sub: 'commissioner-123',
       email: 'commissioner@ballottrust.com',
-      role: 'ELECTION_COMMISSIONER',
+      role: Role.ELECTION_COMMISSIONER,
     };
 
-    const result = await strategy.validate(payload);
+    const result = strategy.validate(payload);
 
     expect(result).toEqual({
       userId: 'commissioner-123',
@@ -85,10 +86,10 @@ describe('JwtStrategy', () => {
     const payload = {
       sub: 'candidate-123',
       email: 'candidate@ballottrust.com',
-      role: 'CANDIDATE',
+      role: Role.CANDIDATE,
     };
 
-    const result = await strategy.validate(payload);
+    const result = strategy.validate(payload);
 
     expect(result.role).toBe('CANDIDATE');
   });
@@ -101,10 +102,10 @@ describe('JwtStrategy', () => {
     const payload = {
       sub: 'voter-123',
       email: 'voter@ballottrust.com',
-      role: 'VOTER',
+      role: Role.VOTER,
     };
 
-    const result = await strategy.validate(payload);
+    const result = strategy.validate(payload);
 
     expect(result.role).toBe('VOTER');
   });

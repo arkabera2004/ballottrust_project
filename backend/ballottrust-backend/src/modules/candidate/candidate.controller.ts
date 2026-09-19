@@ -10,7 +10,6 @@ import {
   Query,
   UseGuards,
   NotFoundException,
-  Req,
 } from '@nestjs/common';
 
 import { Role } from '@prisma/client';

@@ -23,6 +23,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Response } from 'express';
 import { Role, UserStatus } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
+import type { GoogleOAuthUser } from '../../common/types';
 
 @Injectable()
 export class AuthService {
@@ -510,10 +511,22 @@ export class AuthService {
     };
   }
 
-  async googleLogin(googleUser: any, res: Response) {
+  async googleLogin(googleUser: GoogleOAuthUser, res: Response) {
+    // Google only returns an email when the account exposes one and the
+    // `email` scope was granted. Every downstream branch keys off it, and
+    // `email` is a required unique column, so reject early rather than
+    // letting `findUnique({ where: { email: undefined } })` throw.
+    const email = googleUser.email;
+
+    if (!email) {
+      throw new BadRequestException(
+        'Your Google account did not provide an email address. Use email registration instead.',
+      );
+    }
+
     let user = await this.prisma.user.findUnique({
       where: {
-        email: googleUser.email,
+        email,
       },
     });
 
@@ -564,9 +577,9 @@ export class AuthService {
     if (!user) {
       user = await this.prisma.user.create({
         data: {
-          fullName: googleUser.fullName,
+          fullName: googleUser.fullName ?? email,
 
-          email: googleUser.email,
+          email,
 
           password: null,
 

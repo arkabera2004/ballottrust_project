@@ -14,6 +14,7 @@ import type { Request } from 'express';
 import { UploadService } from './upload.service';
 import { multerConfig } from './upload.config';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import type { AuthenticatedRequest } from '../../common/types';
 
 @Controller('upload')
 export class UploadController {
@@ -22,7 +23,10 @@ export class UploadController {
   @UseGuards(JwtAuthGuard)
   @Post('avatar')
   @UseInterceptors(FileInterceptor('file', multerConfig))
-  uploadAvatar(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
+  uploadAvatar(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: AuthenticatedRequest,
+  ) {
     return this.uploadService.uploadAvatar(req.user.userId, file);
   }
 }

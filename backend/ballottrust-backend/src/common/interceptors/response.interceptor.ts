@@ -9,15 +9,29 @@ import { Observable } from 'rxjs';
 
 import { map } from 'rxjs/operators';
 
+interface ApiResponse<T> {
+  success: true;
+  timestamp: string;
+  data: T;
+}
+
 @Injectable()
-export class ResponseInterceptor implements NestInterceptor {
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+export class ResponseInterceptor<T> implements NestInterceptor<
+  T,
+  ApiResponse<T>
+> {
+  intercept(
+    _context: ExecutionContext,
+    next: CallHandler<T>,
+  ): Observable<ApiResponse<T>> {
     return next.handle().pipe(
-      map((data) => ({
-        success: true,
-        timestamp: new Date().toISOString(),
-        data,
-      })),
+      map(
+        (data): ApiResponse<T> => ({
+          success: true,
+          timestamp: new Date().toISOString(),
+          data,
+        }),
+      ),
     );
   }
 }

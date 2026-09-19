@@ -1,6 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import type { Role } from '@prisma/client';
+
+import type { AuthenticatedUser } from '../../../common/types';
+
+/** The claims as they appear inside a signed access token. */
+interface SignedJwtClaims {
+  sub: string;
+  email: string;
+  role: Role;
+}
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -12,11 +22,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any) {
-    console.log('========== JWT PAYLOAD ==========');
-    console.log(payload);
-    console.log('===============================');
-
+  validate(payload: SignedJwtClaims): AuthenticatedUser {
     return {
       userId: payload.sub,
       email: payload.email,

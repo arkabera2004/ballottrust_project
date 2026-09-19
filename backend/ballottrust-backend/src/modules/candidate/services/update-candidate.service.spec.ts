@@ -1,4 +1,3 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { CandidateStatus, CandidateType } from '@prisma/client';
 
 import { UpdateCandidateService } from './update-candidate.service';

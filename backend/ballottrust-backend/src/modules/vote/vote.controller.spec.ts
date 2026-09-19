@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 
 import { VoteController } from './vote.controller';
 import { VoteService } from './vote.service';
+import type { AuthenticatedRequest } from '../../common/types';
 
 describe('VoteController', () => {
   let controller: VoteController;
@@ -36,7 +37,7 @@ describe('VoteController', () => {
       user: {
         userId: 'user-1',
       },
-    };
+    } as unknown as AuthenticatedRequest;
 
     const voteData = {
       candidateId: 'candidate-1',

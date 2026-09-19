@@ -1,7 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { ElectionStatus } from '@prisma/client';
-
 import { ElectionRepository } from '../election/repository';
 import { AuditService } from '../audit/audit.service';
 

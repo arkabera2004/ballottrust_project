@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
@@ -11,15 +12,11 @@ import * as path from 'path';
 
 @Injectable()
 export class UploadService {
+  private readonly logger = new Logger(UploadService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async uploadAvatar(userId: string, file: Express.Multer.File) {
-    console.log('==============================');
-    console.log('UPLOAD SERVICE');
-    console.log('User ID:', userId);
-    console.log('File:', file);
-    console.log('==============================');
-
     if (!userId) {
       throw new BadRequestException('User ID is missing');
     }
@@ -34,8 +31,6 @@ export class UploadService {
       },
     });
 
-    console.log('User Found:', user);
-
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -45,17 +40,13 @@ export class UploadService {
     if (user.avatarUrl) {
       const oldPath = path.join(process.cwd(), user.avatarUrl.replace('/', ''));
 
-      console.log('Old Avatar Path:', oldPath);
-
       if (fs.existsSync(oldPath)) {
         fs.unlinkSync(oldPath);
-        console.log('Old avatar deleted.');
+        this.logger.debug(`Deleted previous avatar for user ${userId}`);
       }
     }
 
     const avatarUrl = `/uploads/${file.filename}`;
-
-    console.log('New Avatar URL:', avatarUrl);
 
     const updatedUser = await this.prisma.user.update({
       where: {
@@ -77,8 +68,7 @@ export class UploadService {
       },
     });
 
-    console.log('Database Updated Successfully');
-    console.log(updatedUser);
+    this.logger.log(`Avatar updated for user ${userId}`);
 
     return {
       success: true,

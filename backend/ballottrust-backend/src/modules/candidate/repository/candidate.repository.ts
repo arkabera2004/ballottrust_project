@@ -428,8 +428,8 @@ export class CandidateRepository {
 
           data: {
             ballotOrder: assignment.ballotOrder,
-          } as any,
-        } as any),
+          },
+        }),
       ),
     );
   }
@@ -445,11 +445,11 @@ export class CandidateRepository {
         ballotOrder: {
           not: null,
         },
-      } as any,
+      },
 
       data: {
         ballotOrder: null,
-      } as any,
+      },
     });
   }
 

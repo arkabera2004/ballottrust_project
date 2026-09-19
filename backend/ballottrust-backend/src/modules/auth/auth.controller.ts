@@ -25,6 +25,10 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import type { Response } from 'express';
+import type {
+  AuthenticatedRequest,
+  GoogleOAuthRequest,
+} from '../../common/types';
 
 @Controller('auth')
 export class AuthController {
@@ -86,7 +90,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   getProfile(
     @Req()
-    req: any,
+    req: AuthenticatedRequest,
   ) {
     return req.user;
   }
@@ -169,7 +173,7 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
-  async googleCallback(@Req() req: any, @Res() res: Response) {
+  async googleCallback(@Req() req: GoogleOAuthRequest, @Res() res: Response) {
     return this.authService.googleLogin(req.user, res);
   }
 }

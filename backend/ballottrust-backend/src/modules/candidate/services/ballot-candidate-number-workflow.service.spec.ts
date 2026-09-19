@@ -1,5 +1,3 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
-
 import {
   BallotOrderMethod,
   CandidateStatus,
