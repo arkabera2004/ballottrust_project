@@ -8,32 +8,32 @@ datasource db {
 }
 
 model User {
-  id                            String              @id @default(uuid())
+  id                            String                     @id @default(uuid())
   /// ///////////////////////////////////////////////////
   /// ///////////////////////////////////////////////////
   fullName                      String
-  email                         String              @unique
+  email                         String                     @unique
   password                      String?
   /// ///////////////////////////////////////////////////
   /// ///////////////////////////////////////////////////
-  createdAt                     DateTime            @default(now())
-  role                          Role                @default(VOTER)
+  createdAt                     DateTime                   @default(now())
+  role                          Role                       @default(VOTER)
   /// ///////////////////////////////////////////////////
   /// ///////////////////////////////////////////////////
   department                    String?
   profilePhoto                  String?
   registrationNumber            String?
-  status                        UserStatus          @default(PENDING)
+  status                        UserStatus                 @default(PENDING)
   studentIdCard                 String?
-  updatedAt                     DateTime            @updatedAt
-  emailVerified                 Boolean             @default(false)
+  updatedAt                     DateTime                   @updatedAt
+  emailVerified                 Boolean                    @default(false)
   /// ///////////////////////////////////////////////////
   /// ///////////////////////////////////////////////////
-  failedLoginAttempts           Int                 @default(0)
+  failedLoginAttempts           Int                        @default(0)
   lastLogin                     DateTime?
   lockedUntil                   DateTime?
   phoneNumber                   String?
-  profileCompleted              Boolean             @default(false)
+  profileCompleted              Boolean                    @default(false)
   providerId                    String?
   /// ///////////////////////////////////////////////////
   /// ///////////////////////////////////////////////////
@@ -51,7 +51,7 @@ model User {
   deletedAt                     DateTime?
   gender                        String?
   lastPasswordChange            DateTime?
-  mfaEnabled                    Boolean             @default(false)
+  mfaEnabled                    Boolean                    @default(false)
   mfaSecret                     String?
   postalCode                    String?
   semester                      Int?
@@ -59,25 +59,25 @@ model User {
   year                          Int?
   /// ///////////////////////////////////////////////////
   /// ///////////////////////////////////////////////////
-  provider                      AuthProvider        @default(LOCAL)
+  provider                      AuthProvider               @default(LOCAL)
   emailVerificationOtp          String?
   emailVerificationOtpExpiresAt DateTime?
   passwordResetToken            String?
   passwordResetTokenExpiresAt   DateTime?
   avatar                        String?
-  googleLinked                  Boolean             @default(false)
+  googleLinked                  Boolean                    @default(false)
   auditLogs                     AuditLog[]
-  candidates                    Candidate[]         @relation("CandidateUser")
-  verifiedCandidates            Candidate[]         @relation("CandidateVerifiedBy")
-  approvedCandidates            Candidate[]         @relation("CandidateApprovedBy")
-  rejectedCandidates            Candidate[]         @relation("CandidateRejectedBy")
-  disqualifiedCandidates        Candidate[]         @relation("CandidateDisqualifiedBy")
-  verifiedCandidateDocuments    CandidateDocument[] @relation("CandidateDocumentVerifiedBy")
-  rejectedCandidateDocuments    CandidateDocument[] @relation("CandidateDocumentRejectedBy")
-  approvedElections             Election[]          @relation("ElectionApprover")
-  createdElections              Election[]          @relation("ElectionCreator")
-  publishedElections            Election[]          @relation("ElectionPublisher")
-  ballotFinalizedElections      Election[]          @relation("ElectionBallotFinalizer")
+  candidates                    Candidate[]                @relation("CandidateUser")
+  verifiedCandidates            Candidate[]                @relation("CandidateVerifiedBy")
+  approvedCandidates            Candidate[]                @relation("CandidateApprovedBy")
+  rejectedCandidates            Candidate[]                @relation("CandidateRejectedBy")
+  disqualifiedCandidates        Candidate[]                @relation("CandidateDisqualifiedBy")
+  verifiedCandidateDocuments    CandidateDocument[]        @relation("CandidateDocumentVerifiedBy")
+  rejectedCandidateDocuments    CandidateDocument[]        @relation("CandidateDocumentRejectedBy")
+  approvedElections             Election[]                 @relation("ElectionApprover")
+  createdElections              Election[]                 @relation("ElectionCreator")
+  publishedElections            Election[]                 @relation("ElectionPublisher")
+  ballotFinalizedElections      Election[]                 @relation("ElectionBallotFinalizer")
   reports                       ElectionReport[]
   notifications                 Notification[]
   refreshTokens                 RefreshToken[]
@@ -85,6 +85,10 @@ model User {
   voterCredentials              VoterCredential[]
   createdEligibilityRuleSets    EligibilityRuleSet[]
   eligibilitySnapshots          VoterEligibilitySnapshot[]
+  voterRegistrations            VoterRegistration[]        @relation("VoterRegistrationUser")
+  verifiedVoterRegistrations    VoterRegistration[]        @relation("VoterRegistrationVerifiedBy")
+  approvedVoterRegistrations    VoterRegistration[]        @relation("VoterRegistrationApprovedBy")
+  rejectedVoterRegistrations    VoterRegistration[]        @relation("VoterRegistrationRejectedBy")
 
   @@index([email])
   @@index([role])
@@ -97,53 +101,54 @@ model User {
 }
 
 model Election {
-  id                  String             @id @default(uuid())
-  title               String
-  description         String?
-  startDate           DateTime
-  endDate             DateTime
-  status              ElectionStatus     @default(DRAFT)
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  closedAt            DateTime?
-  createdById         String?
-  deletedAt           DateTime?
-  publishedAt         DateTime?
-  allowRevote         Boolean            @default(false)
-  approvedById        String?
-  auditEnabled        Boolean            @default(true)
-  autoArchive         Boolean            @default(false)
-  autoPublish         Boolean            @default(false)
-  banner              String?
-  blockchainEnabled   Boolean            @default(true)
-  campaignEnd         DateTime?
-  campaignStart       DateTime?
-  candidateLimit      Int                @default(0)
-  electionCode        String             @unique
-  electionType        ElectionType
-  ballotOrderMethod   BallotOrderMethod?
-  ballotFinalizedAt   DateTime?
-  ballotFinalizedById String?
-  logo                String?
-  maximumVotes        Int                @default(1)
-  nominationEnd       DateTime?
-  nominationStart     DateTime?
-  publishedById       String?
-  registrationEnd     DateTime?
-  registrationStart   DateTime?
-  resultDate          DateTime?
-  resultVisibility    ResultVisibility   @default(AFTER_CLOSURE)
-  approvedAt          DateTime?
-  candidates          Candidate[]
-  dashboardMetrics    DashboardMetric[]
-  approvedBy          User?              @relation("ElectionApprover", fields: [approvedById], references: [id])
-  createdBy           User?              @relation("ElectionCreator", fields: [createdById], references: [id])
-  publishedBy         User?              @relation("ElectionPublisher", fields: [publishedById], references: [id])
-  ballotFinalizedBy   User?              @relation("ElectionBallotFinalizer", fields: [ballotFinalizedById], references: [id])
-  reports             ElectionReport[]
-  votes               Vote[]
-  voterCredentials    VoterCredential[]
-  eligibilityRuleSets EligibilityRuleSet[]
+  id                   String                     @id @default(uuid())
+  title                String
+  description          String?
+  startDate            DateTime
+  endDate              DateTime
+  status               ElectionStatus             @default(DRAFT)
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
+  closedAt             DateTime?
+  createdById          String?
+  deletedAt            DateTime?
+  publishedAt          DateTime?
+  allowRevote          Boolean                    @default(false)
+  approvedById         String?
+  auditEnabled         Boolean                    @default(true)
+  autoArchive          Boolean                    @default(false)
+  autoPublish          Boolean                    @default(false)
+  banner               String?
+  blockchainEnabled    Boolean                    @default(true)
+  campaignEnd          DateTime?
+  campaignStart        DateTime?
+  candidateLimit       Int                        @default(0)
+  electionCode         String                     @unique
+  electionType         ElectionType
+  ballotOrderMethod    BallotOrderMethod?
+  ballotFinalizedAt    DateTime?
+  ballotFinalizedById  String?
+  logo                 String?
+  maximumVotes         Int                        @default(1)
+  nominationEnd        DateTime?
+  nominationStart      DateTime?
+  publishedById        String?
+  registrationEnd      DateTime?
+  registrationStart    DateTime?
+  resultDate           DateTime?
+  resultVisibility     ResultVisibility           @default(AFTER_CLOSURE)
+  approvedAt           DateTime?
+  candidates           Candidate[]
+  dashboardMetrics     DashboardMetric[]
+  approvedBy           User?                      @relation("ElectionApprover", fields: [approvedById], references: [id])
+  createdBy            User?                      @relation("ElectionCreator", fields: [createdById], references: [id])
+  publishedBy          User?                      @relation("ElectionPublisher", fields: [publishedById], references: [id])
+  ballotFinalizedBy    User?                      @relation("ElectionBallotFinalizer", fields: [ballotFinalizedById], references: [id])
+  reports              ElectionReport[]
+  voterRegistrations   VoterRegistration[]
+  votes                Vote[]
+  voterCredentials     VoterCredential[]
+  eligibilityRuleSets  EligibilityRuleSet[]
   eligibilitySnapshots VoterEligibilitySnapshot[]
 
   @@index([status])
@@ -455,19 +460,19 @@ model VoterCredential {
 /// deactivates the previous one, so every past evaluation stays
 /// explainable against the exact rule set that produced it.
 model EligibilityRuleSet {
-  id          String    @id @default(uuid())
+  id          String                     @id @default(uuid())
   electionId  String
   version     Int
   /// ///////////////////////////////////////////////////
   /// ///////////////////////////////////////////////////
-  isActive    Boolean   @default(true)
+  isActive    Boolean                    @default(true)
   description String?
   /// AND/OR/NOT/CONDITION tree — see eligibility/types.ts for the shape.
   rule        Json
   createdById String
-  createdAt   DateTime  @default(now())
-  election    Election  @relation(fields: [electionId], references: [id], onDelete: Cascade)
-  createdBy   User      @relation(fields: [createdById], references: [id])
+  createdAt   DateTime                   @default(now())
+  election    Election                   @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  createdBy   User                       @relation(fields: [createdById], references: [id])
   snapshots   VoterEligibilitySnapshot[]
 
   @@unique([electionId, version])
@@ -480,18 +485,18 @@ model EligibilityRuleSet {
 /// eligible/ineligible for election Y" is always answerable after the
 /// fact without re-deriving it from mutable state.
 model VoterEligibilitySnapshot {
-  id             String              @id @default(uuid())
-  electionId     String
-  userId         String
+  id          String              @id @default(uuid())
+  electionId  String
+  userId      String
   /// Null when no EligibilityRuleSet existed yet — evaluated against the
   /// default rule (role = VOTER AND status = APPROVED).
-  ruleSetId      String?
-  eligible       Boolean
-  explanation    Json
-  evaluatedAt    DateTime            @default(now())
-  election       Election            @relation(fields: [electionId], references: [id], onDelete: Cascade)
-  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ruleSet        EligibilityRuleSet? @relation(fields: [ruleSetId], references: [id])
+  ruleSetId   String?
+  eligible    Boolean
+  explanation Json
+  evaluatedAt DateTime            @default(now())
+  election    Election            @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ruleSet     EligibilityRuleSet? @relation(fields: [ruleSetId], references: [id])
 
   @@index([electionId, userId])
   @@index([ruleSetId])
@@ -742,6 +747,8 @@ model DashboardMetric {
 enum Role {
   SUPER_ADMIN
   ELECTION_COMMISSIONER
+  VERIFICATION_OFFICER
+  RETURNING_OFFICER
   AUDITOR
   CANDIDATE
   VOTER
@@ -846,4 +853,66 @@ enum CandidateDocumentStatus {
   PENDING
   VERIFIED
   REJECTED
+}
+
+/// Status of a voter's registration for one specific election.
+/// Verification and approval are distinct steps: a Verification Officer
+/// confirms the supporting identity details, an Election Commissioner
+/// then admits the voter to the roll.
+enum VoterRegistrationStatus {
+  PENDING
+  VERIFIED
+  APPROVED
+  REJECTED
+}
+
+/// How the registration entered the system.
+enum VoterRegistrationSource {
+  SELF
+  IMPORT
+  ADMIN
+}
+
+/// A voter's enrolment on the roll for one election.
+///
+/// Deliberately *not* a separate identity table: a voter is a User with
+/// role VOTER, which is what the eligibility engine evaluates against and
+/// what VoterCredential keys off. This model captures the per-election
+/// registration workflow only.
+model VoterRegistration {
+  id         String                  @id @default(uuid())
+  userId     String
+  electionId String
+  status     VoterRegistrationStatus @default(PENDING)
+  source     VoterRegistrationSource @default(SELF)
+
+  registeredAt DateTime @default(now())
+
+  verifiedById String?
+  verifiedAt   DateTime?
+
+  approvedById String?
+  approvedAt   DateTime?
+
+  rejectedById    String?
+  rejectedAt      DateTime?
+  rejectionReason String?
+
+  notes String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  user       User     @relation("VoterRegistrationUser", fields: [userId], references: [id], onDelete: Cascade)
+  election   Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  verifiedBy User?    @relation("VoterRegistrationVerifiedBy", fields: [verifiedById], references: [id])
+  approvedBy User?    @relation("VoterRegistrationApprovedBy", fields: [approvedById], references: [id])
+  rejectedBy User?    @relation("VoterRegistrationRejectedBy", fields: [rejectedById], references: [id])
+
+  /// Business rule: one registration per voter per election.
+  @@unique([userId, electionId])
+  @@index([electionId, status])
+  @@index([userId])
+  @@index([status])
 }

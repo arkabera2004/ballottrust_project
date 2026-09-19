@@ -4,6 +4,7 @@ import { VoteService } from './vote.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { CheckVoterEligibilityService } from '../eligibility/services/check-voter-eligibility.service';
+import { CheckVoterRollService } from '../voter/services/check-voter-roll.service';
 
 describe('VoteService', () => {
   let service: VoteService;
@@ -39,6 +40,10 @@ describe('VoteService', () => {
     execute: jest.fn(),
   };
 
+  const mockCheckVoterRollService = {
+    execute: jest.fn(),
+  };
+
   const approvedCandidate = {
     id: 'candidate-1',
     electionId: 'election-1',
@@ -60,6 +65,13 @@ describe('VoteService', () => {
       ruleSetId: null,
       ruleSetVersion: 0,
     });
+    // Admitted by default — the roll is only authoritative for elections
+    // that configure a registration window.
+    mockCheckVoterRollService.execute.mockResolvedValue({
+      admitted: true,
+      rollEnforced: false,
+      status: null,
+    });
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -78,6 +90,11 @@ describe('VoteService', () => {
         {
           provide: CheckVoterEligibilityService,
           useValue: mockCheckVoterEligibilityService,
+        },
+
+        {
+          provide: CheckVoterRollService,
+          useValue: mockCheckVoterRollService,
         },
       ],
     }).compile();

@@ -8,6 +8,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreateVoteDto } from './dto/create-vote.dto';
 import { AuditService } from '../audit/audit.service';
 import { CheckVoterEligibilityService } from '../eligibility/services/check-voter-eligibility.service';
+import { CheckVoterRollService } from '../voter/services/check-voter-roll.service';
 
 import * as crypto from 'crypto';
 
@@ -17,6 +18,7 @@ export class VoteService {
     private prisma: PrismaService,
     private auditService: AuditService,
     private checkVoterEligibilityService: CheckVoterEligibilityService,
+    private checkVoterRollService: CheckVoterRollService,
   ) {}
 
   /**
@@ -108,6 +110,20 @@ export class VoteService {
     if (!eligible) {
       throw new ForbiddenException(
         'You are not eligible to vote in this election',
+      );
+    }
+
+    // docs/07 §8: verification is required before voting. Enforced only
+    // for elections that configure a registration window — see
+    // CheckVoterRollService for why the gate is conditional.
+    const roll = await this.checkVoterRollService.execute(
+      userId,
+      data.electionId,
+    );
+
+    if (!roll.admitted) {
+      throw new ForbiddenException(
+        roll.reason ?? 'You are not on the voter roll for this election',
       );
     }
 
