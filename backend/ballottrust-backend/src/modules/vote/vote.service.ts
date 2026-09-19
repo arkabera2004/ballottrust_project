@@ -190,7 +190,7 @@ export class VoteService {
         )
         .digest('hex');
 
-      return tx.vote.create({
+      const vote = await tx.vote.create({
         data: {
           anonymousToken,
           candidateId: data.candidateId,
@@ -199,6 +199,34 @@ export class VoteService {
           previousHash,
         },
       });
+
+      // Issue the voter's receipt in the same transaction as the vote, so
+      // a vote can never exist without one.
+      //
+      // The receipt hangs off the (anonymous) Vote row and carries no
+      // reference to the voter, preserving the Sec11 boundary: presenting
+      // a verification code proves a vote was recorded, and reveals
+      // nothing about who cast it. The code is returned to the voter here
+      // and never again — it is theirs to keep.
+      const verificationCode = crypto.randomBytes(16).toString('hex');
+
+      const receipt = await tx.voteReceipt.create({
+        data: {
+          voteId: vote.id,
+          receiptNumber: `BT-${crypto.randomBytes(6).toString('hex').toUpperCase()}`,
+          verificationCode,
+          verificationHash: hash,
+        },
+      });
+
+      return {
+        ...vote,
+        receipt: {
+          receiptNumber: receipt.receiptNumber,
+          verificationCode: receipt.verificationCode,
+          issuedAt: receipt.createdAt,
+        },
+      };
     });
   }
 }

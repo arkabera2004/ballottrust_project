@@ -18,6 +18,9 @@ describe('VoteService', () => {
       findFirst: jest.fn(),
       create: jest.fn(),
     },
+    voteReceipt: {
+      create: jest.fn(),
+    },
   };
 
   const mockPrismaService = {
@@ -58,6 +61,9 @@ describe('VoteService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     mockPrismaService.$transaction.mockImplementation((cb) => cb(mockTx));
+    mockTx.voteReceipt.create.mockImplementation(({ data }) =>
+      Promise.resolve({ ...data, createdAt: new Date('2026-01-01') }),
+    );
     // Eligible by default — tests exercising ineligibility override this.
     mockCheckVoterEligibilityService.execute.mockResolvedValue({
       eligible: true,
@@ -143,7 +149,22 @@ describe('VoteService', () => {
 
     const result = await service.castVote('user-1', data);
 
-    expect(result).toEqual(createdVote);
+    expect(result).toEqual({
+      ...createdVote,
+      receipt: {
+        receiptNumber: expect.stringMatching(/^BT-[0-9A-F]{12}$/),
+        verificationCode: expect.stringMatching(/^[0-9a-f]{32}$/),
+        issuedAt: expect.any(Date),
+      },
+    });
+
+    // The receipt hangs off the anonymous Vote row and must carry no
+    // reference back to the voter.
+    const receiptData = mockTx.voteReceipt.create.mock.calls[0][0]
+      .data as Record<string, unknown>;
+
+    expect(receiptData).toEqual(expect.objectContaining({ voteId: 'vote-1' }));
+    expect(JSON.stringify(receiptData)).not.toContain('user-1');
 
     expect(mockPrismaService.candidate.findUnique).toHaveBeenCalledWith({
       where: { id: 'candidate-1' },

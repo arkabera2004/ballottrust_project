@@ -26,6 +26,8 @@ import { ManifestoModule } from './modules/manifesto/manifesto.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { SystemConfigModule } from './modules/config/config.module';
 import { WorkflowModule } from './modules/workflow/workflow.module';
+import { PublicModule } from './modules/public/public.module';
+import { ReportModule } from './modules/report/report.module';
 import { ResultModule } from './modules/result/result.module';
 
 import { BlockchainModule } from './modules/blockchain/blockchain.module';
@@ -84,6 +86,8 @@ import { JobsModule } from './modules/jobs/jobs.module';
     NotificationModule,
     SystemConfigModule,
     WorkflowModule,
+    PublicModule,
+    ReportModule,
     ResultModule,
 
     BlockchainModule,
