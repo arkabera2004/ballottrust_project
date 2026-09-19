@@ -1,5 +1,4 @@
 import {
-  Bell,
   Search,
   Sun,
   UserCircle,
@@ -7,13 +6,13 @@ import {
 
 import { useNavigate } from 'react-router-dom';
 
+import { useAuth } from '../../context/AuthContext';
+import { NotificationBell } from '../../modules/notification';
+
 export default function Topbar() {
   const navigate = useNavigate();
 
-  const user =
-    JSON.parse(
-      localStorage.getItem('user') || 'null',
-    );
+  const { user } = useAuth();
 
   return (
     <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8">
@@ -64,13 +63,7 @@ export default function Topbar() {
 
         </button>
 
-        <button className="relative w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200">
-
-          <Bell size={20} />
-
-          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
-
-        </button>
+        <NotificationBell />
 
         <button
           onClick={() => navigate('/profile')}
