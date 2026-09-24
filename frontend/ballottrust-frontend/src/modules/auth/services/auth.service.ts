@@ -3,12 +3,23 @@ import api from '../../../api/axios';
 import type {
   LoginRequest,
   LoginResponse,
+  RegisterRequest,
+  RegisterResponse,
 } from '../../../types/auth';
 
 class AuthService {
-  register(_arg0: { fullName: string; email: string; password: string; role: "VOTER" | "CANDIDATE"; }) {
-      throw new Error('Method not implemented.');
-  }
+  async register(
+  data: RegisterRequest,
+    ): Promise<RegisterResponse> {
+
+      const response =
+        await api.post(
+          '/auth/register',
+          data,
+        );
+
+      return response.data.data;
+    }
 
   async login(
   data: LoginRequest,

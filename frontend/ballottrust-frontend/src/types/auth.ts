@@ -10,6 +10,28 @@ export interface User {
 
 }
 
+export interface RegisterRequest {
+
+  fullName: string;
+
+  email: string;
+
+  password: string;
+
+  role: 'VOTER' | 'CANDIDATE';
+
+}
+
+export interface RegisterResponse {
+
+  success: boolean;
+
+  message: string;
+
+  userId: string;
+
+}
+
 export interface LoginRequest {
 
   email: string;
