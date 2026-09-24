@@ -132,8 +132,7 @@ export interface CreateElectionDto {
   resultVisibility: ResultVisibility;
 }
 
-export interface UpdateElectionDto
-  extends Partial<CreateElectionDto> {}
+export type UpdateElectionDto = Partial<CreateElectionDto>;
 
 export interface QueryElectionDto {
   search?: string;

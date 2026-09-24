@@ -11,6 +11,24 @@ class CandidateService {
   // Get My Candidates
   // ======================================================
 
+  /**
+   * Admin/commissioner listing. The API paginates and wraps the page in the
+   * standard response envelope, so the caller gets both rows and the total.
+   */
+  async list(params?: {
+    page?: number;
+    limit?: number;
+  }): Promise<{ data: Candidate[]; total: number; totalPages: number }> {
+    const response = await api.get(
+      '/candidates',
+      {
+        params,
+      },
+    );
+
+    return response.data.data;
+  }
+
   async getMyCandidates(): Promise<Candidate[]> {
     const response = await api.get(
       '/candidates/me',

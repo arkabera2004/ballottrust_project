@@ -72,8 +72,8 @@ export default function OAuthCallback() {
 
         switch (user.role) {
 
+          // Both administrative roles land on the same console.
           case 'SUPER_ADMIN':
-
           case 'ELECTION_COMMISSIONER':
 
             navigate('/admin');

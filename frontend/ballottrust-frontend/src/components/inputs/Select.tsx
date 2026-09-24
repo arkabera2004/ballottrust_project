@@ -4,8 +4,7 @@ import {
 
 import clsx from 'clsx';
 
-interface SelectProps
-  extends SelectHTMLAttributes<HTMLSelectElement> {}
+type SelectProps = SelectHTMLAttributes<HTMLSelectElement>;
 
 export default function Select({
   className,
