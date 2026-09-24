@@ -4,6 +4,7 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 
 import { Request, Response } from 'express';
@@ -31,6 +32,8 @@ function extractMessage(payload: string | object): string | string[] {
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(HttpExceptionFilter.name);
+
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
 
@@ -49,6 +52,19 @@ export class HttpExceptionFilter implements ExceptionFilter {
         : 'Internal server error';
 
     const message = extractMessage(exceptionResponse);
+
+    // Anything that is not an HttpException reached us unplanned: a bug, a
+    // driver error, a failed assumption. The response deliberately stays a
+    // bare "Internal server error" so nothing internal leaks to the caller,
+    // which previously meant the cause was lost entirely — the process wrote
+    // nothing at all. Record it server-side, with the stack when there is
+    // one, so these are diagnosable from the logs.
+    if (!(exception instanceof HttpException)) {
+      this.logger.error(
+        `Unhandled exception on ${request.method} ${request.url}`,
+        exception instanceof Error ? exception.stack : String(exception),
+      );
+    }
 
     response.status(status).json({
       success: false,
