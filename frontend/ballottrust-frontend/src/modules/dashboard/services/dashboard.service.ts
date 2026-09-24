@@ -18,13 +18,25 @@ class DashboardService {
     return response.data.data;
   }
 
+  /**
+   * There is no /candidates/pending route. Requesting it matched
+   * @Get(':id'), whose ParseUUIDPipe rejected "pending" with a 400, so the
+   * dashboard never loaded. Pending candidates are the status filter on the
+   * paginated list endpoint.
+   */
   async getPendingCandidates() {
     const response =
       await api.get(
-        '/candidates/pending',
+        '/candidates',
+        {
+          params: {
+            status: 'PENDING',
+            limit: 10,
+          },
+        },
       );
 
-    return response.data.data;
+    return response.data.data.data;
   }
 
   async approveCandidate(

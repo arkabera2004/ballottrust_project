@@ -36,29 +36,51 @@ export function useDashboard() {
     setPendingCandidates] =
     useState<PendingCandidate[]>([]);
 
+  const [error, setError] =
+    useState<string | null>(null);
+
   async function refresh() {
 
     setLoading(true);
+    setError(null);
 
-    const [
-      stats,
-      election,
-      pending,
-    ] = await Promise.all([
+    // Previously an unguarded Promise.all with setLoading(false) after it:
+    // any one rejection skipped the reset and the page sat on
+    // "Loading Dashboard..." forever. The reset now happens in finally, and
+    // the failure is surfaced instead of only reaching the console.
+    try {
 
-      DashboardService.getStats(),
+      const [
+        stats,
+        election,
+        pending,
+      ] = await Promise.all([
 
-      DashboardService.getCurrentElection(),
+        DashboardService.getStats(),
 
-      DashboardService.getPendingCandidates(),
+        DashboardService.getCurrentElection(),
 
-    ]);
+        DashboardService.getPendingCandidates(),
 
-    setStats(stats);
-    setCurrentElection(election);
-    setPendingCandidates(pending);
+      ]);
 
-    setLoading(false);
+      setStats(stats);
+      setCurrentElection(election);
+      setPendingCandidates(pending);
+
+    }
+
+    catch {
+
+      setError('Could not load the dashboard.');
+
+    }
+
+    finally {
+
+      setLoading(false);
+
+    }
 
   }
 
@@ -69,6 +91,8 @@ export function useDashboard() {
   return {
 
     loading,
+
+    error,
 
     stats,
 
