@@ -1,13 +1,27 @@
+import { ConfigService } from '@nestjs/config';
 import { Role } from '@prisma/client';
+
 import { JwtStrategy } from './jwt.strategy';
 
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
 
   beforeEach(() => {
-    process.env.JWT_SECRET = 'ballottrust-test-secret';
+    // The strategy now takes the secret from ConfigService instead of reading
+    // process.env directly, so the environment no longer has to be primed.
+    const config = new ConfigService({
+      JWT_SECRET: 'ballottrust-test-secret',
+    });
 
-    strategy = new JwtStrategy();
+    strategy = new JwtStrategy(config);
+  });
+
+  // ============================================================
+  // SECRET RESOLUTION
+  // ============================================================
+
+  it('fails fast when no JWT secret is configured', () => {
+    expect(() => new JwtStrategy(new ConfigService({}))).toThrow(/JWT_SECRET/);
   });
 
   // ============================================================
