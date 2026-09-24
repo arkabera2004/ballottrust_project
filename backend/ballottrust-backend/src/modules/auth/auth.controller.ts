@@ -18,6 +18,7 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { BootstrapAdminDto } from './dto/bootstrap-admin.dto';
 import { ResendOtpDto } from './dto/resend-otp.dto';
 
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -100,8 +101,11 @@ export class AuthController {
   // ==========================
 
   @Post('bootstrap-admin')
-  bootstrapAdmin() {
-    return this.authService.bootstrapAdmin();
+  bootstrapAdmin(
+    @Body()
+    data: BootstrapAdminDto,
+  ) {
+    return this.authService.bootstrapAdmin(data);
   }
 
   // ==========================

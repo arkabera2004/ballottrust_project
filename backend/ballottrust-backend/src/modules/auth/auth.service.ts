@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -15,9 +19,10 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { MailService } from '../mail/mail.service';
 import { generateOtp } from '../../common/utils/otp.util';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { BootstrapAdminDto } from './dto/bootstrap-admin.dto';
 import { ResendOtpDto } from './dto/resend-otp.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { createHash } from 'crypto';
+import { createHash, timingSafeEqual } from 'crypto';
 import { generatePasswordResetToken } from '../../common/utils/password-reset.util';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Response } from 'express';
@@ -207,37 +212,118 @@ export class AuthService {
     };
   }
 
-  async bootstrapAdmin() {
-    const existingUser = await this.prisma.user.findUnique({
+  /**
+   * Creates the very first SUPER_ADMIN so a fresh deployment has someone who
+   * can sign in. This is a dangerous thing to expose, so it is fenced in four
+   * ways:
+   *
+   *   1. It does nothing unless BOOTSTRAP_ADMIN_TOKEN is configured. An
+   *      unconfigured deployment answers 404, the same as any unknown route,
+   *      so the endpoint's existence is not advertised.
+   *   2. The caller has to present that token, compared in constant time.
+   *   3. It refuses once *any* SUPER_ADMIN exists, not merely when one
+   *      specific address is taken, so it cannot be used to add a second
+   *      administrator later.
+   *   4. The credentials come from the environment. There is no default
+   *      password.
+   *
+   * Previously this method was unauthenticated and created
+   * superadmin@ballottrust.com with the hardcoded password "Admin@123",
+   * which handed full control of the system to anyone who could reach the
+   * API. It also returned the created row verbatim, including the argon2
+   * hash.
+   */
+  async bootstrapAdmin(data: BootstrapAdminDto) {
+    const expectedToken = process.env.BOOTSTRAP_ADMIN_TOKEN;
+
+    if (!expectedToken) {
+      throw new NotFoundException();
+    }
+
+    if (!this.matchesBootstrapToken(data.token, expectedToken)) {
+      await this.auditService.log({
+        action: 'BOOTSTRAP_ADMIN_DENIED',
+        module: 'auth',
+        entityType: 'User',
+        result: 'FAILURE',
+        description: 'Invalid bootstrap token',
+      });
+
+      throw new ForbiddenException('Invalid bootstrap token.');
+    }
+
+    const email = process.env.BOOTSTRAP_ADMIN_EMAIL;
+    const password = process.env.BOOTSTRAP_ADMIN_PASSWORD;
+
+    if (!email || !password) {
+      throw new ForbiddenException(
+        'BOOTSTRAP_ADMIN_EMAIL and BOOTSTRAP_ADMIN_PASSWORD must be configured.',
+      );
+    }
+
+    const existingAdmin = await this.prisma.user.findFirst({
       where: {
-        email: 'superadmin@ballottrust.com',
+        role: Role.SUPER_ADMIN,
+      },
+      select: {
+        id: true,
       },
     });
 
-    if (existingUser) {
-      return {
-        message: 'Super Admin already exists',
-      };
+    if (existingAdmin) {
+      throw new ForbiddenException('A super admin already exists.');
     }
-
-    const hashedPassword = await argon2.hash('Admin@123');
 
     const user = await this.prisma.user.create({
       data: {
         fullName: 'Super Admin',
-        email: 'superadmin@ballottrust.com',
-        password: hashedPassword,
-        role: 'SUPER_ADMIN',
-        status: 'APPROVED',
+        email,
+        password: await argon2.hash(password),
+        role: Role.SUPER_ADMIN,
+        status: UserStatus.APPROVED,
         emailVerified: true,
         provider: 'LOCAL',
       },
+
+      // Never return the password hash.
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        role: true,
+        status: true,
+      },
+    });
+
+    await this.auditService.log({
+      userId: user.id,
+      action: 'BOOTSTRAP_ADMIN_CREATED',
+      module: 'auth',
+      entityType: 'User',
+      entityId: user.id,
+      result: 'SUCCESS',
     });
 
     return {
       message: 'Super Admin created',
       user,
     };
+  }
+
+  /**
+   * Constant-time comparison. timingSafeEqual throws on length mismatch, so
+   * the lengths are checked first and a mismatch short-circuits — the length
+   * of a rejected token is not secret.
+   */
+  private matchesBootstrapToken(provided: string, expected: string): boolean {
+    const providedBuffer = Buffer.from(provided, 'utf8');
+    const expectedBuffer = Buffer.from(expected, 'utf8');
+
+    if (providedBuffer.length !== expectedBuffer.length) {
+      return false;
+    }
+
+    return timingSafeEqual(providedBuffer, expectedBuffer);
   }
 
   async refreshToken(data: RefreshTokenDto) {
