@@ -1,30 +1,34 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+
+import api from '../api/axios';
+import toast from '../utils/toast';
 
 import DashboardLayout from '../components/DashboardLayout';
 
 type Candidate = {
   id: string;
-  name: string;
-  email: string;
-  department: string;
+  user: { fullName: string; email: string };
   position: string;
-  manifesto: string;
+  campaignSlogan: string | null;
   status: string;
 };
 
 export default function CandidateApproval() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
 
-  const token = localStorage.getItem('token');
-
   const loadCandidates = async () => {
     try {
-      const response = await axios.get(
-  'http://localhost:3000/candidates/pending'
-);
+      const response = await api.get(
+        '/candidates',
+        {
+          params: {
+            status: 'PENDING',
+            limit: 50,
+          },
+        },
+      );
 
-      setCandidates(response.data);
+      setCandidates(response.data.data.data);
     } catch (error) {
       console.error(error);
     }
@@ -34,21 +38,15 @@ export default function CandidateApproval() {
     id: string,
   ) => {
     try {
-      await axios.patch(
-        `http://localhost:3000/candidates/${id}/approve`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      await api.patch(
+        `/candidates/${id}/approve`,
       );
 
-      alert('Candidate Approved');
+      toast.success('Candidate Approved');
 
       loadCandidates();
     } catch {
-      alert('Approval Failed');
+      toast.error('Approval Failed');
     }
   };
 
@@ -56,21 +54,15 @@ export default function CandidateApproval() {
     id: string,
   ) => {
     try {
-      await axios.patch(
-        `http://localhost:3000/candidates/${id}/reject`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      await api.patch(
+        `/candidates/${id}/reject`,
       );
 
-      alert('Candidate Rejected');
+      toast.success('Candidate Rejected');
 
       loadCandidates();
     } catch {
-      alert('Rejection Failed');
+      toast.error('Rejection Failed');
     }
   };
 
@@ -106,18 +98,11 @@ export default function CandidateApproval() {
 
                 <div>
                   <h2 className="text-xl font-bold">
-                    {candidate.name}
+                    {candidate.user.fullName}
                   </h2>
 
                   <p className="text-gray-500">
-                    {candidate.email}
-                  </p>
-
-                  <p className="mt-2">
-                    Department:
-                    <span className="font-semibold ml-2">
-                      {candidate.department}
-                    </span>
+                    {candidate.user.email}
                   </p>
 
                   <p>
@@ -128,7 +113,7 @@ export default function CandidateApproval() {
                   </p>
 
                   <p className="mt-3 text-gray-700">
-                    {candidate.manifesto}
+                    {candidate.campaignSlogan}
                   </p>
                 </div>
 
@@ -147,7 +132,7 @@ export default function CandidateApproval() {
 
               </div>
 
-              {candidate.status === 'DRAFT' && (
+              {candidate.status === 'PENDING' && (
                 <div className="flex gap-4 mt-6">
 
                   <button
