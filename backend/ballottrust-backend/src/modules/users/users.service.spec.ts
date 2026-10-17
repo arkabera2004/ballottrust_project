@@ -70,7 +70,20 @@ describe('UsersService', () => {
       where: {
         status: 'PENDING',
       },
+      select: expect.objectContaining({ id: true, fullName: true }),
     });
+  });
+
+  it('should never select the password hash or secret fields for pending users', async () => {
+    mockPrismaService.user.findMany.mockResolvedValue([]);
+
+    await service.getPendingUsers();
+
+    const { select } = mockPrismaService.user.findMany.mock.calls[0][0];
+
+    expect(select.password).toBeUndefined();
+    expect(select.mfaSecret).toBeUndefined();
+    expect(select.passwordResetToken).toBeUndefined();
   });
 
   // ============================================================
@@ -98,7 +111,18 @@ describe('UsersService', () => {
       data: {
         status: 'APPROVED',
       },
+      select: expect.objectContaining({ id: true, fullName: true }),
     });
+  });
+
+  it('should never select the password hash when approving a user', async () => {
+    mockPrismaService.user.update.mockResolvedValue({});
+
+    await service.approveUser('user-1');
+
+    const { select } = mockPrismaService.user.update.mock.calls[0][0];
+
+    expect(select.password).toBeUndefined();
   });
 
   // ============================================================
@@ -126,6 +150,7 @@ describe('UsersService', () => {
       data: {
         status: 'REJECTED',
       },
+      select: expect.objectContaining({ id: true, fullName: true }),
     });
   });
 
@@ -179,6 +204,8 @@ describe('UsersService', () => {
     expect(createCall.data.password).toEqual(expect.any(String));
 
     expect(createCall.data.password).not.toBe('StrongPassword123!');
+
+    expect(createCall.select.password).toBeUndefined();
   });
 
   // ============================================================

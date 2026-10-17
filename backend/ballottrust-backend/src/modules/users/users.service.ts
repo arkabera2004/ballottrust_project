@@ -3,6 +3,23 @@ import { PrismaService } from '../../prisma/prisma.service';
 import * as argon2 from 'argon2';
 import { CreateStaffDto } from './dto/create-staff.dto';
 
+/**
+ * Every method here is reachable by SUPER_ADMIN/ELECTION_COMMISSIONER and
+ * returns full user rows straight from Prisma unless scoped by this select,
+ * which would otherwise hand back the argon2 password hash (and the MFA/OTP/
+ * reset-token secrets) to any caller approving, rejecting or creating a
+ * user — the same leak the bootstrap-admin endpoint was fixed to avoid.
+ */
+const SAFE_USER_SELECT = {
+  id: true,
+  fullName: true,
+  email: true,
+  role: true,
+  status: true,
+  department: true,
+  createdAt: true,
+} as const;
+
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
@@ -12,6 +29,7 @@ export class UsersService {
       where: {
         status: 'PENDING',
       },
+      select: SAFE_USER_SELECT,
     });
   }
 
@@ -21,6 +39,7 @@ export class UsersService {
       data: {
         status: 'APPROVED',
       },
+      select: SAFE_USER_SELECT,
     });
   }
 
@@ -30,6 +49,7 @@ export class UsersService {
       data: {
         status: 'REJECTED',
       },
+      select: SAFE_USER_SELECT,
     });
   }
 
@@ -56,6 +76,7 @@ export class UsersService {
 
         status: 'APPROVED',
       },
+      select: SAFE_USER_SELECT,
     });
   }
 }
