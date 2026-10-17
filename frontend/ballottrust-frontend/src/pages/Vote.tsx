@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+
+import api from '../api/axios';
+import toast from '../utils/toast';
 
 export default function Vote() {
   const [elections, setElections] = useState<any[]>([]);
@@ -9,15 +11,13 @@ export default function Vote() {
   const [candidateId, setCandidateId] = useState('');
   const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
 
-  const token = localStorage.getItem('token');
-
   const loadElections = async () => {
     try {
-      const response = await axios.get(
-        'http://localhost:3000/elections'
+      const response = await api.get(
+        '/public/elections'
       );
 
-      setElections(response.data);
+      setElections(response.data.data.items);
     } catch (error) {
       console.error(error);
     }
@@ -25,11 +25,14 @@ export default function Vote() {
 
   const loadCandidates = async () => {
     try {
-      const response = await axios.get(
-        'http://localhost:3000/candidates'
+      const response = await api.get(
+        '/public/candidates',
+        electionId
+          ? { params: { electionId } }
+          : undefined,
       );
 
-      setCandidates(response.data);
+      setCandidates(response.data.data.items);
     } catch (error) {
       console.error(error);
     }
@@ -37,41 +40,36 @@ export default function Vote() {
 
   const castVote = async () => {
     if (!electionId) {
-      alert('Please select an election');
+      toast.error('Please select an election');
       return;
     }
 
     if (!candidateId) {
-      alert('Please select a candidate');
+      toast.error('Please select a candidate');
       return;
     }
 
     const confirmed = window.confirm(
-      `Are you sure you want to vote for ${selectedCandidate?.name}?`
+      `Are you sure you want to vote for ${selectedCandidate?.user?.fullName}?`
     );
 
     if (!confirmed) return;
 
     try {
-      await axios.post(
-        'http://localhost:3000/votes',
+      await api.post(
+        '/votes',
         {
           candidateId,
           electionId,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
       );
 
-      alert('✅ Vote Cast Successfully');
+      toast.success('Vote Cast Successfully');
 
       setCandidateId('');
       setSelectedCandidate(null);
     } catch (error: any) {
-      alert(
+      toast.error(
         error?.response?.data?.message ||
           'Vote Failed'
       );
@@ -80,8 +78,11 @@ export default function Vote() {
 
   useEffect(() => {
     loadElections();
-    loadCandidates();
   }, []);
+
+  useEffect(() => {
+    loadCandidates();
+  }, [electionId]);
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
@@ -151,39 +152,34 @@ export default function Vote() {
 
                 <img
                   src={
-                    candidate.photo ||
+                    candidate.photoUrl ||
                     'https://via.placeholder.com/150'
                   }
-                  alt={candidate.name}
+                  alt={candidate.user?.fullName}
                   className="w-28 h-28 rounded-full object-cover border"
                 />
 
               </div>
 
               <h3 className="text-xl font-bold text-center">
-                {candidate.name}
+                {candidate.user?.fullName}
               </h3>
 
               <p className="text-center text-gray-600 mb-4">
-                {candidate.party || 'Independent'}
+                {candidate.party?.name || 'Independent'}
               </p>
 
               <div className="space-y-2 text-sm">
 
                 <p>
-                  <strong>Education:</strong>{' '}
-                  {candidate.education || 'N/A'}
+                  <strong>Position:</strong>{' '}
+                  {candidate.position || 'N/A'}
                 </p>
 
                 <p>
-                  <strong>Experience:</strong>{' '}
-                  {candidate.experience || 'N/A'}
-                </p>
-
-                <p>
-                  <strong>Agenda:</strong>{' '}
-                  {candidate.agenda ||
-                    'No agenda uploaded'}
+                  <strong>Slogan:</strong>{' '}
+                  {candidate.campaignSlogan ||
+                    'No slogan uploaded'}
                 </p>
 
               </div>
@@ -217,12 +213,12 @@ export default function Vote() {
 
             <p>
               <strong>Name:</strong>{' '}
-              {selectedCandidate.name}
+              {selectedCandidate.user?.fullName}
             </p>
 
             <p>
               <strong>Party:</strong>{' '}
-              {selectedCandidate.party ||
+              {selectedCandidate.party?.name ||
                 'Independent'}
             </p>
 
