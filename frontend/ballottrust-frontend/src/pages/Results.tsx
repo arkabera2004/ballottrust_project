@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+
+import api from '../api/axios';
 
 export default function Results() {
   const [elections, setElections] = useState<any[]>([]);
@@ -9,21 +10,21 @@ export default function Results() {
   const [results, setResults] = useState<any>(null);
 
   const loadElections = async () => {
-    const response = await axios.get(
-      'http://localhost:3000/elections'
+    const response = await api.get(
+      '/public/elections',
     );
 
-    setElections(response.data);
+    setElections(response.data.data.items);
   };
 
   const loadResults = async () => {
     if (!selectedElection) return;
 
-    const response = await axios.get(
-      `http://localhost:3000/results/${selectedElection}`
+    const response = await api.get(
+      `/public/results/${selectedElection}`
     );
 
-    setResults(response.data);
+    setResults(response.data.data);
   };
 
   useEffect(() => {
@@ -86,4 +87,3 @@ export default function Results() {
     </div>
   );
 }
-
