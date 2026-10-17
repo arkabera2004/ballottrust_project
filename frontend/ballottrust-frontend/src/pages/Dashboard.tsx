@@ -1,6 +1,8 @@
 
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+
+import api from '../api/axios';
+import { summarizeIntegrity } from '../utils/blockchain-integrity';
 
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
@@ -42,11 +44,11 @@ const [currentElection, setCurrentElection] =
 
   const loadStats = async () => {
     try {
-      const response = await axios.get(
-        'http://localhost:3000/dashboard/stats'
+      const response = await api.get(
+        '/dashboard/stats'
       );
 
-      setStats(response.data);
+      setStats(response.data.data);
     } catch (error) {
       console.error(error);
     }
@@ -54,11 +56,11 @@ const [currentElection, setCurrentElection] =
 
   const loadWinner = async () => {
     try {
-      const response = await axios.get(
-        'http://localhost:3000/dashboard/winner'
+      const response = await api.get(
+        '/dashboard/winner'
       );
 
-      setWinner(response.data);
+      setWinner(response.data.data);
     } catch (error) {
       console.error(error);
     }
@@ -66,15 +68,17 @@ const [currentElection, setCurrentElection] =
 
   const loadElections = async () => {
     try {
-      const response = await axios.get(
-        'http://localhost:3000/elections'
+      const response = await api.get(
+        '/elections'
       );
 
-      setElections(response.data);
+      const items = response.data.data.data ?? [];
 
-      if (response.data.length > 0) {
+      setElections(items);
+
+      if (items.length > 0) {
         setSelectedElection(
-          response.data[0].id
+          items[0].id
         );
       }
     } catch (error) {
@@ -86,11 +90,11 @@ const [currentElection, setCurrentElection] =
     electionId: string,
   ) => {
     try {
-      const response = await axios.get(
-        `http://localhost:3000/dashboard/results-chart/${electionId}`
+      const response = await api.get(
+        `/dashboard/results-chart/${electionId}`
       );
 
-      setChartData(response.data);
+      setChartData(response.data.data);
     } catch (error) {
       console.error(error);
     }
@@ -100,12 +104,12 @@ const [currentElection, setCurrentElection] =
   async () => {
     try {
       const response =
-        await axios.get(
-          'http://localhost:3000/dashboard/current-election'
+        await api.get(
+          '/dashboard/current-election'
         );
 
       setCurrentElection(
-        response.data
+        response.data.data
       );
     } catch (error) {
       console.error(error);
@@ -114,13 +118,14 @@ const [currentElection, setCurrentElection] =
 
   const loadIntegrity = async () => {
   try {
-    const response = await axios.get(
-      'http://localhost:3000/blockchain/verify'
+    const response = await api.get(
+      '/blockchain/verify'
     );
 
-    setIntegrity(response.data);
+    setIntegrity(summarizeIntegrity(response.data.data));
   } catch (error) {
     console.error(error);
+    setIntegrity(summarizeIntegrity(null));
   }
 };
 
@@ -167,7 +172,7 @@ const [currentElection, setCurrentElection] =
 
           {/* Top Statistics */}
 
-        
+
             {/* Top Statistics */}
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-6 mb-8">
@@ -512,4 +517,3 @@ const [currentElection, setCurrentElection] =
     </div>
   );
 }
-
