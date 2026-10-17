@@ -38,6 +38,13 @@ export default function CandidateApproval() {
     id: string,
   ) => {
     try {
+      // The backend lifecycle only allows PENDING -> VERIFIED -> APPROVED;
+      // approving straight from PENDING is rejected with a 400, so this
+      // queue's one-click "Approve" has to make both transitions.
+      await api.patch(
+        `/candidates/${id}/verify`,
+      );
+
       await api.patch(
         `/candidates/${id}/approve`,
       );
@@ -45,8 +52,11 @@ export default function CandidateApproval() {
       toast.success('Candidate Approved');
 
       loadCandidates();
-    } catch {
-      toast.error('Approval Failed');
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          'Approval Failed'
+      );
     }
   };
 
@@ -61,8 +71,11 @@ export default function CandidateApproval() {
       toast.success('Candidate Rejected');
 
       loadCandidates();
-    } catch {
-      toast.error('Rejection Failed');
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          'Rejection Failed'
+      );
     }
   };
 
