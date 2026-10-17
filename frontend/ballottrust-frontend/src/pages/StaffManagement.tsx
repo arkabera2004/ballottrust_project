@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import axios from 'axios';
+
+import api from '../api/axios';
+import toast from '../utils/toast';
 
 export default function StaffManagement() {
   const [formData, setFormData] = useState({
@@ -8,8 +10,6 @@ export default function StaffManagement() {
     password: '',
     role: 'ELECTION_COMMISSIONER',
   });
-
-  const token = localStorage.getItem('token');
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -24,17 +24,12 @@ export default function StaffManagement() {
 
   const createStaff = async () => {
     try {
-      await axios.post(
-        'http://localhost:3000/users/create-staff',
+      await api.post(
+        '/users/create-staff',
         formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
       );
 
-      alert('Staff Created Successfully');
+      toast.success('Staff Created Successfully');
 
       setFormData({
         fullName: '',
@@ -42,9 +37,11 @@ export default function StaffManagement() {
         password: '',
         role: 'ELECTION_COMMISSIONER',
       });
-    } catch (error) {
-      console.error(error);
-      alert('Failed to create staff');
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          'Failed to create staff'
+      );
     }
   };
 
