@@ -285,3 +285,88 @@ To create the first admin on a fresh database, set `BOOTSTRAP_ADMIN_TOKEN`,
 `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_PASSWORD`, restart, then
 `POST /api/v1/auth/bootstrap-admin` with `{"token": "<your token>"}`, then remove the three
 variables.
+
+---
+
+## Follow-up session — six-page migration, a real leak, and a full live E2E pass
+
+Branch and remotes unchanged (`fix/jwt-env-load-order`). This session also pushed to a
+second remote, `arkabera` → `https://github.com/arkabera2004/ballottrust_project.git`, in
+addition to `origin`. Both remotes carry the same commit history on this branch.
+
+### What this session verified wasn't actually true yet
+
+The six pages reported as "migrated" at the end of the previous session
+(`Dashboard.tsx`, `Vote.tsx`, `Results.tsx`, `CandidateApproval.tsx`, `StaffManagement.tsx`,
+`Blockchain.tsx`) were still sitting **uncommitted** in the working tree — real fixes, never
+committed or pushed. Split into 7 atomic commits (one utility + one per page), then pushed.
+
+### A real defect found by driving the actual API, not by reading code
+
+Spun up the real local stack — `ballottrust-db` (Postgres 16, port 5433), Mailpit, and the
+backend dev server — registered disposable test users through the real `/auth/register` →
+OTP → `/auth/verify-email` flow, and drove a full election lifecycle by hand:
+create → submit → approve → publish → nominate → verify → approve candidate → cast vote →
+duplicate vote rejected → results correctly withheld pre-publication → blockchain
+verification. All of it worked as designed, with one exception:
+
+**`GET /users/pending`, `PATCH /users/:id/approve`, `PATCH /users/:id/reject` and
+`POST /users/create-staff` returned the full Prisma `User` row, including the argon2
+password hash and the MFA/OTP/reset-token fields, to any `SUPER_ADMIN` or
+`ELECTION_COMMISSIONER`.** Confirmed live (`GET /users/pending` returned a `password` key)
+before fixing it — the same class of leak the bootstrap-admin endpoint was already fixed to
+avoid, just never applied to this module. Fixed with the identical explicit-`select`
+pattern, four call sites, two new regression tests asserting the select clause excludes
+those fields.
+
+**Also found by hand-driving the candidate workflow**: `CandidateApproval.tsx`'s one
+"Approve" button called `PATCH /candidates/:id/approve` directly on a `PENDING` candidate,
+which the backend's lifecycle validator always rejects (`PENDING` can only move to
+`VERIFIED` or `REJECTED`; `APPROVED` is only reachable from `VERIFIED`). Confirmed the 400
+live, then fixed the button to call `verify` then `approve` in sequence.
+
+### Commits this session
+
+| Commit | What |
+|---|---|
+| `020277b` | `fix(frontend)` — blockchain-integrity summarizer utility + tests |
+| `d607e0c` | `fix(frontend)` — Dashboard.tsx off hardcoded localhost axios |
+| `d5d5c52` | `fix(frontend)` — Vote.tsx onto public election/candidate endpoints |
+| `3a37e39` | `fix(frontend)` — Results.tsx onto the public results endpoint |
+| `4524270` | `fix(frontend)` — CandidateApproval.tsx onto the PENDING queue |
+| `e3704e5` | `fix(frontend)` — StaffManagement.tsx onto the shared API client |
+| `e5357cc` | `fix(frontend)` — Blockchain.tsx onto the shared API client |
+| `d10a147` | `fix(users)` — stop leaking password hashes from the staff-admin endpoints |
+| `9d8d499` | `fix(frontend)` — verify before approving in the candidate review queue |
+
+All nine pushed to both `origin` and `arkabera`.
+
+### Verified this session
+
+| Check | Result |
+|---|---|
+| Backend unit tests | **603 pass** / 82 suites (was 601) |
+| Backend e2e tests | **7 pass**, run against the real local Postgres |
+| Backend build | succeeds |
+| Backend lint (no `--fix`) | clean |
+| Frontend `tsc -b` | clean |
+| Frontend production build | succeeds |
+| Frontend tests | **9 pass** / 3 files (was 5 / 2) |
+| Frontend lint | 68 problems — within noise of the 66-problem baseline (stashed and re-ran to confirm), same pre-existing categories (`no-explicit-any`, `set-state-in-effect`) |
+| Prisma migrations | 29 migrations tracked; `prisma migrate status` against the local DB: **up to date, no drift** |
+| Live election → vote → blockchain workflow | **executed end-to-end against the real stack**, not just unit-tested; all disposable test data (users, election, candidate, vote) removed afterward and the DB confirmed back to its pre-session row counts |
+
+### Corrections to the previous audit's findings
+
+Two things an earlier audit flagged turned out not to be real gaps on inspection:
+- "Bootstrap-admin missing from `.env.example`" — it's already there, commented out.
+- "No `prisma/migrations` directory found" — it exists with 29 tracked migrations; the
+  earlier search was incomplete.
+
+### Still open
+
+- Frontend lint debt (pre-existing, not a functional regression) — deferred, see above.
+- No browser-driven (Chrome/Playwright) click-through of the six pages — verified via direct
+  API calls matching exactly what each page's code sends, not via an actual rendered page.
+- The backend is still not deployed anywhere (see "Why the backend was not deployed" above);
+  the frontend-only Vercel deployment is unaffected by this session's backend fix.
