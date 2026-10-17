@@ -370,3 +370,54 @@ Two things an earlier audit flagged turned out not to be real gaps on inspection
   API calls matching exactly what each page's code sends, not via an actual rendered page.
 - The backend is still not deployed anywhere (see "Why the backend was not deployed" above);
   the frontend-only Vercel deployment is unaffected by this session's backend fix.
+
+---
+
+## Follow-up session — repo hygiene, security sweep, confirmed Vercel state
+
+### What changed
+
+- `chore(repo)`: added a root `.gitignore` (`.DS_Store`) — the two stray files kept
+  reappearing because only the per-app `.gitignore`s existed, and the stray files lived
+  outside those directories.
+- Re-audited every `this.prisma.user.*` call site across the backend for the same
+  password-hash-leak pattern fixed last session. **No further leaks found** —
+  `profile.service.ts` and `upload.service.ts` already use an explicit safe `select`;
+  everything else either never returns the row or only uses it as an existence check.
+
+### Confirmed, not assumed
+
+- **The real BallotTrust frontend URL is `https://ballottrust.vercel.app`** — confirmed via
+  `vercel ls`/`vercel whoami` (linked project `ballottrust`, org `arka-s-team`) and by
+  loading it (`<title>ballottrust-frontend</title>`, HTTP 200). It is **23 days old**,
+  predating every fix from both sessions — the live site does not yet reflect any of this
+  work. `GET /api/v1/public/statistics` on it still 404s: the backend remains undeployed.
+- **Production redeploy was attempted and blocked** by this environment's own permission
+  policy (`[Production Deploy]`), not by a missing credential — the Vercel CLI is
+  authenticated and linked correctly. **Manual action needed:** run `vercel --prod` yourself
+  from `frontend/ballottrust-frontend` (or trigger it from the Vercel dashboard) to publish
+  the fixes from both sessions.
+- No CI workflow exists in this repository (`.github/workflows` is absent). Not added this
+  session — introducing CI from nothing is new infrastructure, not a bug fix, and is
+  flagged here rather than added unreviewed.
+- No rate limiting exists on `/auth/*`, OTP, or `/votes` (no `@nestjs/throttler` or
+  equivalent anywhere in `src/`). Flagged as a real gap, not fixed this session — adding
+  global throttling is an architectural change with app-wide blast radius, not a small
+  atomic fix, and deserves its own reviewed change.
+
+### Verified this session
+
+| Check | Result |
+|---|---|
+| Backend tests | 603 pass / 82 suites (unchanged) |
+| Frontend tsc / build / tests | clean / succeeds / 9 pass (unchanged) |
+| Local `HEAD` vs both remotes | all three at `4a0a268`, confirmed by `git ls-remote` |
+| Live frontend URL | `https://ballottrust.vercel.app` — 200, confirmed BallotTrust, backend still 404 |
+
+### Commits this session
+
+| Commit | What |
+|---|---|
+| `4a0a268` | `chore(repo)` — root `.gitignore` for `.DS_Store` |
+
+Pushed to both `origin` and `arkabera`.
