@@ -1,18 +1,21 @@
 import { useState } from 'react';
-import axios from 'axios';
+
+import api from '../api/axios';
+import toast from '../utils/toast';
+import { summarizeIntegrity } from '../utils/blockchain-integrity';
 
 export default function Blockchain() {
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<ReturnType<typeof summarizeIntegrity> | null>(null);
 
   const verifyBlockchain = async () => {
     try {
-      const response = await axios.get(
-        'http://localhost:3000/blockchain/verify'
+      const response = await api.get(
+        '/blockchain/verify'
       );
 
-      setResult(response.data);
+      setResult(summarizeIntegrity(response.data.data));
     } catch {
-      alert('Verification Failed');
+      toast.error('Verification Failed');
     }
   };
 
@@ -59,7 +62,7 @@ export default function Blockchain() {
 
           <div>
             Total Votes:
-            <b> {result.totalVotes ?? 0}</b>
+            <b> {result.totalVotes}</b>
           </div>
 
         </div>
@@ -68,4 +71,3 @@ export default function Blockchain() {
     </div>
   );
 }
-
