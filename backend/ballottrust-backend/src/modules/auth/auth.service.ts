@@ -341,6 +341,15 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
+    // Rotation: the presented token is revoked and replaced with a new
+    // one on every use. validateRefreshToken() only matches non-revoked
+    // tokens, so presenting an already-rotated token again lands here as
+    // an "Invalid Refresh Token" rejection rather than succeeding.
+    await this.refreshTokenService.revokeToken(token.id);
+    const refreshToken = await this.refreshTokenService.generateRefreshToken(
+      user.id,
+    );
+
     const accessToken = await this.jwtService.signAsync({
       sub: user.id,
       email: user.email,
@@ -349,6 +358,7 @@ export class AuthService {
 
     return {
       access_token: accessToken,
+      refresh_token: refreshToken,
     };
   }
 

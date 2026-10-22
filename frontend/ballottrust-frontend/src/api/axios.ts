@@ -61,6 +61,7 @@ function processQueue(error: unknown, token?: string) {
 interface RefreshEnvelope {
   data?: {
     access_token?: string;
+    refresh_token?: string;
   };
 }
 
@@ -117,12 +118,20 @@ api.interceptors.response.use(
       );
 
       const newAccessToken = response.data?.data?.access_token;
+      const newRefreshToken = response.data?.data?.refresh_token;
 
       if (!newAccessToken) {
         throw new Error('Refresh response did not contain an access token.');
       }
 
       TokenStorage.setAccessToken(newAccessToken);
+
+      // The backend rotates the refresh token on every use and revokes
+      // the one just presented, so the new one must replace it or the
+      // next refresh attempt will be rejected as reuse of a revoked token.
+      if (newRefreshToken) {
+        TokenStorage.setRefreshToken(newRefreshToken);
+      }
 
       processQueue(null, newAccessToken);
 
