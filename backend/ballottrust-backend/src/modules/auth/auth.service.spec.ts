@@ -23,6 +23,7 @@ describe('AuthService', () => {
 
   const mockJwtService = {
     sign: jest.fn(),
+    signAsync: jest.fn(),
     verify: jest.fn(),
   };
 
@@ -31,6 +32,9 @@ describe('AuthService', () => {
     refreshAccessToken: jest.fn(),
     revokeRefreshToken: jest.fn(),
     revokeAllUserTokens: jest.fn(),
+    validateRefreshToken: jest.fn(),
+    generateRefreshToken: jest.fn(),
+    revokeToken: jest.fn(),
   };
 
   const mockMailService = {
@@ -206,6 +210,87 @@ describe('AuthService', () => {
       expect(Object.keys(createArg.select)).not.toContain('password');
 
       expect(result.user).not.toHaveProperty('password');
+    });
+  });
+
+  // ============================================================
+  // REFRESH TOKEN ROTATION (BT-SEC-002)
+  // ============================================================
+
+  describe('refreshToken', () => {
+    const presentedToken = 'presented-refresh-token';
+    const storedToken = {
+      id: 'token-1',
+      userId: 'user-1',
+      expiresAt: new Date(Date.now() + 1000 * 60 * 60),
+    };
+    const user = {
+      id: 'user-1',
+      email: 'voter@example.test',
+      role: Role.VOTER,
+    };
+
+    beforeEach(() => {
+      mockRefreshTokenService.validateRefreshToken.mockResolvedValue(
+        storedToken,
+      );
+      mockPrismaService.user.findUnique.mockResolvedValue(user);
+      mockJwtService.signAsync.mockResolvedValue('new-access-token');
+      mockRefreshTokenService.generateRefreshToken.mockResolvedValue(
+        'new-refresh-token',
+      );
+    });
+
+    it('revokes the presented token and issues a new one', async () => {
+      const result = await service.refreshToken({
+        refreshToken: presentedToken,
+      });
+
+      expect(mockRefreshTokenService.revokeToken).toHaveBeenCalledWith(
+        storedToken.id,
+      );
+
+      expect(mockRefreshTokenService.generateRefreshToken).toHaveBeenCalledWith(
+        user.id,
+      );
+
+      expect(result).toEqual({
+        access_token: 'new-access-token',
+        refresh_token: 'new-refresh-token',
+      });
+    });
+
+    it('revokes before issuing the replacement, so a crash cannot leave two live tokens', async () => {
+      const callOrder: string[] = [];
+
+      mockRefreshTokenService.revokeToken.mockImplementation(() => {
+        callOrder.push('revoke');
+
+        return Promise.resolve();
+      });
+
+      mockRefreshTokenService.generateRefreshToken.mockImplementation(() => {
+        callOrder.push('generate');
+
+        return Promise.resolve('new-refresh-token');
+      });
+
+      await service.refreshToken({ refreshToken: presentedToken });
+
+      expect(callOrder).toEqual(['revoke', 'generate']);
+    });
+
+    it('rejects when the token does not resolve to a user', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.refreshToken({ refreshToken: presentedToken }),
+      ).rejects.toThrow('User not found');
+
+      expect(mockRefreshTokenService.revokeToken).not.toHaveBeenCalled();
+      expect(
+        mockRefreshTokenService.generateRefreshToken,
+      ).not.toHaveBeenCalled();
     });
   });
 });
