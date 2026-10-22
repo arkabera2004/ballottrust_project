@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { join } from 'path';
 
 import { AppController } from './app.controller';
@@ -49,6 +51,15 @@ import { JobsModule } from './modules/jobs/jobs.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+
+    // Global fallback limit. Sensitive auth/OTP endpoints apply a
+    // tighter, named limit via @Throttle() — see auth.controller.ts.
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60_000,
+        limit: 100,
+      },
+    ]),
 
     // Lets modules raise notifications without importing the
     // NotificationModule — see notification.events.ts.
@@ -101,6 +112,12 @@ import { JobsModule } from './modules/jobs/jobs.module';
 
   controllers: [AppController, AdminController],
 
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
