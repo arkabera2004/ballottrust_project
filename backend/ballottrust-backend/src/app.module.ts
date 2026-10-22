@@ -8,6 +8,7 @@ import { join } from 'path';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { validateEnv } from './env.validation';
 
 import { PrismaModule } from './prisma/prisma.module';
 
@@ -50,6 +51,7 @@ import { JobsModule } from './modules/jobs/jobs.module';
 
     ConfigModule.forRoot({
       isGlobal: true,
+      validate: validateEnv,
     }),
 
     // Global fallback limit. Sensitive auth/OTP endpoints apply a
