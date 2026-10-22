@@ -23,10 +23,18 @@ before resuming work.
 | ID | Task | Status | Commit(s) | Evidence |
 |---|---|---|---|---|
 | BT-REPO-001 | Ignore local `.env*`, keep `.env.example` trackable | VERIFIED | `6980a69` | pushed to both remotes, SHAs confirmed equal |
-| LEDGER-INIT | Create this ledger | IN PROGRESS | (this commit) | — |
-| BT-SEC-001 | Rate limit auth/OTP endpoints | NOT STARTED | — | — |
-| BT-SEC-002 | Refresh-token rotation on use | NOT STARTED | — | — |
+| LEDGER-INIT | Create this ledger | VERIFIED | `81c116a` | pushed to both remotes |
+| BT-SEC-001 | Rate limit auth/OTP endpoints | VERIFIED | `f912c77` (impl), `7193eab` (test) | `@nestjs/throttler` global 100/min + per-endpoint limits on register(5)/login(5)/verify-email(10)/resend-otp(3)/bootstrap-admin(3)/forgot-password(3)/reset-password(5); 83 suites/610 tests pass, build clean, lint clean; both remotes at `7193eab` |
+| BT-SEC-002 | Refresh-token rotation on use | IN PROGRESS | — | — |
 | BT-SEC-003 | Env-var validation schema | NOT STARTED | — | — |
+
+**Known limitation (BT-SEC-001):** the throttler's default IP tracker reads `req.ip`
+directly; if the app is ever deployed behind a reverse proxy/load balancer without Express
+`trust proxy` configured, all traffic could appear to share one IP and the limit would be
+too aggressive (or, if trust proxy is misconfigured to trust client-supplied headers, an
+attacker could spoof `X-Forwarded-For` to bypass the limit entirely). Not fixed here —
+no proxy topology was confirmed during this session. Revisit when BT-DEPLOY-001 establishes
+the actual hosting setup.
 
 Remaining backlog items (BT-TEST-001/2/3, BT-FE-001/2, BT-DEPLOY-001/2, BT-CI-001,
 BT-DOCS-001) are carried over from the audit; see conversation history for descriptions.
