@@ -25,8 +25,8 @@ before resuming work.
 | BT-REPO-001 | Ignore local `.env*`, keep `.env.example` trackable | VERIFIED | `6980a69` | pushed to both remotes, SHAs confirmed equal |
 | LEDGER-INIT | Create this ledger | VERIFIED | `81c116a` | pushed to both remotes |
 | BT-SEC-001 | Rate limit auth/OTP endpoints | VERIFIED | `f912c77` (impl), `7193eab` (test) | `@nestjs/throttler` global 100/min + per-endpoint limits on register(5)/login(5)/verify-email(10)/resend-otp(3)/bootstrap-admin(3)/forgot-password(3)/reset-password(5); 83 suites/610 tests pass, build clean, lint clean; both remotes at `7193eab` |
-| BT-SEC-002 | Refresh-token rotation on use | IN PROGRESS | — | — |
-| BT-SEC-003 | Env-var validation schema | NOT STARTED | — | — |
+| BT-SEC-002 | Refresh-token rotation on use | VERIFIED | `7243c2a` (impl, backend+frontend contract), `5bc0597` (test) | old token revoked + new one issued on every `/auth/refresh`; frontend stores rotated token; 83 suites/613 backend tests + 9 frontend tests pass; both remotes at `5bc0597` |
+| BT-SEC-003 | Env-var validation schema | VERIFIED | `2e2623d` (impl), `7d3855b` (test) | `src/env.validation.ts` zod schema wired into `ConfigModule.forRoot({validate})`; requires DATABASE_URL, JWT_SECRET, GOOGLE_*, MAIL_HOST/PORT/FROM, leaves PORT/NODE_ENV/FRONTEND_URL/CORS_ORIGINS/BOOTSTRAP_* optional; 84 suites/626 backend tests pass, build+lint clean; live-boot smoke test skipped (needs a reachable Postgres, out of this session's scope) |
 
 **Known limitation (BT-SEC-001):** the throttler's default IP tracker reads `req.ip`
 directly; if the app is ever deployed behind a reverse proxy/load balancer without Express
