@@ -102,12 +102,9 @@ jobs:
 
       # npm run lint uses --fix, which auto-corrects instead of failing the
       # check; CI needs a pure pass/fail gate, so eslint is invoked directly.
-      # Non-blocking for now: 21 known react-hooks/set-state-in-effect and
-      # react-refresh errors are a deliberate, documented scope-out
-      # (BT-FE-001b in docs/PROJECT_COMPLETION_LEDGER.md), not a regression.
-      # Flip this back to blocking once that work lands.
+      # BT-FE-001b (lint errors from the manual fetch-in-effect pattern) is
+      # resolved, so this is a real blocking gate again.
       - run: npx eslint "src/**/*.{ts,tsx}"
-        continue-on-error: true
 
       - run: npm run test -- --run
 
