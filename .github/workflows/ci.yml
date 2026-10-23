@@ -24,6 +24,17 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      # Matches local dev (.env.example): the app sends real OTP/notification
+      # emails via SMTP on register/forgot-password/etc, and without a
+      # reachable mail server those calls throw ECONNREFUSED, which
+      # auth.service.ts correctly surfaces as a failure rather than
+      # silently losing a user's verification email - so e2e needs a real
+      # (disposable) SMTP server, not a mocked one.
+      mailpit:
+        image: axllent/mailpit
+        ports:
+          - 1025:1025
+
     defaults:
       run:
         working-directory: backend/ballottrust-backend
