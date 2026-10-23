@@ -28,7 +28,9 @@ npm run start:dev
 
 The API is served under `/api/v1`; Swagger docs are at `/api/docs` in any
 non-production environment (disabled in production — the schema
-enumerates every route and role requirement).
+enumerates every route and role requirement). `GET /api/v1/health` checks
+real database connectivity and is suitable for a hosting platform's
+readiness/liveness probe.
 
 ## Environment variables
 
