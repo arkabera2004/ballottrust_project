@@ -19,5 +19,10 @@ export default defineConfig(({ mode }) => {
         '/uploads': { target, changeOrigin: true },
       },
     },
+
+    test: {
+      environment: 'jsdom',
+      setupFiles: ['./src/test/setup.ts'],
+    },
   }
 })
