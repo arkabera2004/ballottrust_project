@@ -21,7 +21,28 @@ describe('JwtStrategy', () => {
   // ============================================================
 
   it('fails fast when no JWT secret is configured', () => {
-    expect(() => new JwtStrategy(new ConfigService({}))).toThrow(/JWT_SECRET/);
+    // ConfigService#get() falls back to process.env when a key is absent
+    // from the object passed to its constructor. Importing the real
+    // `Role` enum above (a runtime value, not a type) loads @prisma/client,
+    // whose generated runtime loads .env on import as a documented side
+    // effect - populating process.env.JWT_SECRET from the real dev .env
+    // file and defeating this test's "nothing is configured" premise.
+    // Isolated here rather than left to accidentally pass or fail based on
+    // whatever else ran first in the same Jest worker.
+    const original = process.env.JWT_SECRET;
+    delete process.env.JWT_SECRET;
+
+    try {
+      expect(() => new JwtStrategy(new ConfigService({}))).toThrow(
+        /JWT_SECRET/,
+      );
+    } finally {
+      if (original === undefined) {
+        delete process.env.JWT_SECRET;
+      } else {
+        process.env.JWT_SECRET = original;
+      }
+    }
   });
 
   // ============================================================
