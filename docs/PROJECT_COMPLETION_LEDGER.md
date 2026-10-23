@@ -39,6 +39,8 @@ actual hosting setup.
 Remaining backlog items (BT-TEST-001/2/3, BT-FE-001/2, BT-DEPLOY-001/2, BT-CI-001,
 BT-DOCS-001) are described with acceptance criteria in the "Expanded backlog" section below.
 
+| BT-TEST-001 | Backend e2e coverage: auth lifecycle + election governance workflow | PARTIAL | `0d92f97` (auth), `028c592` (election) | A disposable local Postgres (`ballottrust` DB on `localhost:5432`, already migrated) was confirmed reachable and used for real (non-mocked) e2e runs. `test/auth.e2e-spec.ts`: register→reject-pending→verify OTP→reject-unapproved→approve→login→guarded route→refresh rotation+reuse rejection→logout (9 tests). `test/election.e2e-spec.ts`: DRAFT→PENDING_APPROVAL→APPROVED→PUBLISHED plus role enforcement (only commissioner/admin can create, only SUPER_ADMIN can approve) and workflow-order guards (9 tests). 3 e2e suites / 26 tests pass total, backend unit suite still 84/627, lint+build clean; both remotes verified at `028c592`. **Remaining scope (tracked as BT-TEST-001b, not started):** candidate nomination→approval→ballot finalization, voter eligibility, vote casting, duplicate-vote rejection, election closure, and results retrieval — this needs the ballot-readiness and eligibility-engine machinery wired up and is a larger, separate increment. |
+
 ## Baseline re-confirmed (2026-10-23)
 
 Repo unchanged since last ledger entry (`db878fb`, clean working tree, both remotes in
