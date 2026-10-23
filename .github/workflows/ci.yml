@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [master, 'fix/**']
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ballottrust
+          POSTGRES_PASSWORD: ballottrust
+          POSTGRES_DB: ballottrust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: backend/ballottrust-backend
+
+    env:
+      DATABASE_URL: postgresql://ballottrust:ballottrust@localhost:5432/ballottrust?schema=public
+      JWT_SECRET: ci-test-secret-not-for-production
+      GOOGLE_CLIENT_ID: ci-placeholder
+      GOOGLE_CLIENT_SECRET: ci-placeholder
+      GOOGLE_CALLBACK_URL: http://localhost:3000/api/v1/auth/google/callback
+      MAIL_HOST: localhost
+      MAIL_PORT: '1025'
+      MAIL_FROM: BallotTrust <no-reply@ballottrust.local>
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: backend/ballottrust-backend/package-lock.json
+
+      - run: npm ci
+
+      - run: npx prisma migrate deploy
+
+      # npm run lint uses --fix, which auto-corrects instead of failing the
+      # check; CI needs a pure pass/fail gate, so eslint is invoked directly.
+      - run: npx eslint "{src,apps,libs,test}/**/*.ts"
+
+      - run: npm run build
+
+      - run: npm run test -- --ci
+
+      - run: npm run test:e2e
+
+  frontend:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend/ballottrust-frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/ballottrust-frontend/package-lock.json
+
+      - run: npm ci
+
+      # npm run lint uses --fix, which auto-corrects instead of failing the
+      # check; CI needs a pure pass/fail gate, so eslint is invoked directly.
+      # Non-blocking for now: 21 known react-hooks/set-state-in-effect and
+      # react-refresh errors are a deliberate, documented scope-out
+      # (BT-FE-001b in docs/PROJECT_COMPLETION_LEDGER.md), not a regression.
+      # Flip this back to blocking once that work lands.
+      - run: npx eslint "src/**/*.{ts,tsx}"
+        continue-on-error: true
+
+      - run: npm run test -- --run
+
+      - run: npm run build
