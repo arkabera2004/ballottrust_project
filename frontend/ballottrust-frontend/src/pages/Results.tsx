@@ -1,37 +1,37 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import api from '../api/axios';
 
 export default function Results() {
-  const [elections, setElections] = useState<
-    { id: string; title: string }[]
-  >([]);
   const [selectedElection, setSelectedElection] =
     useState('');
 
-  const [results, setResults] = useState<unknown>(null);
+  const { data: elections = [] } = useQuery({
+    queryKey: ['public', 'elections'],
+    queryFn: async () => {
+      const response = await api.get<{
+        data: { items: { id: string; title: string }[] };
+      }>('/public/elections');
 
-  const loadElections = async () => {
-    const response = await api.get(
-      '/public/elections',
-    );
+      return response.data.data.items;
+    },
+  });
 
-    setElections(response.data.data.items);
-  };
+  // Fetched on demand (the "View Results" click), not automatically when
+  // selectedElection changes - enabled: false plus a manual refetch() is
+  // React Query's way of expressing exactly that.
+  const { data: results, refetch: loadResults } = useQuery({
+    queryKey: ['public', 'results', selectedElection],
+    queryFn: async () => {
+      const response = await api.get(
+        `/public/results/${selectedElection}`,
+      );
 
-  const loadResults = async () => {
-    if (!selectedElection) return;
-
-    const response = await api.get(
-      `/public/results/${selectedElection}`
-    );
-
-    setResults(response.data.data);
-  };
-
-  useEffect(() => {
-    loadElections();
-  }, []);
+      return response.data.data as unknown;
+    },
+    enabled: false,
+  });
 
   return (
     <div className="p-8">
@@ -62,7 +62,7 @@ export default function Results() {
       </select>
 
       <button
-        onClick={loadResults}
+        onClick={() => loadResults()}
         className="bg-blue-600 text-white px-4 py-2 rounded mb-6"
       >
         View Results

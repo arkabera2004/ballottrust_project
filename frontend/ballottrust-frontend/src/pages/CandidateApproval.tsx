@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import api from '../api/axios';
 import toast from '../utils/toast';
@@ -14,12 +14,15 @@ type Candidate = {
   status: string;
 };
 
-export default function CandidateApproval() {
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
+const PENDING_CANDIDATES_QUERY_KEY = ['candidates', 'pending-approval'];
 
-  const loadCandidates = async () => {
-    try {
-      const response = await api.get(
+export default function CandidateApproval() {
+  const queryClient = useQueryClient();
+
+  const { data: candidates = [] } = useQuery({
+    queryKey: PENDING_CANDIDATES_QUERY_KEY,
+    queryFn: async () => {
+      const response = await api.get<{ data: { data: Candidate[] } }>(
         '/candidates',
         {
           params: {
@@ -29,58 +32,40 @@ export default function CandidateApproval() {
         },
       );
 
-      setCandidates(response.data.data.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+      return response.data.data.data;
+    },
+  });
 
-  const approveCandidate = async (
-    id: string,
-  ) => {
-    try {
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: PENDING_CANDIDATES_QUERY_KEY });
+
+  const approveMutation = useMutation({
+    mutationFn: async (id: string) => {
       // The backend lifecycle only allows PENDING -> VERIFIED -> APPROVED;
       // approving straight from PENDING is rejected with a 400, so this
       // queue's one-click "Approve" has to make both transitions.
-      await api.patch(
-        `/candidates/${id}/verify`,
-      );
-
-      await api.patch(
-        `/candidates/${id}/approve`,
-      );
-
+      await api.patch(`/candidates/${id}/verify`);
+      await api.patch(`/candidates/${id}/approve`);
+    },
+    onSuccess: () => {
       toast.success('Candidate Approved');
+      invalidate();
+    },
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, 'Approval Failed'));
+    },
+  });
 
-      loadCandidates();
-    } catch (error: unknown) {
-      toast.error(
-        getErrorMessage(error, 'Approval Failed'),
-      );
-    }
-  };
-
-  const rejectCandidate = async (
-    id: string,
-  ) => {
-    try {
-      await api.patch(
-        `/candidates/${id}/reject`,
-      );
-
+  const rejectMutation = useMutation({
+    mutationFn: (id: string) => api.patch(`/candidates/${id}/reject`),
+    onSuccess: () => {
       toast.success('Candidate Rejected');
-
-      loadCandidates();
-    } catch (error: unknown) {
-      toast.error(
-        getErrorMessage(error, 'Rejection Failed'),
-      );
-    }
-  };
-
-  useEffect(() => {
-    loadCandidates();
-  }, []);
+      invalidate();
+    },
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, 'Rejection Failed'));
+    },
+  });
 
   return (
     <DashboardLayout>
@@ -149,7 +134,7 @@ export default function CandidateApproval() {
 
                   <button
                     onClick={() =>
-                      approveCandidate(candidate.id)
+                      approveMutation.mutate(candidate.id)
                     }
                     className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
                   >
@@ -158,7 +143,7 @@ export default function CandidateApproval() {
 
                   <button
                     onClick={() =>
-                      rejectCandidate(candidate.id)
+                      rejectMutation.mutate(candidate.id)
                     }
                     className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
                   >

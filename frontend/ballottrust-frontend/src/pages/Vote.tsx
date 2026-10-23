@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import api from '../api/axios';
 import toast from '../utils/toast';
@@ -19,40 +20,35 @@ interface PublicCandidate {
 }
 
 export default function Vote() {
-  const [elections, setElections] = useState<PublicElection[]>([]);
-  const [candidates, setCandidates] = useState<PublicCandidate[]>([]);
-
   const [electionId, setElectionId] = useState('');
   const [candidateId, setCandidateId] = useState('');
   const [selectedCandidate, setSelectedCandidate] =
     useState<PublicCandidate | null>(null);
 
-  const loadElections = useCallback(async () => {
-    try {
-      const response = await api.get(
-        '/public/elections'
-      );
+  const { data: elections = [] } = useQuery({
+    queryKey: ['public', 'elections'],
+    queryFn: async () => {
+      const response = await api.get<{
+        data: { items: PublicElection[] };
+      }>('/public/elections');
 
-      setElections(response.data.data.items);
-    } catch (error) {
-      console.error(error);
-    }
-  }, []);
+      return response.data.data.items;
+    },
+  });
 
-  const loadCandidates = useCallback(async () => {
-    try {
-      const response = await api.get(
+  const { data: candidates = [] } = useQuery({
+    queryKey: ['public', 'candidates', electionId],
+    queryFn: async () => {
+      const response = await api.get<{
+        data: { items: PublicCandidate[] };
+      }>(
         '/public/candidates',
-        electionId
-          ? { params: { electionId } }
-          : undefined,
+        electionId ? { params: { electionId } } : undefined,
       );
 
-      setCandidates(response.data.data.items);
-    } catch (error) {
-      console.error(error);
-    }
-  }, [electionId]);
+      return response.data.data.items;
+    },
+  });
 
   const castVote = async () => {
     if (!electionId) {
@@ -90,14 +86,6 @@ export default function Vote() {
       );
     }
   };
-
-  useEffect(() => {
-    loadElections();
-  }, [loadElections]);
-
-  useEffect(() => {
-    loadCandidates();
-  }, [loadCandidates]);
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
