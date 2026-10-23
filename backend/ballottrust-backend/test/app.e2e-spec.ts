@@ -56,6 +56,14 @@ describe('BallotTrust API (e2e)', () => {
   // ROUTING AND RESPONSE ENVELOPE
   // ============================================================
 
+  it('reports healthy on a real database connection (BT-DEPLOY-001)', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/health')
+      .expect(200);
+
+    expect(response.body.data).toEqual({ status: 'ok', database: 'up' });
+  });
+
   it('serves the public portal under the /api/v1 prefix', async () => {
     const response = await request(app.getHttpServer())
       .get('/api/v1/public/statistics')
