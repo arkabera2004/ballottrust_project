@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import authService from '../services/auth.service';
 
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../../context/useAuth';
 import Toast from '../../../utils/toast';
 import { getErrorMessage } from '../../../utils/api-error';
 import { ROUTES } from '../../../constants/routes';

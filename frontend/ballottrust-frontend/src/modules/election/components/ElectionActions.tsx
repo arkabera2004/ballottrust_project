@@ -8,7 +8,7 @@ import Button from '../../../components/buttons/Button';
 import WorkflowActions from './workflow/WorkflowActions';
 
 import { ElectionService } from '../services';
-import { useElectionRefresh } from '../context/ElectionContext';
+import { useElectionRefresh } from '../context/useElectionRefresh';
 
 import type { Election } from '../types';
 

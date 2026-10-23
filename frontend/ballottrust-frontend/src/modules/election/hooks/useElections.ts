@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { ElectionService } from '../services';
 import { getErrorMessage } from '../../../utils/api-error';
-import { useElectionRefresh } from '../context/ElectionContext';
+import { useElectionRefresh } from '../context/useElectionRefresh';
 
 import type {
   Election,

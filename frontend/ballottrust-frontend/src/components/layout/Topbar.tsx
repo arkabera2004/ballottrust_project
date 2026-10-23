@@ -6,7 +6,7 @@ import {
 
 import { useNavigate } from 'react-router-dom';
 
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 import { NotificationBell } from '../../modules/notification';
 
 export default function Topbar() {

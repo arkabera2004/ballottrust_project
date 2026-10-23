@@ -1,19 +1,9 @@
 import {
-  createContext,
-  useContext,
   useState,
   type ReactNode,
 } from 'react';
 
-interface ElectionContextType {
-  refreshKey: number;
-  refresh: () => void;
-}
-
-const ElectionContext =
-  createContext<ElectionContextType | null>(
-    null,
-  );
+import { ElectionContext } from './election-context';
 
 export function ElectionProvider({
   children,
@@ -37,17 +27,4 @@ export function ElectionProvider({
       {children}
     </ElectionContext.Provider>
   );
-}
-
-export function useElectionRefresh() {
-  const context =
-    useContext(ElectionContext);
-
-  if (!context) {
-    throw new Error(
-      'useElectionRefresh must be used inside ElectionProvider.',
-    );
-  }
-
-  return context;
 }

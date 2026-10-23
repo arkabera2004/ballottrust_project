@@ -1,6 +1,4 @@
 import {
-  createContext,
-  useContext,
   useMemo,
   useState,
 } from 'react';
@@ -10,24 +8,7 @@ import type { ReactNode } from 'react';
 import TokenStorage from '../utils/token-storage';
 import type { User } from '../types/auth';
 
-type AuthContextType = {
-  user: User | null;
-  isAuthenticated: boolean;
-  loading: boolean;
-
-  login: (
-    accessToken: string,
-    refreshToken: string,
-    user: User,
-  ) => void;
-
-  logout: () => void;
-};
-
-const AuthContext =
-  createContext<AuthContextType>(
-    {} as AuthContextType,
-  );
+import { AuthContext } from './auth-context';
 
 export const AuthProvider = ({
   children,
@@ -112,6 +93,3 @@ export const AuthProvider = ({
   );
 
 };
-
-export const useAuth = () =>
-  useContext(AuthContext);

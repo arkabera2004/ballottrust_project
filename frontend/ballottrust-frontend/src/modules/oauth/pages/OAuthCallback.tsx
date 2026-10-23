@@ -4,7 +4,7 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../../context/useAuth';
 
 import authService from '../../auth/services/auth.service';
 

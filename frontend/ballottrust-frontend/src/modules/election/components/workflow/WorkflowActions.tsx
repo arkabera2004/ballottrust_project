@@ -9,7 +9,7 @@ import {
   useStartElection,
 } from '../../hooks';
 
-import { useElectionRefresh } from '../../context/ElectionContext';
+import { useElectionRefresh } from '../../context/useElectionRefresh';
 
 import {ElectionService} from '../../services';
 
