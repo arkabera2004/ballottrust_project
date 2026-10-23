@@ -1,13 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import { ElectionService } from '../services';
 import { getErrorMessage } from '../../../utils/api-error';
 import { useElectionRefresh } from '../context/useElectionRefresh';
 
-import type {
-  Election,
-  QueryElectionDto,
-} from '../types';
+import type { QueryElectionDto } from '../types';
 
 export function useElections(
   query?: QueryElectionDto,
@@ -15,82 +12,27 @@ export function useElections(
   const { refreshKey } =
     useElectionRefresh();
 
-  const [loading, setLoading] =
-    useState(true);
-
-  const [error, setError] =
-    useState<string | null>(null);
-
-  const [elections, setElections] =
-    useState<Election[]>([]);
-
-  const [total, setTotal] =
-    useState(0);
-
-  const [totalPages, setTotalPages] =
-    useState(1);
-
-  async function load() {
-    try {
-      setLoading(true);
-
-      const result =
-        await ElectionService.getAll(
-          query,
-        );
-
-      setElections(
-        result.data,
-      );
-
-      setTotal(
-        result.total,
-      );
-
-      setTotalPages(
-        result.totalPages,
-      );
-
-      setError(null);
-
-    } catch (err: unknown) {
-
-      setError(
-        getErrorMessage(err, 'Unable to load elections.'),
-      );
-
-    } finally {
-
-      setLoading(false);
-
-    }
-  }
-
-  // Deliberately keyed on the serialized value of `query`, not `load` or
-  // `query` itself: callers often pass a fresh object literal each render,
-  // which would otherwise give `load` (and the effect) a new identity -
-  // and therefore refetch - every render regardless of whether the query
-  // actually changed. `load` always closes over the latest `query` anyway.
+  // Keyed on the serialized value of `query`, not `query` itself: callers
+  // often pass a fresh object literal each render, which would otherwise
+  // give the query key a new identity - and therefore refetch - every
+  // render regardless of whether the query actually changed. refreshKey is
+  // included so other parts of the app (e.g. an election action) can force
+  // a refetch here without this hook needing to know why.
   const queryKey = JSON.stringify(query);
 
-  useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queryKey, refreshKey]);
+  const result = useQuery({
+    queryKey: ['elections', queryKey, refreshKey],
+    queryFn: () => ElectionService.getAll(query),
+  });
 
   return {
-
-    loading,
-
-    error,
-
-    elections,
-
-    total,
-
-    totalPages,
-
-    refresh: load,
-
+    loading: result.isLoading,
+    error: result.error
+      ? getErrorMessage(result.error, 'Unable to load elections.')
+      : null,
+    elections: result.data?.data ?? [],
+    total: result.data?.total ?? 0,
+    totalPages: result.data?.totalPages ?? 1,
+    refresh: result.refetch,
   };
 }

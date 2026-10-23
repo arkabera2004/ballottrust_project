@@ -1,50 +1,21 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import { CandidateService } from '../services';
-
-import type { Candidate } from '../types';
 
 import { getErrorMessage } from '../../../utils/api-error';
 
 export function useMyCandidates() {
-  const [candidates, setCandidates] =
-    useState<Candidate[]>([]);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [error, setError] =
-    useState<string | null>(null);
-
-  const loadCandidates = useCallback(
-    async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const result =
-          await CandidateService.getMyCandidates();
-
-        setCandidates(result);
-      } catch (err: unknown) {
-        setError(
-          getErrorMessage(err, 'Unable to load your candidacies.'),
-        );
-      } finally {
-        setLoading(false);
-      }
-    },
-    [],
-  );
-
-  useEffect(() => {
-    loadCandidates();
-  }, [loadCandidates]);
+  const result = useQuery({
+    queryKey: ['candidates', 'mine'],
+    queryFn: () => CandidateService.getMyCandidates(),
+  });
 
   return {
-    candidates,
-    loading,
-    error,
-    refresh: loadCandidates,
+    candidates: result.data ?? [],
+    loading: result.isLoading,
+    error: result.error
+      ? getErrorMessage(result.error, 'Unable to load your candidacies.')
+      : null,
+    refresh: result.refetch,
   };
 }

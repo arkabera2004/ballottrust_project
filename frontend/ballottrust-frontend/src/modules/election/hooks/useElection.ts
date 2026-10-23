@@ -1,55 +1,21 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import { ElectionService } from '../services';
 import { getErrorMessage } from '../../../utils/api-error';
 
-import type { Election } from '../types';
-
 export function useElection(id?: string) {
-  const [loading, setLoading] = useState(true);
-
-  const [error, setError] =
-    useState<string | null>(null);
-
-  const [election, setElection] =
-    useState<Election | null>(null);
-
-  const load = useCallback(async () => {
-    if (!id) return;
-
-    try {
-      setLoading(true);
-
-      const result =
-        await ElectionService.getById(id);
-
-      setElection(result);
-
-      setError(null);
-
-    } catch (err: unknown) {
-
-      setError(
-        getErrorMessage(err, 'Unable to fetch election.'),
-      );
-
-    } finally {
-
-      setLoading(false);
-
-    }
-  }, [id]);
-
-  useEffect(() => {
-    if (id) {
-      load();
-    }
-  }, [id, load]);
+  const result = useQuery({
+    queryKey: ['elections', id],
+    queryFn: () => ElectionService.getById(id as string),
+    enabled: !!id,
+  });
 
   return {
-    loading,
-    error,
-    election,
-    refresh: load,
+    loading: result.isLoading,
+    error: result.error
+      ? getErrorMessage(result.error, 'Unable to fetch election.')
+      : null,
+    election: result.data ?? null,
+    refresh: result.refetch,
   };
 }
