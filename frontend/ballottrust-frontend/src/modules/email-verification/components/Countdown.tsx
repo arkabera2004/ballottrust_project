@@ -15,9 +15,23 @@ export default function Countdown({
   const [seconds, setSeconds] =
     useState(initialSeconds);
 
-  useEffect(() => {
+  // Resets the countdown when restartKey/initialSeconds change, following
+  // React's "adjusting state during render" pattern instead of an effect
+  // (https://react.dev/learn/you-might-not-need-an-effect) — tracking the
+  // key we last reset for in state lets this branch run during render,
+  // rather than needing a render-then-effect round trip.
+  const [resetFor, setResetFor] = useState({
+    restartKey,
+    initialSeconds,
+  });
+
+  if (
+    resetFor.restartKey !== restartKey ||
+    resetFor.initialSeconds !== initialSeconds
+  ) {
+    setResetFor({ restartKey, initialSeconds });
     setSeconds(initialSeconds);
-  }, [restartKey, initialSeconds]);
+  }
 
   useEffect(() => {
 

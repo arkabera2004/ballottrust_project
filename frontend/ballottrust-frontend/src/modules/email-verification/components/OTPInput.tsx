@@ -1,7 +1,5 @@
 import {
-  useEffect,
   useRef,
-  useState,
 } from 'react';
 
 type Props = {
@@ -20,28 +18,15 @@ export default function OTPInput({
 
 }: Props) {
 
-  const [otp, setOtp] = useState<string[]>(
-
-    Array(length).fill(''),
-
-  );
+  // Fully derived from the controlled `value` prop rather than mirrored
+  // into its own state + an effect to keep them in sync - the single
+  // source of truth is the prop.
+  const otp = Array(length)
+    .fill('')
+    .map((_, i) => value[i] || '');
 
   const inputs =
     useRef<Array<HTMLInputElement | null>>([]);
-
-  useEffect(() => {
-
-    const values =
-      value.split('');
-
-    const updated =
-      Array(length)
-        .fill('')
-        .map((_, i) => values[i] || '');
-
-    setOtp(updated);
-
-  }, [value, length]);
 
   function handleChange(
     index: number,
@@ -55,8 +40,6 @@ export default function OTPInput({
       [...otp];
 
     updated[index] = input;
-
-    setOtp(updated);
 
     onChange(updated.join(''));
 
@@ -125,8 +108,6 @@ export default function OTPInput({
       Array(length)
         .fill('')
         .map((_, i) => pasted[i] || '');
-
-    setOtp(updated);
 
     onChange(updated.join(''));
 
