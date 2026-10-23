@@ -66,12 +66,17 @@ export function useElections(
     }
   }
 
+  // Deliberately keyed on the serialized value of `query`, not `load` or
+  // `query` itself: callers often pass a fresh object literal each render,
+  // which would otherwise give `load` (and the effect) a new identity -
+  // and therefore refetch - every render regardless of whether the query
+  // actually changed. `load` always closes over the latest `query` anyway.
+  const queryKey = JSON.stringify(query);
+
   useEffect(() => {
     load();
-  }, [
-    JSON.stringify(query),
-    refreshKey,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryKey, refreshKey]);
 
   return {
 

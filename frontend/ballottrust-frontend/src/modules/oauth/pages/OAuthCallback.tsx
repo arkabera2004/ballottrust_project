@@ -114,7 +114,7 @@ export default function OAuthCallback() {
 
     completeOAuthLogin();
 
-  }, []);
+  }, [login, navigate, params]);
 
   return (
 

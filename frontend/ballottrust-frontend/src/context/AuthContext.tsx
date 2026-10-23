@@ -1,7 +1,6 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from 'react';
@@ -36,24 +35,17 @@ export const AuthProvider = ({
   children: ReactNode;
 }) => {
 
+  // TokenStorage.getUser() reads localStorage synchronously, so the stored
+  // user can be read as the initial state directly instead of via an
+  // effect-after-mount, which previously caused every page load to render
+  // once as unauthenticated before flipping to the real session.
   const [user, setUser] =
-    useState<User | null>(null);
+    useState<User | null>(() => TokenStorage.getUser());
 
-  const [loading, setLoading] =
-    useState(true);
-
-  useEffect(() => {
-
-    const storedUser =
-      TokenStorage.getUser();
-
-    if (storedUser) {
-      setUser(storedUser);
-    }
-
-    setLoading(false);
-
-  }, []);
+  // Always false: the session is now read synchronously above, so there is
+  // no longer an async "checking session" window. Kept in the context
+  // shape because RoleRoute (and possibly other consumers) still read it.
+  const [loading] = useState(false);
 
   const login = (
     accessToken: string,

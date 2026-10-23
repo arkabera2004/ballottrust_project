@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { ElectionService } from '../services';
 
@@ -13,13 +13,7 @@ export function useElection(id?: string) {
   const [election, setElection] =
     useState<Election | null>(null);
 
-  useEffect(() => {
-    if (id) {
-      load();
-    }
-  }, [id]);
-
-  async function load() {
+  const load = useCallback(async () => {
     if (!id) return;
 
     try {
@@ -44,7 +38,13 @@ export function useElection(id?: string) {
       setLoading(false);
 
     }
-  }
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      load();
+    }
+  }, [id, load]);
 
   return {
     loading,

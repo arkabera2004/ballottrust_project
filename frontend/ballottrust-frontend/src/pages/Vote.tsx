@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import api from '../api/axios';
 import toast from '../utils/toast';
@@ -11,7 +11,7 @@ export default function Vote() {
   const [candidateId, setCandidateId] = useState('');
   const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
 
-  const loadElections = async () => {
+  const loadElections = useCallback(async () => {
     try {
       const response = await api.get(
         '/public/elections'
@@ -21,9 +21,9 @@ export default function Vote() {
     } catch (error) {
       console.error(error);
     }
-  };
+  }, []);
 
-  const loadCandidates = async () => {
+  const loadCandidates = useCallback(async () => {
     try {
       const response = await api.get(
         '/public/candidates',
@@ -36,7 +36,7 @@ export default function Vote() {
     } catch (error) {
       console.error(error);
     }
-  };
+  }, [electionId]);
 
   const castVote = async () => {
     if (!electionId) {
@@ -78,11 +78,11 @@ export default function Vote() {
 
   useEffect(() => {
     loadElections();
-  }, []);
+  }, [loadElections]);
 
   useEffect(() => {
     loadCandidates();
-  }, [electionId]);
+  }, [loadCandidates]);
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
