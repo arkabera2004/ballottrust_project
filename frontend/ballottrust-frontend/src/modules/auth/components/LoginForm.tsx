@@ -201,6 +201,7 @@ export default function LoginForm() {
           </button>
 
           <button
+                type="button"
                 onClick={() => {
                     window.location.href =
                         `${ENV.API_URL}/auth/google`;
