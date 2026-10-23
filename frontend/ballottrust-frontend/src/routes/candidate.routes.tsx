@@ -2,9 +2,11 @@ import { Route } from 'react-router-dom';
 
 import RoleRoute from '../routes/RoleRoute';
 
-import CandidateDashboard from '../pages/CandidateDashboard';
-import CandidateNomination from '../pages/CandidateNomination';
-import EditCandidatePage from '../modules/candidate/pages/EditCandidatePage';
+import {
+  CandidateDashboard,
+  CandidateNomination,
+  EditCandidatePage,
+} from './lazy-pages';
 
 export const CandidateRoutes = (
   <>

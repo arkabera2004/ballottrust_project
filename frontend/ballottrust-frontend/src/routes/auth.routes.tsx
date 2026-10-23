@@ -1,19 +1,16 @@
 import { Route } from 'react-router-dom';
 
+// Kept eager: this is the "/" landing route most unauthenticated traffic
+// hits first, so there is no benefit to deferring it behind its own chunk.
 import Login from '../modules/auth/pages/Login';
-import Register from '../modules/auth/pages/Register';
-
-import VerifyEmail
-from '../modules/email-verification/pages/VerifyEmail';
 
 import {
+    Register,
+    VerifyEmail,
     ForgotPassword,
     ResetPassword,
-} from '../modules/forgot-password/pages';
-
-import {
     OAuthCallback,
-} from '../modules/oauth/pages';
+} from './lazy-pages';
 
 export const AuthRoutes = (
     <>

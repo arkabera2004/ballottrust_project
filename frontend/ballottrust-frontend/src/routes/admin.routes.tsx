@@ -2,11 +2,12 @@ import { Route } from 'react-router-dom';
 
 import RoleRoute from '../routes/RoleRoute';
 
-import AdminDashboardPage from '../modules/dashboard/pages/AdminDashboardPage';
-
-import CandidateApproval from '../pages/CandidateApproval';
-import { VoterRollPage } from '../modules/voter';
-import StaffManagement from '../pages/StaffManagement';
+import {
+  AdminDashboardPage,
+  CandidateApproval,
+  VoterRollPage,
+  StaffManagement,
+} from './lazy-pages';
 
 export const AdminRoutes = (
   <>

@@ -1,11 +1,11 @@
 import { Route } from 'react-router-dom';
 
 import {
-  PublicCandidatePage,
-  PublicElectionDetailPage,
   PublicElectionsPage,
+  PublicElectionDetailPage,
+  PublicCandidatePage,
   VerifyReceiptPage,
-} from '../modules/public';
+} from './lazy-pages';
 
 /**
  * The Public Election Portal.

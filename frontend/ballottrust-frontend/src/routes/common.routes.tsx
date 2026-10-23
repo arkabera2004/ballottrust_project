@@ -3,16 +3,17 @@ import { Route } from 'react-router-dom';
 import ProtectedRoute from '../routes/ProtectedRoute';
 import RoleRoute from '../routes/RoleRoute';
 
-import Dashboard from '../pages/Dashboard';
-import Candidates from '../pages/Candidates';
-import Vote from '../pages/Vote';
-import Results from '../pages/Results';
-import Blockchain from '../pages/Blockchain';
-import AuditLogs from '../pages/AuditLogs';
-import Settings from '../pages/Settings';
-
-import Profile from '../modules/profile/pages/Profile';
-import ChangePassword from '../modules/change-password/pages/ChangePassword';
+import {
+  Dashboard,
+  Candidates,
+  Vote,
+  Results,
+  Blockchain,
+  AuditLogs,
+  Settings,
+  Profile,
+  ChangePassword,
+} from './lazy-pages';
 
 export const CommonRoutes = (
   <>

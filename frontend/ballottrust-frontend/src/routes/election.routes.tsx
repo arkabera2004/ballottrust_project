@@ -2,10 +2,12 @@ import { Route } from 'react-router-dom';
 
 import ProtectedRoute from '../routes/ProtectedRoute';
 
-import ElectionsPage from '../modules/election/pages/ElectionsPage';
-import CreateElectionPage from '../modules/election/pages/CreateElectionPage';
-import ElectionDetailsPage from '../modules/election/pages/ElectionDetailsPage';
-import EditElectionPage from '../modules/election/pages/EditElectionPage';
+import {
+  ElectionsPage,
+  CreateElectionPage,
+  ElectionDetailsPage,
+  EditElectionPage,
+} from './lazy-pages';
 
 export const ElectionRoutes = (
   <>

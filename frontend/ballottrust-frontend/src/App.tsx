@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import {
   BrowserRouter,
   Routes,
@@ -16,23 +17,31 @@ import {
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <Suspense
+        fallback={
+          <div className="flex h-screen items-center justify-center">
+            Loading...
+          </div>
+        }
+      >
+        <Routes>
 
-        {PublicRoutes}
+          {PublicRoutes}
 
-        {AuthRoutes}
+          {AuthRoutes}
 
-        {ElectionRoutes}
+          {ElectionRoutes}
 
-        {AdminRoutes}
+          {AdminRoutes}
 
-        {CandidateRoutes}
+          {CandidateRoutes}
 
-        {VoterRoutes}
+          {VoterRoutes}
 
-        {CommonRoutes}
+          {CommonRoutes}
 
-      </Routes>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

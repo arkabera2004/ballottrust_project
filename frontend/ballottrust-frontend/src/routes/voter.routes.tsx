@@ -2,8 +2,7 @@ import { Route } from 'react-router-dom';
 
 import RoleRoute from '../routes/RoleRoute';
 
-import VoterDashboard from '../pages/VoterDashboard';
-import { MyRegistrationsPage } from '../modules/voter';
+import { VoterDashboard, MyRegistrationsPage } from './lazy-pages';
 
 export const VoterRoutes = (
   <>
