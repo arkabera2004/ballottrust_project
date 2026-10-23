@@ -27,18 +27,17 @@ before resuming work.
 | BT-SEC-001 | Rate limit auth/OTP endpoints | VERIFIED | `f912c77` (impl), `7193eab` (test) | `@nestjs/throttler` global 100/min + per-endpoint limits on register(5)/login(5)/verify-email(10)/resend-otp(3)/bootstrap-admin(3)/forgot-password(3)/reset-password(5); 83 suites/610 tests pass, build clean, lint clean; both remotes at `7193eab` |
 | BT-SEC-002 | Refresh-token rotation on use | VERIFIED | `7243c2a` (impl, backend+frontend contract), `5bc0597` (test) | old token revoked + new one issued on every `/auth/refresh`; frontend stores rotated token; 83 suites/613 backend tests + 9 frontend tests pass; both remotes at `5bc0597` |
 | BT-SEC-003 | Env-var validation schema | VERIFIED | `2e2623d` (impl), `7d3855b` (test) | `src/env.validation.ts` zod schema wired into `ConfigModule.forRoot({validate})`; requires DATABASE_URL, JWT_SECRET, GOOGLE_*, MAIL_HOST/PORT/FROM, leaves PORT/NODE_ENV/FRONTEND_URL/CORS_ORIGINS/BOOTSTRAP_* optional; 84 suites/626 backend tests pass, build+lint clean; live-boot smoke test skipped (needs a reachable Postgres, out of this session's scope) |
+| BT-SEC-004 | Security headers (helmet) + configurable trust-proxy handling | VERIFIED | `520f26c` (impl), `69e2ddc` (test), `92d152e` (docs) | `main.ts` now calls `helmet()` (CSP relaxed only for the non-production Swagger UI) and sets Express `trust proxy` from a new optional `TRUST_PROXY` env var (defaults to `false`/trust-nobody, since hosting topology is still undecided). e2e test asserts real `X-Content-Type-Options`/`X-Frame-Options` headers and absence of `X-Powered-By` against a disposable local Postgres (`ballottrust` DB on port 5432) — not mocked. 84 suites/627 backend unit tests pass, 8/8 e2e tests pass, build+lint clean; both remotes verified at `92d152e` |
 
-**Known limitation (BT-SEC-001):** the throttler's default IP tracker reads `req.ip`
-directly; if the app is ever deployed behind a reverse proxy/load balancer without Express
-`trust proxy` configured, all traffic could appear to share one IP and the limit would be
-too aggressive (or, if trust proxy is misconfigured to trust client-supplied headers, an
-attacker could spoof `X-Forwarded-For` to bypass the limit entirely). Not fixed here —
-no proxy topology was confirmed during this session. Revisit when BT-DEPLOY-001 establishes
-the actual hosting setup.
+**Known limitation (BT-SEC-001), now partially addressed by BT-SEC-004:** `trust proxy` is
+explicit and defaults safely to `false`, closing the "misconfigured to trust everything"
+half of the original risk. The other half remains open: whoever deploys the app (BT-DEPLOY-001)
+must set `TRUST_PROXY` to the correct hop count for the real topology, or the rate limiter
+will again see one shared IP for all traffic. Revisit when BT-DEPLOY-001 establishes the
+actual hosting setup.
 
 Remaining backlog items (BT-TEST-001/2/3, BT-FE-001/2, BT-DEPLOY-001/2, BT-CI-001,
-BT-DOCS-001) are carried over from the audit; see conversation history for descriptions.
-They will be added to this table as they're started.
+BT-DOCS-001) are described with acceptance criteria in the "Expanded backlog" section below.
 
 ## Baseline re-confirmed (2026-10-23)
 
@@ -75,11 +74,10 @@ function > auth > API/DB > tests > frontend > deployment > perf/docs)
 
 ## Recommended next task
 
-**BT-SEC-004** (helmet + trust proxy) is the single highest-priority item: it is a real,
-currently-open security gap (no security headers, rate limiter trusts raw IP), it is small
-and self-contained, and it directly closes the known limitation already flagged under
-BT-SEC-001 — unlike BT-DEPLOY-001/002, it needs no external infrastructure decision to
-start.
+BT-SEC-004 is now VERIFIED. **BT-TEST-001** (backend e2e coverage) is next: a disposable
+local Postgres is confirmed reachable this session (`ballottrust` DB on `localhost:5432`,
+already migrated), removing the "no database available" blocker that applied to earlier
+sessions, so the auth and election-lifecycle e2e specs can actually be written and run now.
 
 ## Session continuity note
 
