@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   useNavigate,
   useParams,
@@ -664,77 +665,19 @@ export default function EditCandidatePage() {
 function useCandidateForEdit(
   id?: string,
 ) {
-  const [state, setState] =
-    useState<{
-      data: Awaited<
-        ReturnType<
-          typeof CandidateService.getById
-        >
-      > | null;
-      isLoading: boolean;
-      error: string | null;
-    }>({
-      data: null,
-      isLoading: Boolean(id),
-      error: null,
-    });
+  const result = useQuery({
+    queryKey: ['candidates', id],
+    queryFn: () => CandidateService.getById(id as string),
+    enabled: !!id,
+  });
 
-  useEffect(() => {
-    const candidateId = id;
-
-    if (!candidateId) {
-      setState({
-        data: null,
-        isLoading: false,
-        error: 'Candidate ID is missing.',
-      });
-
-      return;
-    }
-
-    let mounted = true;
-
-    async function load() {
-      try {
-        setState({
-          data: null,
-          isLoading: true,
-          error: null,
-        });
-
-        const candidate =
-          await CandidateService.getById(
-            candidateId as string,
-          );
-
-        if (!mounted) {
-          return;
-        }
-
-        setState({
-          data: candidate,
-          isLoading: false,
-          error: null,
-        });
-      } catch (err: unknown) {
-        if (!mounted) {
-          return;
-        }
-
-        setState({
-          data: null,
-          isLoading: false,
-          error: getErrorMessage(err, 'Unable to load candidate nomination.'),
-        });
-      }
-    }
-
-    load();
-
-    return () => {
-      mounted = false;
-    };
-  }, [id]);
-
-  return state;
+  return {
+    data: result.data ?? null,
+    isLoading: id ? result.isLoading : false,
+    error: !id
+      ? 'Candidate ID is missing.'
+      : result.error
+        ? getErrorMessage(result.error, 'Unable to load candidate nomination.')
+        : null,
+  };
 }
