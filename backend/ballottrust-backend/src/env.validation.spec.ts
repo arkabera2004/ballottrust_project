@@ -55,7 +55,13 @@ describe('validateEnv', () => {
     );
   });
 
-  it('allows PORT, NODE_ENV, FRONTEND_URL, and CORS_ORIGINS to be omitted', () => {
+  it('allows PORT, NODE_ENV, FRONTEND_URL, CORS_ORIGINS, and TRUST_PROXY to be omitted', () => {
     expect(() => validateEnv({ ...validConfig })).not.toThrow();
+  });
+
+  it('accepts TRUST_PROXY when set', () => {
+    expect(() =>
+      validateEnv({ ...validConfig, TRUST_PROXY: '1' }),
+    ).not.toThrow();
   });
 });

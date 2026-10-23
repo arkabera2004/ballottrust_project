@@ -1,5 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import helmet from 'helmet';
 import request from 'supertest';
 import { App } from 'supertest/types';
 
@@ -32,6 +33,7 @@ describe('BallotTrust API (e2e)', () => {
 
     // Mirrors main.ts so the test sees what a real client sees.
     app.setGlobalPrefix('api/v1');
+    app.use(helmet());
     app.useGlobalInterceptors(new ResponseInterceptor());
     app.useGlobalFilters(new HttpExceptionFilter());
     app.useGlobalPipes(
@@ -122,5 +124,19 @@ describe('BallotTrust API (e2e)', () => {
       .post('/api/v1/auth/login')
       .send({ email: 'x@example.com', password: 'x', isAdmin: true })
       .expect(400);
+  });
+
+  // ============================================================
+  // SECURITY HEADERS (BT-SEC-004)
+  // ============================================================
+
+  it('sets baseline security headers via helmet', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/public/statistics')
+      .expect(200);
+
+    expect(response.headers['x-content-type-options']).toBe('nosniff');
+    expect(response.headers['x-frame-options']).toBe('SAMEORIGIN');
+    expect(response.headers['x-powered-by']).toBeUndefined();
   });
 });
