@@ -1,10 +1,10 @@
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import api from '../api/axios';
 import {
   summarizeIntegrity,
-  type IntegritySummary,
 } from '../utils/blockchain-integrity';
 
 import Sidebar from '../components/Sidebar';
@@ -44,8 +44,7 @@ interface WinnerInfo {
   election: string;
 }
 
-export default function Dashboard() {
-  const [stats, setStats] = useState<DashboardStats>({
+const EMPTY_STATS: DashboardStats = {
   elections: 0,
   candidates: 0,
   votes: 0,
@@ -58,141 +57,62 @@ export default function Dashboard() {
   turnout: 0,
 
   recentElections: [],
-});
-
-const [currentElection, setCurrentElection] =
-  useState<CurrentElection | null>(null);
-
-  const [winner, setWinner] = useState<WinnerInfo | null>(null);
-
-  const [chartData, setChartData] =
-    useState<{ name: string; votes: number }[]>([]);
-
-  const [elections, setElections] =
-    useState<{ id: string; title: string }[]>([]);
-
-  const [integrity, setIntegrity] =
-  useState<IntegritySummary | null>(null);
-
-  const [selectedElection, setSelectedElection] =
-    useState('');
-
-  const loadStats = async () => {
-    try {
-      const response = await api.get(
-        '/dashboard/stats'
-      );
-
-      setStats(response.data.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const loadWinner = async () => {
-    try {
-      const response = await api.get(
-        '/dashboard/winner'
-      );
-
-      setWinner(response.data.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const loadElections = async () => {
-    try {
-      const response = await api.get(
-        '/elections'
-      );
-
-      const items = response.data.data.data ?? [];
-
-      setElections(items);
-
-      if (items.length > 0) {
-        setSelectedElection(
-          items[0].id
-        );
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const loadChart = async (
-    electionId: string,
-  ) => {
-    try {
-      const response = await api.get(
-        `/dashboard/results-chart/${electionId}`
-      );
-
-      setChartData(response.data.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const loadCurrentElection =
-  async () => {
-    try {
-      const response =
-        await api.get(
-          '/dashboard/current-election'
-        );
-
-      setCurrentElection(
-        response.data.data
-      );
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const loadIntegrity = async () => {
-  try {
-    const response = await api.get(
-      '/blockchain/verify'
-    );
-
-    setIntegrity(summarizeIntegrity(response.data.data));
-  } catch (error) {
-    console.error(error);
-    setIntegrity(summarizeIntegrity(null));
-  }
 };
 
-  useEffect(() => {
+export default function Dashboard() {
+  // The user's explicit choice, if they have made one. When they haven't,
+  // the default (the first election in the list) is derived directly
+  // below rather than synced into this state via an effect.
+  const [chosenElection, setChosenElection] = useState('');
 
-  loadStats();
-  loadWinner();
-  loadIntegrity();
-  loadElections();
-  loadCurrentElection();
+  const overviewQuery = useQuery({
+    queryKey: ['dashboard', 'overview'],
+    queryFn: async () => {
+      const [statsRes, winnerRes, integrityRes, electionsRes, currentRes] =
+        await Promise.all([
+          api.get('/dashboard/stats'),
+          api.get('/dashboard/winner'),
+          api.get('/blockchain/verify'),
+          api.get('/elections'),
+          api.get('/dashboard/current-election'),
+        ]);
 
-  const interval =
-    setInterval(() => {
+      return {
+        stats: statsRes.data.data as DashboardStats,
+        winner: winnerRes.data.data as WinnerInfo | null,
+        integrity: summarizeIntegrity(integrityRes.data.data),
+        elections: (electionsRes.data.data.data ?? []) as {
+          id: string;
+          title: string;
+        }[],
+        currentElection: currentRes.data.data as CurrentElection | null,
+      };
+    },
+    // Matches the previous 10s polling interval.
+    refetchInterval: 10_000,
+  });
 
-      loadStats();
-      loadWinner();
-      loadIntegrity();
-      loadElections();
-      loadCurrentElection();
+  const stats = overviewQuery.data?.stats ?? EMPTY_STATS;
+  const winner = overviewQuery.data?.winner ?? null;
+  const integrity = overviewQuery.data?.integrity ?? summarizeIntegrity(null);
+  const elections = overviewQuery.data?.elections ?? [];
+  const currentElection = overviewQuery.data?.currentElection ?? null;
 
-    }, 10000);
+  const selectedElection = chosenElection || elections[0]?.id || '';
 
-  return () =>
-    clearInterval(interval);
+  const chartQuery = useQuery({
+    queryKey: ['dashboard', 'results-chart', selectedElection],
+    queryFn: async () => {
+      const response = await api.get(
+        `/dashboard/results-chart/${selectedElection}`,
+      );
 
-}, []);
+      return response.data.data as { name: string; votes: number }[];
+    },
+    enabled: !!selectedElection,
+  });
 
-  useEffect(() => {
-    if (selectedElection) {
-      loadChart(selectedElection);
-    }
-  }, [selectedElection]);
+  const chartData = chartQuery.data ?? [];
 
   return (
     <div className="flex">
@@ -467,7 +387,7 @@ const [currentElection, setCurrentElection] =
               className="border p-2 rounded mb-4 text-black"
               value={selectedElection}
               onChange={(e) =>
-                setSelectedElection(e.target.value)
+                setChosenElection(e.target.value)
               }
             >
               {elections.map((election) => (
