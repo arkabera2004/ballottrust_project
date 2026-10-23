@@ -1,110 +1,55 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 
 import profileService from '../services/profile.service';
 
-import type { Profile } from '../types/profile';
 import type { ProfileFormData } from '../schemas/profile.schema';
 
+const PROFILE_QUERY_KEY = ['profile', 'me'];
+
 export function useProfile() {
+  const queryClient = useQueryClient();
 
-  const [profile, setProfile] =
-    useState<Profile | null>(null);
+  const profileQuery = useQuery({
+    queryKey: PROFILE_QUERY_KEY,
+    queryFn: () => profileService.getMyProfile(),
+  });
 
-  const [loading, setLoading] =
-    useState(true);
-
-  const [saving, setSaving] =
-    useState(false);
-
-  async function loadProfile() {
-
-    try {
-
-      setLoading(true);
-
-      const data =
-        await profileService.getMyProfile();
-
-      setProfile(data);
-
-    }
-
-    catch (error) {
-
-      console.error(error);
-
-      toast.error(
-        'Failed to load profile',
-      );
-
-    }
-
-    finally {
-
-      setLoading(false);
-
-    }
-
-  }
-
-  async function updateProfile(
-    values: ProfileFormData,
-  ) {
-
-    try {
-
-      setSaving(true);
-
-      const response =
-        await profileService.updateMyProfile(
-          values,
-        );
-
-      setProfile(response.profile);
-
-      toast.success(
-        'Profile updated successfully',
-      );
-
-    }
-
-    catch (error) {
-
-      console.error(error);
-
-      toast.error(
-        'Unable to update profile',
-      );
-
-    }
-
-    finally {
-
-      setSaving(false);
-
-    }
-
-  }
-
+  // toast.error() is a side effect, not a state sync, so it belongs in an
+  // effect reacting to the query's error rather than in the query itself
+  // (calling it directly in the render body would re-fire on every render
+  // while the error is still set).
   useEffect(() => {
+    if (profileQuery.error) {
+      console.error(profileQuery.error);
+      toast.error('Failed to load profile');
+    }
+  }, [profileQuery.error]);
 
-    loadProfile();
-
-  }, []);
+  const updateMutation = useMutation({
+    mutationFn: (values: ProfileFormData) =>
+      profileService.updateMyProfile(values),
+    onSuccess: (response) => {
+      queryClient.setQueryData(PROFILE_QUERY_KEY, response.profile);
+      toast.success('Profile updated successfully');
+    },
+    onError: (error) => {
+      console.error(error);
+      toast.error('Unable to update profile');
+    },
+  });
 
   return {
-
-    profile,
-
-    loading,
-
-    saving,
-
-    updateProfile,
-
-    reload: loadProfile,
-
+    profile: profileQuery.data ?? null,
+    loading: profileQuery.isLoading,
+    saving: updateMutation.isPending,
+    // mutate(), not mutateAsync(): the original never threw (it caught
+    // internally and only toasted), and this is passed straight to
+    // react-hook-form's handleSubmit, which would otherwise see an
+    // unhandled rejection on failure.
+    updateProfile: (values: ProfileFormData) =>
+      updateMutation.mutate(values),
+    reload: profileQuery.refetch,
   };
-
 }

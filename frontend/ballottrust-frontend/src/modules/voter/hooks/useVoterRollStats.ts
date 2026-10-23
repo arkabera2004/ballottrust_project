@@ -1,37 +1,25 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import { VoterService } from '../services';
 import ApiError from '../../../utils/api-error';
 
-import type { VoterRollStats } from '../types';
-
 export function useVoterRollStats(electionId?: string) {
-  const [loading, setLoading] = useState(Boolean(electionId));
-  const [stats, setStats] = useState<VoterRollStats | null>(null);
-
-  const load = useCallback(async () => {
-    if (!electionId) {
-      setStats(null);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      setStats(await VoterService.stats(electionId));
-    } catch (err) {
-      ApiError.handle(err);
-
-      setStats(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [electionId]);
+  const result = useQuery({
+    queryKey: ['voter', 'roll-stats', electionId],
+    queryFn: () => VoterService.stats(electionId as string),
+    enabled: !!electionId,
+  });
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (result.error) {
+      ApiError.handle(result.error);
+    }
+  }, [result.error]);
 
-  return { loading, stats, refresh: load };
+  return {
+    loading: result.isLoading,
+    stats: result.data ?? null,
+    refresh: result.refetch,
+  };
 }

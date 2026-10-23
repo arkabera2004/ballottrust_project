@@ -1,12 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import { VoterService } from '../services';
 import ApiError from '../../../utils/api-error';
 
-import type {
-  QueryVoterDto,
-  VoterRegistration,
-} from '../types';
+import type { QueryVoterDto } from '../types';
 
 import type { PaginationMeta } from '../../../types/api.types';
 
@@ -18,38 +16,26 @@ const EMPTY_META: PaginationMeta = {
 };
 
 export function useVoters(query?: QueryVoterDto) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [voters, setVoters] = useState<VoterRegistration[]>([]);
-  const [meta, setMeta] = useState<PaginationMeta>(EMPTY_META);
-
-  // Serialised so the effect re-runs on value changes rather than on
+  // Serialised so the query key changes on value changes rather than on
   // every new object identity from the caller's render.
   const queryKey = JSON.stringify(query ?? {});
 
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-
-      const result = await VoterService.getAll(
-        JSON.parse(queryKey) as QueryVoterDto,
-      );
-
-      setVoters(result.items);
-      setMeta(result.meta);
-      setError(null);
-    } catch (err) {
-      ApiError.handle(err);
-
-      setError('Unable to load the voter roll.');
-    } finally {
-      setLoading(false);
-    }
-  }, [queryKey]);
+  const result = useQuery({
+    queryKey: ['voters', queryKey],
+    queryFn: () => VoterService.getAll(JSON.parse(queryKey) as QueryVoterDto),
+  });
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (result.error) {
+      ApiError.handle(result.error);
+    }
+  }, [result.error]);
 
-  return { loading, error, voters, meta, refresh: load };
+  return {
+    loading: result.isLoading,
+    error: result.error ? 'Unable to load the voter roll.' : null,
+    voters: result.data?.items ?? [],
+    meta: result.data?.meta ?? EMPTY_META,
+    refresh: result.refetch,
+  };
 }

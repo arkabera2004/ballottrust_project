@@ -1,32 +1,25 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import { VoterService } from '../services';
 import ApiError from '../../../utils/api-error';
 
-import type { VoterRegistration } from '../types';
-
 /** Every election the signed-in voter has registered for. */
 export function useMyRegistrations() {
-  const [loading, setLoading] = useState(true);
-  const [registrations, setRegistrations] = useState<VoterRegistration[]>([]);
-
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-
-      const result = await VoterService.myRegistrations();
-
-      setRegistrations(result.items);
-    } catch (err) {
-      ApiError.handle(err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const result = useQuery({
+    queryKey: ['voter', 'my-registrations'],
+    queryFn: () => VoterService.myRegistrations(),
+  });
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (result.error) {
+      ApiError.handle(result.error);
+    }
+  }, [result.error]);
 
-  return { loading, registrations, refresh: load };
+  return {
+    loading: result.isLoading,
+    registrations: result.data?.items ?? [],
+    refresh: result.refetch,
+  };
 }
