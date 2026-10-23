@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import { NotificationService } from '../services';
 import ApiError from '../../../utils/api-error';
 
-import type { AppNotification, QueryNotificationDto } from '../types';
+import type { QueryNotificationDto } from '../types';
 import type { PaginationMeta } from '../../../types/api.types';
 
 const EMPTY_META: PaginationMeta = {
@@ -14,32 +15,27 @@ const EMPTY_META: PaginationMeta = {
 };
 
 export function useNotifications(query?: QueryNotificationDto) {
-  const [loading, setLoading] = useState(true);
-  const [items, setItems] = useState<AppNotification[]>([]);
-  const [meta, setMeta] = useState<PaginationMeta>(EMPTY_META);
-
   const queryKey = JSON.stringify(query ?? {});
 
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
+  const result = useQuery({
+    queryKey: ['notifications', queryKey],
+    queryFn: () =>
+      NotificationService.getAll(JSON.parse(queryKey) as QueryNotificationDto),
+  });
 
-      const result = await NotificationService.getAll(
-        JSON.parse(queryKey) as QueryNotificationDto,
-      );
-
-      setItems(result.items);
-      setMeta(result.meta);
-    } catch (err) {
-      ApiError.handle(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [queryKey]);
-
+  // ApiError.handle() shows a toast — a side effect, not a state sync, so
+  // it belongs in an effect reacting to the query's error rather than in
+  // the query itself.
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (result.error) {
+      ApiError.handle(result.error);
+    }
+  }, [result.error]);
 
-  return { loading, items, meta, refresh: load };
+  return {
+    loading: result.isLoading,
+    items: result.data?.items ?? [],
+    meta: result.data?.meta ?? EMPTY_META,
+    refresh: result.refetch,
+  };
 }

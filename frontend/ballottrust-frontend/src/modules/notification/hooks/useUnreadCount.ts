@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import { NotificationService } from '../services';
 
@@ -14,23 +14,14 @@ const REFRESH_MS = 60_000;
  * toast over whatever the user is actually doing.
  */
 export function useUnreadCount() {
-  const [unread, setUnread] = useState(0);
+  const { data: unread = 0, refetch } = useQuery({
+    queryKey: ['notifications', 'unread-count'],
+    queryFn: () => NotificationService.unreadCount(),
+    refetchInterval: REFRESH_MS,
+    // Matches the previous behavior: a failed poll leaves the last known
+    // count on screen rather than surfacing an error.
+    throwOnError: false,
+  });
 
-  const load = useCallback(async () => {
-    try {
-      setUnread(await NotificationService.unreadCount());
-    } catch {
-      // Intentionally ignored; see above.
-    }
-  }, []);
-
-  useEffect(() => {
-    void load();
-
-    const timer = window.setInterval(() => void load(), REFRESH_MS);
-
-    return () => window.clearInterval(timer);
-  }, [load]);
-
-  return { unread, refresh: load };
+  return { unread, refresh: refetch };
 }
