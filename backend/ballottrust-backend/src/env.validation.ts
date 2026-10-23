@@ -38,6 +38,13 @@ export const envSchema = z
     FRONTEND_URL: z.string().optional(),
     CORS_ORIGINS: z.string().optional(),
 
+    // Express `trust proxy` setting (docs/11_Deployment_Guide.md §2). Controls which
+    // X-Forwarded-For hop the rate limiter (BT-SEC-001) and req.ip trust. Left optional
+    // and defaulting to `false` in main.ts: an unconfigured deployment must not blindly
+    // trust client-supplied forwarding headers. Set explicitly once the real hosting
+    // topology (number of reverse-proxy hops) is known.
+    TRUST_PROXY: z.string().optional(),
+
     BOOTSTRAP_ADMIN_TOKEN: z.string().optional(),
     BOOTSTRAP_ADMIN_EMAIL: z.string().optional(),
     BOOTSTRAP_ADMIN_PASSWORD: z.string().optional(),

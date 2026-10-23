@@ -1,19 +1,60 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
 
 import { AppModule } from './app.module';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // `trust proxy` governs which hop of X-Forwarded-For the app (and the
+  // BT-SEC-001 rate limiter, which keys on req.ip) trusts. Defaults to `false`
+  // (trust nobody) because the real hosting topology is not yet decided -
+  // see docs/11_Deployment_Guide.md and BT-DEPLOY-001/002 in the ledger.
+  // Once deployed, set TRUST_PROXY to the hop count behind the actual proxy
+  // (e.g. "1" for a single reverse proxy/load balancer), never "true", which
+  // trusts every hop and lets a client spoof its own IP.
+  const trustProxy = process.env.TRUST_PROXY;
+  app.set(
+    'trust proxy',
+    trustProxy === undefined
+      ? false
+      : Number.isNaN(Number(trustProxy))
+        ? trustProxy
+        : Number(trustProxy),
+  );
 
   // docs/05 §2 specifies /api/v1 as the base URL. Controllers declare
   // their paths without it, so it is applied globally here. Static
   // uploads are served by ServeStaticModule middleware and are not
   // affected by this prefix.
   app.setGlobalPrefix('api/v1');
+
+  // CSP is left to default-src 'self' with Swagger UI and the API itself in
+  // mind: Swagger UI (served below, non-production only) needs inline styles
+  // and its own bundled scripts, so contentSecurityPolicy is relaxed just
+  // enough for that in non-production and left at helmet's safe default
+  // (which blocks inline scripts/styles) in production, where Swagger is not
+  // mounted. HSTS is only meaningful once the app is actually served over
+  // HTTPS, which depends on the still-undecided hosting choice (BT-DEPLOY-001).
+  app.use(
+    helmet({
+      contentSecurityPolicy:
+        process.env.NODE_ENV === 'production'
+          ? undefined
+          : {
+              directives: {
+                ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+                'script-src': ["'self'", "'unsafe-inline'"],
+                'style-src': ["'self'", "'unsafe-inline'"],
+              },
+            },
+    }),
+  );
 
   app.useGlobalInterceptors(new ResponseInterceptor());
 
