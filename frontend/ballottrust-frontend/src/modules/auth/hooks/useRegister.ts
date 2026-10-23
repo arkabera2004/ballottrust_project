@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import authService from '../services/auth.service';
 import Toast from '../../../utils/toast';
+import { getErrorMessage } from '../../../utils/api-error';
 
 export function useRegister() {
 
@@ -45,11 +46,9 @@ export function useRegister() {
 
     }
 
-    catch (error: any) {
+    catch (error: unknown) {
 
-      const message =
-        error?.response?.data?.message ||
-        'Registration Failed';
+      const message = getErrorMessage(error, 'Registration Failed');
 
       Toast.error(message);
 

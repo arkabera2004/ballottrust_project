@@ -9,6 +9,8 @@ import { useCreateElection } from '../hooks';
 import type { CreateElectionForm } from '../schemas';
 import type { CreateElectionDto } from '../types/election.types';
 
+import { getErrorMessage } from '../../../utils/api-error';
+
 export default function CreateElectionPage() {
   const navigate = useNavigate();
 
@@ -29,11 +31,10 @@ export default function CreateElectionPage() {
 
       navigate('/elections');
 
-    } catch (error: any) {
+    } catch (error: unknown) {
 
       toast.error(
-        error?.response?.data?.message ??
-          'Failed to create election.',
+        getErrorMessage(error, 'Failed to create election.'),
       );
 
     }

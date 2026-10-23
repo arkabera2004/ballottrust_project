@@ -12,6 +12,8 @@ import { useElectionRefresh } from '../context/ElectionContext';
 
 import type { Election } from '../types';
 
+import { getErrorMessage } from '../../../utils/api-error';
+
 interface Props {
   election: Election;
 }
@@ -43,10 +45,9 @@ export default function ElectionActions({
 
       refresh();
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(
-        err?.response?.data?.message ??
-          'Delete failed.',
+        getErrorMessage(err, 'Delete failed.'),
       );
     }
   }

@@ -4,6 +4,8 @@ import { CandidateService } from '../services';
 
 import type { Candidate } from '../types';
 
+import { getErrorMessage } from '../../../utils/api-error';
+
 export function useMyCandidates() {
   const [candidates, setCandidates] =
     useState<Candidate[]>([]);
@@ -24,11 +26,9 @@ export function useMyCandidates() {
           await CandidateService.getMyCandidates();
 
         setCandidates(result);
-      } catch (err: any) {
+      } catch (err: unknown) {
         setError(
-          err?.response?.data?.message ??
-            err?.message ??
-            'Unable to load your candidacies.',
+          getErrorMessage(err, 'Unable to load your candidacies.'),
         );
       } finally {
         setLoading(false);

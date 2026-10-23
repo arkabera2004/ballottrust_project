@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 import changePasswordService from '../services/changePassword.service';
+import { getErrorMessage } from '../../../utils/api-error';
 
 import type { ChangePasswordFormData } from '../schemas/changePassword.schema';
 
@@ -37,15 +38,13 @@ export function useChangePassword() {
 
     }
 
-    catch (error: any) {
+    catch (error: unknown) {
 
       console.error(error);
 
       toast.error(
 
-        error?.response?.data?.message ||
-
-        'Unable to change password',
+        getErrorMessage(error, 'Unable to change password'),
 
       );
 

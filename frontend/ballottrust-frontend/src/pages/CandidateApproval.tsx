@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import api from '../api/axios';
 import toast from '../utils/toast';
+import { getErrorMessage } from '../utils/api-error';
 
 import DashboardLayout from '../components/DashboardLayout';
 
@@ -52,10 +53,9 @@ export default function CandidateApproval() {
       toast.success('Candidate Approved');
 
       loadCandidates();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(
-        error?.response?.data?.message ||
-          'Approval Failed'
+        getErrorMessage(error, 'Approval Failed'),
       );
     }
   };
@@ -71,10 +71,9 @@ export default function CandidateApproval() {
       toast.success('Candidate Rejected');
 
       loadCandidates();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(
-        error?.response?.data?.message ||
-          'Rejection Failed'
+        getErrorMessage(error, 'Rejection Failed'),
       );
     }
   };

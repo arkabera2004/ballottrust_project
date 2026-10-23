@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { ElectionService } from '../services';
+import { getErrorMessage } from '../../../utils/api-error';
 
 import type { Election } from '../types';
 
@@ -26,11 +27,10 @@ export function useElection(id?: string) {
 
       setError(null);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
 
       setError(
-        err.message ??
-          'Unable to fetch election.',
+        getErrorMessage(err, 'Unable to fetch election.'),
       );
 
     } finally {

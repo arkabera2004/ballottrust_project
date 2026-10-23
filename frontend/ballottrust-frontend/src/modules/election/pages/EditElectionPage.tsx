@@ -19,6 +19,8 @@ import type {
   UpdateElectionDto,
 } from '../types';
 
+import { getErrorMessage } from '../../../utils/api-error';
+
 export default function EditElectionPage() {
 
   const { id } = useParams();
@@ -66,11 +68,10 @@ export default function EditElectionPage() {
 
     }
 
-    catch (error: any) {
+    catch (error: unknown) {
 
       toast.error(
-        error?.response?.data?.message ??
-          'Failed to update election.',
+        getErrorMessage(error, 'Failed to update election.'),
       );
 
     }

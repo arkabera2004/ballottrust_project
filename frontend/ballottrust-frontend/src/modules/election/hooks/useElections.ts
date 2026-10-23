@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { ElectionService } from '../services';
+import { getErrorMessage } from '../../../utils/api-error';
 import { useElectionRefresh } from '../context/ElectionContext';
 
 import type {
@@ -52,11 +53,10 @@ export function useElections(
 
       setError(null);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
 
       setError(
-        err.message ??
-          'Unable to load elections.',
+        getErrorMessage(err, 'Unable to load elections.'),
       );
 
     } finally {

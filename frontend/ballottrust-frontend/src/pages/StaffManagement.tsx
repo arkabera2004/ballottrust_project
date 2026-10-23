@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import api from '../api/axios';
 import toast from '../utils/toast';
+import { getErrorMessage } from '../utils/api-error';
 
 export default function StaffManagement() {
   const [formData, setFormData] = useState({
@@ -37,10 +38,9 @@ export default function StaffManagement() {
         password: '',
         role: 'ELECTION_COMMISSIONER',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(
-        error?.response?.data?.message ||
-          'Failed to create staff'
+        getErrorMessage(error, 'Failed to create staff'),
       );
     }
   };

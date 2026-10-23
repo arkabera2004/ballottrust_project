@@ -3,11 +3,13 @@ import { useEffect, useState } from 'react';
 import api from '../api/axios';
 
 export default function Results() {
-  const [elections, setElections] = useState<any[]>([]);
+  const [elections, setElections] = useState<
+    { id: string; title: string }[]
+  >([]);
   const [selectedElection, setSelectedElection] =
     useState('');
 
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<unknown>(null);
 
   const loadElections = async () => {
     const response = await api.get(
@@ -66,7 +68,7 @@ export default function Results() {
         View Results
       </button>
 
-      {results && (
+      {results != null && (
         <div className="bg-white p-6 rounded shadow">
 
           <h2 className="text-2xl font-bold mb-4">

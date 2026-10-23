@@ -8,6 +8,8 @@ import type {
   Candidate,
 } from '../types';
 
+import { getErrorMessage } from '../../../utils/api-error';
+
 export function useCandidateActions() {
   const [loading, setLoading] =
     useState(false);
@@ -40,11 +42,8 @@ export function useCandidateActions() {
         id,
         data,
       );
-    } catch (err: any) {
-      const message =
-        err?.response?.data?.message ??
-        err?.message ??
-        'Unable to update nomination.';
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, 'Unable to update nomination.');
 
       setError(message);
       throw err;
@@ -63,11 +62,8 @@ export function useCandidateActions() {
       return await CandidateService.cancelNomination(
         id,
       );
-    } catch (err: any) {
-      const message =
-        err?.response?.data?.message ??
-        err?.message ??
-        'Unable to cancel nomination.';
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, 'Unable to cancel nomination.');
 
       setError(message);
       throw err;
@@ -88,11 +84,8 @@ export function useCandidateActions() {
         id,
         reason,
       );
-    } catch (err: any) {
-      const message =
-        err?.response?.data?.message ??
-        err?.message ??
-        'Unable to withdraw candidacy.';
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, 'Unable to withdraw candidacy.');
 
       setError(message);
       throw err;

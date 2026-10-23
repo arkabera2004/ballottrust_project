@@ -3,6 +3,8 @@ import { toast } from 'react-hot-toast';
 
 import { emailVerificationService } from '../../auth/services';
 
+import { getErrorMessage } from '../../../utils/api-error';
+
 export function useVerifyEmail() {
 
   const [loading, setLoading] =
@@ -37,15 +39,13 @@ export function useVerifyEmail() {
 
     }
 
-    catch (error: any) {
+    catch (error: unknown) {
 
       console.error(error);
 
       toast.error(
 
-        error?.response?.data?.message ||
-
-        'Verification failed',
+        getErrorMessage(error, 'Verification failed'),
 
       );
 
@@ -82,15 +82,13 @@ export function useVerifyEmail() {
 
     }
 
-    catch (error: any) {
+    catch (error: unknown) {
 
       console.error(error);
 
       toast.error(
 
-        error?.response?.data?.message ||
-
-        'Unable to resend OTP',
+        getErrorMessage(error, 'Unable to resend OTP'),
 
       );
 

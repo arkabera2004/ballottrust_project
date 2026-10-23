@@ -2,14 +2,30 @@ import { useCallback, useEffect, useState } from 'react';
 
 import api from '../api/axios';
 import toast from '../utils/toast';
+import { getErrorMessage } from '../utils/api-error';
+
+interface PublicElection {
+  id: string;
+  title: string;
+}
+
+interface PublicCandidate {
+  id: string;
+  photoUrl?: string;
+  position?: string;
+  campaignSlogan?: string;
+  user?: { fullName?: string };
+  party?: { name?: string };
+}
 
 export default function Vote() {
-  const [elections, setElections] = useState<any[]>([]);
-  const [candidates, setCandidates] = useState<any[]>([]);
+  const [elections, setElections] = useState<PublicElection[]>([]);
+  const [candidates, setCandidates] = useState<PublicCandidate[]>([]);
 
   const [electionId, setElectionId] = useState('');
   const [candidateId, setCandidateId] = useState('');
-  const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
+  const [selectedCandidate, setSelectedCandidate] =
+    useState<PublicCandidate | null>(null);
 
   const loadElections = useCallback(async () => {
     try {
@@ -68,10 +84,9 @@ export default function Vote() {
 
       setCandidateId('');
       setSelectedCandidate(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(
-        error?.response?.data?.message ||
-          'Vote Failed'
+        getErrorMessage(error, 'Vote Failed'),
       );
     }
   };

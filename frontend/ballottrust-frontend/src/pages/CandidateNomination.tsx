@@ -5,6 +5,8 @@ import Card from '../components/cards/Card';
 
 import CandidateNominationForm from '../modules/candidate/components/CandidateNominationForm';
 
+import { getErrorMessage } from '../utils/api-error';
+
 import {
   useSubmitNomination,
 } from '../modules/candidate/hooks';
@@ -46,10 +48,9 @@ export default function CandidateNomination() {
 
       navigate('/candidate');
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(
-        error?.response?.data?.message ??
-          'Failed to submit nomination.',
+        getErrorMessage(error, 'Failed to submit nomination.'),
       );
     }
   }

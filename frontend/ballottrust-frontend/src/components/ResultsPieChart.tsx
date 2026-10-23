@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 
 interface Props {
-  data: any[];
+  data: { name: string; votes: number }[];
 }
 
 const COLORS = [

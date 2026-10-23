@@ -16,6 +16,8 @@ import {ElectionService} from '../../services';
 import { ElectionStatus } from '../../types';
 import type { Election } from '../../types';
 
+import { getErrorMessage } from '../../../../utils/api-error';
+
 interface Props {
   election: Election;
 }
@@ -39,7 +41,7 @@ export default function WorkflowActions({
     useArchiveElection();
 
   async function execute(
-    action: () => Promise<any>,
+    action: () => Promise<unknown>,
     message: string,
   ) {
     try {
@@ -49,11 +51,10 @@ export default function WorkflowActions({
 
       refresh();
 
-    } catch (err: any) {
+    } catch (err: unknown) {
 
       toast.error(
-        err?.response?.data?.message ??
-        'Operation failed.',
+        getErrorMessage(err, 'Operation failed.'),
       );
 
     }

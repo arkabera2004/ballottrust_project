@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { passwordService } from '../services';
 
 import Toast from '../../../utils/toast';
+import { getErrorMessage } from '../../../utils/api-error';
 
 import { ROUTES } from '../../../constants/routes';
 
@@ -40,13 +41,11 @@ export function useForgotPassword() {
 
     }
 
-    catch (error: any) {
+    catch (error: unknown) {
 
       Toast.error(
 
-        error?.response?.data?.message ||
-
-        'Unable to send reset link.',
+        getErrorMessage(error, 'Unable to send reset link.'),
 
       );
 

@@ -13,6 +13,8 @@ import toast from 'react-hot-toast';
 
 import Card from '../../../components/cards/Card';
 
+import { getErrorMessage } from '../../../utils/api-error';
+
 import {
   createCandidateSchema,
   type CreateCandidateForm,
@@ -207,10 +209,9 @@ export default function EditCandidatePage() {
 
       navigate('/candidate');
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(
-        err?.response?.data?.message ??
-          'Unable to update nomination.',
+        getErrorMessage(err, 'Unable to update nomination.'),
       );
     }
   }
@@ -715,7 +716,7 @@ function useCandidateForEdit(
           isLoading: false,
           error: null,
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!mounted) {
           return;
         }
@@ -723,10 +724,7 @@ function useCandidateForEdit(
         setState({
           data: null,
           isLoading: false,
-          error:
-            err?.response?.data?.message ??
-            err?.message ??
-            'Unable to load candidate nomination.',
+          error: getErrorMessage(err, 'Unable to load candidate nomination.'),
         });
       }
     }

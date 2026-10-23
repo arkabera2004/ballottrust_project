@@ -5,6 +5,7 @@ import authService from '../services/auth.service';
 
 import { useAuth } from '../../../context/AuthContext';
 import Toast from '../../../utils/toast';
+import { getErrorMessage } from '../../../utils/api-error';
 import { ROUTES } from '../../../constants/routes';
 
 import {
@@ -94,11 +95,9 @@ export function useLogin() {
 
     }
 
-    catch (error: any) {
+    catch (error: unknown) {
 
-      const message =
-        error?.response?.data?.message ||
-        'Login Failed';
+      const message = getErrorMessage(error, 'Login Failed');
 
       if (
         message ===

@@ -9,6 +9,8 @@ import {
   useCandidateActions,
 } from '../../hooks';
 
+import { getErrorMessage } from '../../../../utils/api-error';
+
 interface CandidateActionsProps {
   candidate: Candidate;
   onComplete?: () => void;
@@ -81,10 +83,9 @@ export default function CandidateActions({
 
       onComplete?.();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(
-        error?.response?.data?.message ??
-          'Unable to cancel nomination.',
+        getErrorMessage(error, 'Unable to cancel nomination.'),
       );
     }
   }
@@ -113,10 +114,9 @@ export default function CandidateActions({
 
       onComplete?.();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(
-        error?.response?.data?.message ??
-          'Unable to withdraw candidacy.',
+        getErrorMessage(error, 'Unable to withdraw candidacy.'),
       );
     }
   }

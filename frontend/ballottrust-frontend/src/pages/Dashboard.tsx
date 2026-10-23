@@ -2,15 +2,50 @@
 import { useEffect, useState } from 'react';
 
 import api from '../api/axios';
-import { summarizeIntegrity } from '../utils/blockchain-integrity';
+import {
+  summarizeIntegrity,
+  type IntegritySummary,
+} from '../utils/blockchain-integrity';
 
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import ResultsPieChart from '../components/ResultsPieChart';
 import StatCard from '../components/StatCard';
 
+interface DashboardStats {
+  elections: number;
+  candidates: number;
+  votes: number;
+
+  activeElections: number;
+  closedElections: number;
+  draftElections: number;
+
+  registeredVoters: number;
+  turnout: number;
+
+  recentElections: {
+    id: string;
+    title: string;
+    status: string;
+    startDate: string;
+  }[];
+}
+
+interface CurrentElection {
+  title: string;
+  status: string;
+  candidates: number;
+  votes: number;
+}
+
+interface WinnerInfo {
+  winner?: { candidateName: string; votes: number };
+  election: string;
+}
+
 export default function Dashboard() {
-  const [stats, setStats] = useState<any>({
+  const [stats, setStats] = useState<DashboardStats>({
   elections: 0,
   candidates: 0,
   votes: 0,
@@ -26,18 +61,18 @@ export default function Dashboard() {
 });
 
 const [currentElection, setCurrentElection] =
-  useState<any>(null);
+  useState<CurrentElection | null>(null);
 
-  const [winner, setWinner] = useState<any>(null);
+  const [winner, setWinner] = useState<WinnerInfo | null>(null);
 
   const [chartData, setChartData] =
-    useState<any[]>([]);
+    useState<{ name: string; votes: number }[]>([]);
 
   const [elections, setElections] =
-    useState<any[]>([]);
+    useState<{ id: string; title: string }[]>([]);
 
   const [integrity, setIntegrity] =
-  useState<any>(null);
+  useState<IntegritySummary | null>(null);
 
   const [selectedElection, setSelectedElection] =
     useState('');
@@ -482,7 +517,7 @@ const [currentElection, setCurrentElection] =
               <tbody>
 
                 {stats.recentElections?.map(
-                  (election: any) => (
+                  (election) => (
                     <tr
                       key={election.id}
                       className="border-b"
